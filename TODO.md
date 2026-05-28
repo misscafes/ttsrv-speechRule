@@ -16,16 +16,17 @@
 
 > **回退说明**：v2.93-2.95 引入的情绪桥接/AI分析模块在 Rhino 环境中存在多处兼容性问题（跨行字符串、JsExtensions 类型无效），已全部删除回退到 v2.92。
 
-### v2.97（历史版本 / 已增加备用模型）
+### v2.97+备用模型（历史版本）
+- 文件名：`ttsrv-speechRule-多角色朗读2.97【...v109-旁白引用严谨版+备用模型】.json`
+- 基于原始 2.97（`...-原始备份.json`）后补集成
 - 整合情绪模块：统一手动配置/桥接标记/AI分析三层情绪输出
 - 统一情绪列表：从 EMOTION_KEY_MAP 动态生成 UI items
 - **代码格式化**：使用 js-beautify 对 code 字段统一缩进
 - **已知问题**：Rhino 跨行字符串报错、JsExtensions 类型无效
-- **新增备用模型**（后补）：集成 `BackupModelManager` + `concurrentApiRequest`/`directApiRequest` 故障切换
+- **新增备用模型**：集成 `BackupModelManager` + `concurrentApiRequest`/`directApiRequest` 故障切换
   - `loadKeyFile` 增加 `#!#` 解析
   - `concurrentApiRequest` `successCount <= 0` 时触发并发接力
   - `directApiRequest` catch 后触发单请求接力
-  - 备份保留：`历史版本/ttsrv-speechRule-2.97...-原始备份.json`
 
 ### v2.95（已删除）
 - 整合情绪模块：统一手动配置/桥接标记/AI分析三层情绪输出
