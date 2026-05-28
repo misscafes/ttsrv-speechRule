@@ -2,31 +2,28 @@
 
 ## 版本变更记录
 
-### v2.95（当前最新版）
-- 整合情绪模块：统一手动配置/桥接标记/AI分析三层情绪输出
-- 统一情绪列表：从 EMOTION_KEY_MAP 动态生成 UI items，新增 confused(疑惑)/grievance(委屈)/weak(虚弱)
-- 统一开关：ENABLE_EMOTION 为总开关，ENABLE_EMOTION_BRIDGE/ENABLE_EMOTION_AI 为子开关
-- 统一日志：logEmotionFromResults 只保留 item.emotion 读取逻辑
-- **代码格式化**：使用 js-beautify 对 code 字段统一缩进（2空格），生成分离的 `.js` 文件方便调阅
+### v2.92（当前最新版）
+- 修复缓存中断
+- 定位优化
+- 情绪日志
+- 备用模型接力
 
-### v2.94
+> **回退说明**：v2.93-2.95 引入的情绪桥接/AI分析模块在 Rhino 环境中存在多处兼容性问题（跨行字符串、JsExtensions 类型无效），已全部删除回退到 v2.92。
+
+### v2.95（已删除）
+- 整合情绪模块：统一手动配置/桥接标记/AI分析三层情绪输出
+- 统一情绪列表：从 EMOTION_KEY_MAP 动态生成 UI items
+- **代码格式化**：使用 js-beautify 对 code 字段统一缩进
+- **已知问题**：Rhino 跨行字符串报错、JsExtensions 类型无效
+
+### v2.94（已删除）
 - 融合猫剪豆问情绪桥接与AI分析模块（B方案）
 - 新增 ENABLE_EMOTION_BRIDGE、ENABLE_AI_EMOTION 开关
-- 新增 resolvePostModuleEmotion、analyzeSentimentWithEmotionList
-- 新增 segment.emotion / emotionScale / emotionSource 字段输出
+- **已知问题**：Rhino 跨行字符串、JsExtensions 类型不兼容
 
-### v2.93
+### v2.93（已删除）
 - ES5 兼容改造
-- 修复缓存中断
-- 定位优化
-- 情绪日志
-- 备用模型接力
-
-### v2.92
-- 修复缓存中断
-- 定位优化
-- 情绪日志
-- 备用模型接力
+- 修复缓存中断、定位优化、情绪日志、备用模型接力
 
 ### v2.91
 - 修复缓存中断
@@ -58,22 +55,19 @@
 ## 会话摘要（每次关闭前更新）
 
 ### 2025-05-28 本次会话
-- **当前最新版本**：v2.95（情绪模块整合版）
+- **当前最新版本**：v2.92（已回退，情绪桥接模块全部删除）
 - **主目录结构**：
-  - `多角色朗读2.95...json`（最新版）
+  - `多角色朗读2.92...json`（最新版）
   - `ttsrv-plugin-猫剪豆问.json`
   - `AGENTS.md`（项目规范）
   - `TODO.md`（本文件）
-  - `历史版本/`（2.85-2.94）
+  - `历史版本/`（2.85-2.92）
 - **仓库状态**：GitHub + cnb.cool 双仓库同步，origin 已配置一键双推
 - **已完成**：
-  - 融合猫剪豆问情绪桥接与AI分析逻辑
-  - 统一手动/桥接/AI三层情绪输出到 segment.emotion
-  - 动态生成情绪列表，新增 confused/grievance/weak 三个 key
   - 建立 Git 仓库、历史版本文件夹、AGENTS.md 规范
-  - 使用 js-beautify 格式化 2.95 code 字段，生成独立 `多角色朗读2.95.js` 文件（7198行，方便调阅）
-  - **修复 Rhino 跨行字符串报错**：`analyzeSentimentWithEmotionList` 中 prompt 拼接使用实际换行符，Rhino 报 "字符串文字没有限制"，已改为 `\n` 转义
-  - **修复 JsExtensions 类型无效**：`ttsrv.tts.request` 返回 Java 对象，Rhino 三元运算符无法直接持有，改为 `try-catch` + `JSON.stringify/parse` 安全转换后传入 `resolvePostModuleEmotion`
+  - **回退到 v2.92**：删除 v2.93-2.95 所有情绪桥接相关代码（跨行字符串、JsExtensions 类型不兼容，Rhino 环境无法稳定运行）
+  - 主目录清理：删除 2.95.js、bug.txt、2.95.json 及相关备份
+  - 历史版本清理：删除 2.93、2.94 文件
 - **注意事项**：
   - 2.93 原文件已被覆盖（无备份）
   - GitHub Token 曾在命令历史中泄露（需撤销）
