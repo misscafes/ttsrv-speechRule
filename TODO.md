@@ -82,6 +82,10 @@
   - 增加 `ENABLE_EMOTION_DEBUG_LOG` 开关（默认关闭）
   - `logEmotionFromResults` 新增 `【运行时情绪】| 序号= | 类型= | 标签= | 情绪= | 文本=` 详细日志
   - 版本号同步：文件名、顶层 name/version、code 内 name 全处更新为 2.93
+  - **提取备用模型模块**：`模块/backup-model-manager.js`（128行）
+    - 包含 `BackupModelManager` 完整 IIFE、`logBackupInitStatus`、`_lastBackupStatus`
+    - 新增 `tryBackupModelRelay(scene, buildRequestFn, parseResponseFn, thisObj)` 通用接力函数
+    - 可独立复用，支持姓名分析/别名校验/别名清洗三种场景的备用模型接力
 - **注意事项**：
   - 2.93 原文件已被覆盖（无备份）
   - GitHub Token 曾在命令历史中泄露（需撤销）
