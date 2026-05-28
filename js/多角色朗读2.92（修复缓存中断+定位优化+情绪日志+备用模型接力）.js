@@ -51,6 +51,8 @@ shijian.setMilliseconds(0);
 // 0 = 关闭情绪模块（不提取/不拼接/不注入情绪配置）
 // 1 = 开启情绪模块
 var ENABLE_EMOTION = 1;
+// 调试日志开关：1=输出每段详细情绪信息（借鉴2.97格式），0=关闭
+var ENABLE_EMOTION_DEBUG_LOG = 0;
 
 // 状态追踪：记录上次显示的情绪状态，仅变化时再输出
 var _lastEmotionStatus = null;
@@ -247,7 +249,23 @@ function logEmotionFromResults(list, enableEmotion) {
             emotionVal = tagStr.substring(_pipeIdx + 1);
         }
         if (!roleName) roleName = "对话";
+        
+        // 原有简洁日志（始终输出）
         console.log("【情绪】" + roleName + "：" + emotionVal);
+        
+        // 新增详细调试日志（仅开启时输出，借鉴2.97格式）
+        if (ENABLE_EMOTION_DEBUG_LOG === 1) {
+            var itemType = tagStr.indexOf("localSound") === 0 ? "【本地音效】" : 
+                          tagStr.indexOf("括号") === 0 ? "【括号发音】" : 
+                          tagStr === "narration" ? "【旁白】" : "【对话】";
+            var logMsg = "【运行时情绪】" +
+                " | 序号=" + (k + 1) +
+                " | 类型=" + itemType +
+                " | 标签=" + tagStr +
+                " | 情绪=" + emotionVal +
+                " | 文本=" + String(item.text || "").substring(0, 30);
+            console.log(logMsg);
+        }
     }
 }
 
