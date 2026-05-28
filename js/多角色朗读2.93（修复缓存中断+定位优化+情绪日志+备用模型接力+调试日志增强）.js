@@ -447,6 +447,85 @@ var roleToRootIdMap = {};
 
 
 // ===================== 核心：双场景独立密钥轮换管理（热更新版，ES5兼容，新增API自动补全逻辑）=====================
+// 备用模型从miyue.txt读取，格式：姓名分析密钥##别名验证密钥#!#备用模型（地址@@模型@@密钥）
+// 无#!#则无备用模型，向后完全兼容
+
+// 状态追踪：记录上次显示的备用模型状态，仅变化时再输出
+var _lastBackupStatus = null;
+
+  var BackupModelManager = (function() {
+    var backupConfig = null;
+    var backupActive = false;
+    var backupPendingLog = null;
+
+    function isBackupConfigured() {
+        return backupConfig !== null && backupConfig.key ? true : false;
+    }
+
+    function parseSingleGroup(content, defaultConfig) {
+        var pool = [];
+        if (!content || content.trim() === "") return pool;
+        var contentTrim = content.trim();
+        if (contentTrim.indexOf("@@") !== -1) {
+            var splitArr = contentTrim.split("@@");
+            for (var i = 0; i < splitArr.length; i += 3) {
+                var endpoint = splitArr[i] ? splitArr[i].trim() : "";
+                var model = splitArr[i + 1] ? splitArr[i + 1].trim() : "";
+                var key = splitArr[i + 2] ? splitArr[i + 2].trim() : "";
+                if (endpoint) {
+                    if (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
+                    if (endpoint.endsWith("/chat/completions")) endpoint = endpoint.slice(0, -17);
+                    endpoint += "/chat/completions";
+                }
+                if (key) {
+                    pool.push({
+                        endpoint: endpoint || defaultConfig.endpoint,
+                        model: model || defaultConfig.model,
+                        key: key
+                    });
+                }
+            }
+        } else {
+            pool.push({
+                endpoint: defaultConfig.endpoint,
+                model: defaultConfig.model,
+                key: contentTrim
+            });
+        }
+        return pool;
+    }
+
+    function loadBackupFromContent(backupContent, defaultConfig) {
+        backupConfig = null;
+        backupPendingLog = null;
+        if (backupContent) {
+            var backupPool = parseSingleGroup(backupContent, defaultConfig);
+            if (backupPool.length > 0) {
+                backupConfig = backupPool[0];
+                backupPendingLog = "【🟡备用模型】配置已加载，模型：" + backupConfig.model + "，密钥末尾4位：" + backupConfig.key.slice(-4) + "，地址：" + (backupConfig.endpoint || defaultConfig.endpoint);
+            } else {
+                backupPendingLog = "【🟡备用模型】#!#段内容为空或格式无效，备用模型未启用";
+            }
+        }
+    }
+
+    function resetBackup() {
+        backupConfig = null;
+        backupPendingLog = null;
+    }
+
+    return {
+        getBackupConfig: function() { return isBackupConfigured() ? backupConfig : null; },
+        isBackupActive: function() { return backupActive; },
+        activateBackup: function() { backupActive = true; },
+        deactivateBackup: function() { backupActive = false; backupPendingLog = null; },
+        getBackupPendingLog: function() { return backupPendingLog; },
+        loadBackupFromContent: loadBackupFromContent,
+        resetBackup: resetBackup
+    };
+  })();
+
+
 var DualKeyManager = (function() {
   // 兜底默认配置，和原代码完全对齐
   var defaultConfig = {
@@ -662,84 +741,6 @@ var DualKeyManager = (function() {
 
 // ===================== 备用模型配置（故障切换，主力全部失败时才启用）=====================
 // 备用模型：主力连接失败后触发接力，救完后保持静默，只有主力再次失败时才重新启用
-// 备用模型从miyue.txt读取，格式：姓名分析密钥##别名验证密钥#!#备用模型（地址@@模型@@密钥）
-// 无#!#则无备用模型，向后完全兼容
-
-// 状态追踪：记录上次显示的备用模型状态，仅变化时再输出
-var _lastBackupStatus = null;
-
-  var BackupModelManager = (function() {
-    var backupConfig = null;
-    var backupActive = false;
-    var backupPendingLog = null;
-
-    function isBackupConfigured() {
-        return backupConfig !== null && backupConfig.key ? true : false;
-    }
-
-    function parseSingleGroup(content, defaultConfig) {
-        var pool = [];
-        if (!content || content.trim() === "") return pool;
-        var contentTrim = content.trim();
-        if (contentTrim.indexOf("@@") !== -1) {
-            var splitArr = contentTrim.split("@@");
-            for (var i = 0; i < splitArr.length; i += 3) {
-                var endpoint = splitArr[i] ? splitArr[i].trim() : "";
-                var model = splitArr[i + 1] ? splitArr[i + 1].trim() : "";
-                var key = splitArr[i + 2] ? splitArr[i + 2].trim() : "";
-                if (endpoint) {
-                    if (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
-                    if (endpoint.endsWith("/chat/completions")) endpoint = endpoint.slice(0, -17);
-                    endpoint += "/chat/completions";
-                }
-                if (key) {
-                    pool.push({
-                        endpoint: endpoint || defaultConfig.endpoint,
-                        model: model || defaultConfig.model,
-                        key: key
-                    });
-                }
-            }
-        } else {
-            pool.push({
-                endpoint: defaultConfig.endpoint,
-                model: defaultConfig.model,
-                key: contentTrim
-            });
-        }
-        return pool;
-    }
-
-    function loadBackupFromContent(backupContent, defaultConfig) {
-        backupConfig = null;
-        backupPendingLog = null;
-        if (backupContent) {
-            var backupPool = parseSingleGroup(backupContent, defaultConfig);
-            if (backupPool.length > 0) {
-                backupConfig = backupPool[0];
-                backupPendingLog = "【🟡备用模型】配置已加载，模型：" + backupConfig.model + "，密钥末尾4位：" + backupConfig.key.slice(-4) + "，地址：" + (backupConfig.endpoint || defaultConfig.endpoint);
-            } else {
-                backupPendingLog = "【🟡备用模型】#!#段内容为空或格式无效，备用模型未启用";
-            }
-        }
-    }
-
-    function resetBackup() {
-        backupConfig = null;
-        backupPendingLog = null;
-    }
-
-    return {
-        getBackupConfig: function() { return isBackupConfigured() ? backupConfig : null; },
-        isBackupActive: function() { return backupActive; },
-        activateBackup: function() { backupActive = true; },
-        deactivateBackup: function() { backupActive = false; backupPendingLog = null; },
-        getBackupPendingLog: function() { return backupPendingLog; },
-        loadBackupFromContent: loadBackupFromContent,
-        resetBackup: resetBackup
-    };
-  })();
-
 
 // ===================== 修复后：通用并发API请求工具（彻底解决提前唤醒问题，严格等待指定数量结果）=====================
 function concurrentApiRequest(scene, requestBuilder, responseParser, maxConcurrent, timeout) {
