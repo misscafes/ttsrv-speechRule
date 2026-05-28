@@ -447,6 +447,85 @@ var roleToRootIdMap = {};
 
 
 // ===================== 核心：双场景独立密钥轮换管理（热更新版，ES5兼容，新增API自动补全逻辑）=====================
+// 备用模型从miyue.txt读取，格式：姓名分析密钥##别名验证密钥#!#备用模型（地址@@模型@@密钥）
+// 无#!#则无备用模型，向后完全兼容
+
+// 状态追踪：记录上次显示的备用模型状态，仅变化时再输出
+var _lastBackupStatus = null;
+
+  var BackupModelManager = (function() {
+    var backupConfig = null;
+    var backupActive = false;
+    var backupPendingLog = null;
+
+    function isBackupConfigured() {
+        return backupConfig !== null && backupConfig.key ? true : false;
+    }
+
+    function parseSingleGroup(content, defaultConfig) {
+        var pool = [];
+        if (!content || content.trim() === "") return pool;
+        var contentTrim = content.trim();
+        if (contentTrim.indexOf("@@") !== -1) {
+            var splitArr = contentTrim.split("@@");
+            for (var i = 0; i < splitArr.length; i += 3) {
+                var endpoint = splitArr[i] ? splitArr[i].trim() : "";
+                var model = splitArr[i + 1] ? splitArr[i + 1].trim() : "";
+                var key = splitArr[i + 2] ? splitArr[i + 2].trim() : "";
+                if (endpoint) {
+                    if (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
+                    if (endpoint.endsWith("/chat/completions")) endpoint = endpoint.slice(0, -17);
+                    endpoint += "/chat/completions";
+                }
+                if (key) {
+                    pool.push({
+                        endpoint: endpoint || defaultConfig.endpoint,
+                        model: model || defaultConfig.model,
+                        key: key
+                    });
+                }
+            }
+        } else {
+            pool.push({
+                endpoint: defaultConfig.endpoint,
+                model: defaultConfig.model,
+                key: contentTrim
+            });
+        }
+        return pool;
+    }
+
+    function loadBackupFromContent(backupContent, defaultConfig) {
+        backupConfig = null;
+        backupPendingLog = null;
+        if (backupContent) {
+            var backupPool = parseSingleGroup(backupContent, defaultConfig);
+            if (backupPool.length > 0) {
+                backupConfig = backupPool[0];
+                backupPendingLog = "【🟡备用模型】配置已加载，模型：" + backupConfig.model + "，密钥末尾4位：" + backupConfig.key.slice(-4) + "，地址：" + (backupConfig.endpoint || defaultConfig.endpoint);
+            } else {
+                backupPendingLog = "【🟡备用模型】#!#段内容为空或格式无效，备用模型未启用";
+            }
+        }
+    }
+
+    function resetBackup() {
+        backupConfig = null;
+        backupPendingLog = null;
+    }
+
+    return {
+        getBackupConfig: function() { return isBackupConfigured() ? backupConfig : null; },
+        isBackupActive: function() { return backupActive; },
+        activateBackup: function() { backupActive = true; },
+        deactivateBackup: function() { backupActive = false; backupPendingLog = null; },
+        getBackupPendingLog: function() { return backupPendingLog; },
+        loadBackupFromContent: loadBackupFromContent,
+        resetBackup: resetBackup
+    };
+  })();
+
+
 var DualKeyManager = (function() {
   // 兜底默认配置，和原代码完全对齐
   var defaultConfig = {
@@ -662,84 +741,6 @@ var DualKeyManager = (function() {
 
 // ===================== 备用模型配置（故障切换，主力全部失败时才启用）=====================
 // 备用模型：主力连接失败后触发接力，救完后保持静默，只有主力再次失败时才重新启用
-// 备用模型从miyue.txt读取，格式：姓名分析密钥##别名验证密钥#!#备用模型（地址@@模型@@密钥）
-// 无#!#则无备用模型，向后完全兼容
-
-// 状态追踪：记录上次显示的备用模型状态，仅变化时再输出
-var _lastBackupStatus = null;
-
-  var BackupModelManager = (function() {
-    var backupConfig = null;
-    var backupActive = false;
-    var backupPendingLog = null;
-
-    function isBackupConfigured() {
-        return backupConfig !== null && backupConfig.key ? true : false;
-    }
-
-    function parseSingleGroup(content, defaultConfig) {
-        var pool = [];
-        if (!content || content.trim() === "") return pool;
-        var contentTrim = content.trim();
-        if (contentTrim.indexOf("@@") !== -1) {
-            var splitArr = contentTrim.split("@@");
-            for (var i = 0; i < splitArr.length; i += 3) {
-                var endpoint = splitArr[i] ? splitArr[i].trim() : "";
-                var model = splitArr[i + 1] ? splitArr[i + 1].trim() : "";
-                var key = splitArr[i + 2] ? splitArr[i + 2].trim() : "";
-                if (endpoint) {
-                    if (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
-                    if (endpoint.endsWith("/chat/completions")) endpoint = endpoint.slice(0, -17);
-                    endpoint += "/chat/completions";
-                }
-                if (key) {
-                    pool.push({
-                        endpoint: endpoint || defaultConfig.endpoint,
-                        model: model || defaultConfig.model,
-                        key: key
-                    });
-                }
-            }
-        } else {
-            pool.push({
-                endpoint: defaultConfig.endpoint,
-                model: defaultConfig.model,
-                key: contentTrim
-            });
-        }
-        return pool;
-    }
-
-    function loadBackupFromContent(backupContent, defaultConfig) {
-        backupConfig = null;
-        backupPendingLog = null;
-        if (backupContent) {
-            var backupPool = parseSingleGroup(backupContent, defaultConfig);
-            if (backupPool.length > 0) {
-                backupConfig = backupPool[0];
-                backupPendingLog = "【🟡备用模型】配置已加载，模型：" + backupConfig.model + "，密钥末尾4位：" + backupConfig.key.slice(-4) + "，地址：" + (backupConfig.endpoint || defaultConfig.endpoint);
-            } else {
-                backupPendingLog = "【🟡备用模型】#!#段内容为空或格式无效，备用模型未启用";
-            }
-        }
-    }
-
-    function resetBackup() {
-        backupConfig = null;
-        backupPendingLog = null;
-    }
-
-    return {
-        getBackupConfig: function() { return isBackupConfigured() ? backupConfig : null; },
-        isBackupActive: function() { return backupActive; },
-        activateBackup: function() { backupActive = true; },
-        deactivateBackup: function() { backupActive = false; backupPendingLog = null; },
-        getBackupPendingLog: function() { return backupPendingLog; },
-        loadBackupFromContent: loadBackupFromContent,
-        resetBackup: resetBackup
-    };
-  })();
-
 
 // ===================== 修复后：通用并发API请求工具（彻底解决提前唤醒问题，严格等待指定数量结果）=====================
 function concurrentApiRequest(scene, requestBuilder, responseParser, maxConcurrent, timeout) {
@@ -876,6 +877,102 @@ if (!maxConcurrent || maxConcurrent <= 0) {
       errors: errors
     };
   } else {
+    // ===================== 备用模型故障切换 =====================
+    // 主力全部失败，尝试启用备用模型
+    var backupCfg = BackupModelManager.getBackupConfig();
+    if (backupCfg) {
+      console.log("【🟡备用模型】⚠️主力全部失败，启用接力！场景：" + scene + "，模型：" + backupCfg.model + "，密钥末尾4位：" + backupCfg.key.slice(-4));
+      // 输出之前暂存的备用模型加载日志（仅主力失败后才显示）
+      if (BackupModelManager.getBackupPendingLog) { var _plog = BackupModelManager.getBackupPendingLog(); if (_plog) console.log(_plog); }
+      BackupModelManager.activateBackup();
+
+      // ===================== 备用模型并发接力，完成主力任务 =====================
+      var backupNeedCount = needWaitMultiResult ? targetSuccessCount : 1;
+      var backupSuccessResults = [];
+      var backupErrors = [];
+      var backupSuccessNum = new java.util.concurrent.atomic.AtomicInteger(0);
+      var backupFinishedNum = new java.util.concurrent.atomic.AtomicInteger(0);
+      var backupLatch = new java.util.concurrent.CountDownLatch(1);
+      var backupHasWoken = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+      console.log("【🟡备用模型】并发启动，目标成功数：" + backupNeedCount + "，并发总数：" + backupNeedCount);
+
+      function createBackupRequestTask(taskIndex) {
+        return function() {
+          try {
+            var bRequestParams = requestBuilder(backupCfg);
+            if (!bRequestParams) throw new Error("请求参数构建失败");
+            var bResponse = ttsrv.httpPost(
+              bRequestParams.endpoint,
+              JSON.stringify(bRequestParams.data),
+              bRequestParams.headers
+            );
+            var bParsed = responseParser(bResponse);
+            if (!bParsed) throw new Error("响应解析失败");
+            var bSuccessIdx = backupSuccessNum.incrementAndGet();
+            backupSuccessResults.push({
+              data: bParsed,
+              apiConfig: backupCfg,
+              responseTime: 0,
+              timestamp: Date.now()
+            });
+            console.log("【🟡备用模型】并发成功" + bSuccessIdx + "/" + backupNeedCount + "，密钥末尾4位：" + backupCfg.key.slice(-4));
+            if (bSuccessIdx >= backupNeedCount && backupHasWoken.compareAndSet(false, true)) {
+              backupLatch.countDown();
+            }
+          } catch (bErr) {
+            backupErrors.push("备用并发" + taskIndex + "：" + (bErr.message || "未知错误"));
+            console.error("【🟡备用模型】并发" + taskIndex + "失败：" + (bErr.message || "未知错误"));
+          } finally {
+            var bFin = backupFinishedNum.incrementAndGet();
+            if (bFin >= backupNeedCount && backupHasWoken.compareAndSet(false, true)) {
+              backupLatch.countDown();
+            }
+          }
+        };
+      }
+
+      // 启动备用模型并发线程
+      for (var bi = 0; bi < backupNeedCount; bi++) {
+        (function(idx) {
+          var bThread = new java.lang.Thread(new java.lang.Runnable({ run: createBackupRequestTask(idx) }));
+          bThread.start();
+        })(bi);
+      }
+
+      // 等待备用模型并发完成
+      try {
+        var backupWaitOk = backupLatch.await(timeout, java.util.concurrent.TimeUnit.MILLISECONDS);
+        if (!backupWaitOk) {
+          backupErrors.push("备用模型并发超时（" + timeout/1000 + "秒）");
+          console.error("【🟡备用模型】并发超时，已收集" + backupSuccessNum.get() + "个结果");
+        }
+      } catch (bWaitErr) {
+        backupErrors.push("备用模型等待异常：" + bWaitErr.message);
+      }
+
+      // 汇总备用模型结果
+      if (backupSuccessNum.get() > 0) {
+        console.log("【🟡备用模型】✅接力完成！场景：" + scene + "，模型：" + backupCfg.model + "，成功" + backupSuccessNum.get() + "/" + backupNeedCount + "个");
+        BackupModelManager.deactivateBackup();
+        console.log("【🟡备用模型】已复位静默，等待主力下次故障时再启用");
+        return {
+          success: true,
+          data: needWaitMultiResult ? backupSuccessResults : backupSuccessResults[0].data,
+          isMultiResult: needWaitMultiResult,
+          errors: errors.concat(backupErrors),
+          usedBackup: true
+        };
+      } else {
+        console.error("【🟡备用模型】❌接力失败！场景：" + scene + "，模型：" + backupCfg.model + "，密钥末尾4位：" + backupCfg.key.slice(-4) + "，0个成功");
+        for (var bei = 0; bei < backupErrors.length; bei++) {
+          console.error("【🟡备用模型】失败详情：" + backupErrors[bei]);
+        }
+      }
+      // 备用模型也失败，复位状态
+      BackupModelManager.deactivateBackup();
+      console.log("【🟡备用模型】已复位静默（接力失败），等待主力下次故障时再启用");
+    }
     return { success: false, data: null, errors: errors };
   }
 }
@@ -3050,23 +3147,6 @@ CharacterManager.prototype.analyzeCharacter = function(fullText, characterId, al
   // 原有降级逻辑完全保留
   if (!batchResult) {
     console.error("【批量分析】所有重试均失败，走降级兜底逻辑");
-    // 尝试备用模型接力
-    if (typeof BackupModelManager !== 'undefined' && BackupModelManager.getBackupConfig()) {
-        try {
-            var backupConfig = BackupModelManager.getBackupConfig();
-            var backupRequest = buildNameAnalyzeRequest.call(this, backupConfig);
-            var backupResponse = ttsrv.httpPost(
-                backupRequest.endpoint,
-                JSON.stringify(backupRequest.data),
-                backupRequest.headers
-            );
-            batchResult = parseNameAnalyzeResponse(backupResponse);
-            BackupModelManager.activateBackup();
-            console.log("【备用模型】批量分析接力成功");
-        } catch (backupErr) {
-            console.error("【备用模型】批量分析接力失败：" + backupErr.message);
-        }
-    }
     if (!batchResult) {
         return this.analyzeCharacterFallback(fullText, characterId);
     }
@@ -3367,23 +3447,6 @@ CharacterManager.prototype.checkAliasByApi = function(newName, chapterFullConten
   // 原有兜底逻辑完全保留
   if (!finalResult) {
     console.error("【别名校验】所有重试均失败，默认判定为非别名");
-    // 尝试备用模型接力
-    if (typeof BackupModelManager !== 'undefined' && BackupModelManager.getBackupConfig()) {
-        try {
-            var backupConfig = BackupModelManager.getBackupConfig();
-            var backupRequest = buildAliasAnalyzeRequest(backupConfig);
-            var backupResponse = ttsrv.httpPost(
-                backupRequest.endpoint,
-                JSON.stringify(backupRequest.data),
-                backupRequest.headers
-            );
-            finalResult = parseAliasAnalyzeResponse(backupResponse);
-            BackupModelManager.activateBackup();
-            console.log("【备用模型】别名校验接力成功");
-        } catch (backupErr) {
-            console.error("【备用模型】别名校验接力失败：" + backupErr.message);
-        }
-    }
     if (!finalResult) {
         return { isAlias: false, mainName: null, reason: "API调用/解析异常，默认判定为非别名" };
     }
@@ -3598,23 +3661,6 @@ CharacterManager.prototype.refineAliasGroupByApi = function(mainRecord, newName,
 
   if (!finalResult) {
     console.error("【别名清洗】所有重试均失败");
-    // 尝试备用模型接力
-    if (typeof BackupModelManager !== 'undefined' && BackupModelManager.getBackupConfig()) {
-        try {
-            var backupConfig = BackupModelManager.getBackupConfig();
-            var backupRequest = buildAliasRefineRequest(backupConfig);
-            var backupResponse = ttsrv.httpPost(
-                backupRequest.endpoint,
-                JSON.stringify(backupRequest.data),
-                backupRequest.headers
-            );
-            finalResult = parseAliasRefineResponse(backupResponse);
-            BackupModelManager.activateBackup();
-            console.log("【备用模型】别名清洗接力成功");
-        } catch (backupErr) {
-            console.error("【备用模型】别名清洗接力失败：" + backupErr.message);
-        }
-    }
     if (!finalResult) {
         return null;
     }
@@ -4539,7 +4585,7 @@ characterManager.loadRecords();
 
 // -------------------------- SpeechRuleJS核心对象（整合＜＞本地音效） --------------------------
 var SpeechRuleJS = {
-  name: "多角色朗读2.93（修复缓存中断+定位优化+情绪日志+备用模型接力）",
+  name: "多角色朗读2.94（修复缓存中断+定位优化+情绪日志+备用模型接力）",
   id: "mingwuyan",
   author: "命無言、萌新改",
   version: 64,
