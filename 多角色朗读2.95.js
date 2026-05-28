@@ -6926,8 +6926,23 @@ function analyzeSentimentWithEmotionList(text, context, emotionList) {
 
             // 1. 桥接解析（文本标记 + 上游request，最高优先级）
             if (ENABLE_EMOTION_BRIDGE) {
-              var _emotionRequest = (typeof ttsrv !== 'undefined' && ttsrv.tts && ttsrv.tts.request) ? ttsrv.tts
-                .request : {};
+              var _emotionRequest = {};
+              try {
+                if (typeof ttsrv !== 'undefined') {
+                  var _ttsRef = ttsrv.tts;
+                  if (_ttsRef !== undefined && _ttsRef !== null) {
+                    var _reqRef = _ttsRef.request;
+                    if (_reqRef !== undefined && _reqRef !== null) {
+                      var _reqStr = JSON.stringify(_reqRef);
+                      if (_reqStr && _reqStr !== '{}' && _reqStr !== 'null') {
+                        _emotionRequest = JSON.parse(_reqStr);
+                      }
+                    }
+                  }
+                }
+              } catch (e) {
+                _emotionRequest = {};
+              }
               _emotionInfo = resolvePostModuleEmotion(_emotionRequest, originalItem.text);
             }
 
