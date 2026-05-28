@@ -7,6 +7,7 @@
 - 统一情绪列表：从 EMOTION_KEY_MAP 动态生成 UI items，新增 confused(疑惑)/grievance(委屈)/weak(虚弱)
 - 统一开关：ENABLE_EMOTION 为总开关，ENABLE_EMOTION_BRIDGE/ENABLE_EMOTION_AI 为子开关
 - 统一日志：logEmotionFromResults 只保留 item.emotion 读取逻辑
+- **代码格式化**：使用 js-beautify 对 code 字段统一缩进（2空格），生成分离的 `.js` 文件方便调阅
 
 ### v2.94
 - 融合猫剪豆问情绪桥接与AI分析模块（B方案）
@@ -70,6 +71,7 @@
   - 统一手动/桥接/AI三层情绪输出到 segment.emotion
   - 动态生成情绪列表，新增 confused/grievance/weak 三个 key
   - 建立 Git 仓库、历史版本文件夹、AGENTS.md 规范
+  - 使用 js-beautify 格式化 2.95 code 字段，生成独立 `多角色朗读2.95.js` 文件（7198行，方便调阅）
 - **注意事项**：
   - 2.93 原文件已被覆盖（无备份）
   - GitHub Token 曾在命令历史中泄露（需撤销）
