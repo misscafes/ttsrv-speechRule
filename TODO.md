@@ -83,10 +83,11 @@
   - `logEmotionFromResults` 新增 `【运行时情绪】| 序号= | 类型= | 标签= | 情绪= | 文本=` 详细日志
   - 版本号同步：文件名、顶层 name/version、code 内 name 全处更新为 2.93
   - **修复备用模型不调用**：`BackupModelManager` 定义在第 671 行，`DualKeyManager` 内部 `loadKeyFile()` 在第 619 行提前调用，导致 `typeof BackupModelManager === 'undefined'`，备用模型配置未被加载。已将 `BackupModelManager` + `_lastBackupStatus` 移到 `DualKeyManager` IIFE 之前。
-  - **提取备用模型模块**：`模块/backup-model-manager.js`（128行）
+  - **提取备用模型模块**：`模块/backup-model-manager.js`（215行）
     - 包含 `BackupModelManager` 完整 IIFE、`logBackupInitStatus`、`_lastBackupStatus`
-    - 新增 `tryBackupModelRelay(scene, buildRequestFn, parseResponseFn, thisObj)` 通用接力函数
-    - 可独立复用，支持姓名分析/别名校验/别名清洗三种场景的备用模型接力
+    - `tryBackupModelRelay` 使用 2.84 正确的并发接力实现（Java AtomicInteger/CountDownLatch/Thread）
+    - 支持单结果模式和多结果投票模式，主力全部失败后自动触发，成功后立即复位静默
+    - 可独立复用，支持 module.exports 导出
 - **注意事项**：
   - 2.93 原文件已被覆盖（无备份）
   - GitHub Token 曾在命令历史中泄露（需撤销）
