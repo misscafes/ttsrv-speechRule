@@ -4539,7 +4539,7 @@ characterManager.loadRecords();
 
 // -------------------------- SpeechRuleJS核心对象（整合＜＞本地音效） --------------------------
 var SpeechRuleJS = {
-  name: "多角色朗读2.96（修复缓存中断+定位优化+情绪日志+备用模型接力）",
+  name: "多角色朗读2.93（修复缓存中断+定位优化+情绪日志+备用模型接力）",
   id: "mingwuyan",
   author: "命無言、萌新改",
   version: 64,
