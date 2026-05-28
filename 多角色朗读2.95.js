@@ -532,21 +532,14 @@ function analyzeSentimentWithEmotionList(text, context, emotionList) {
   for (var i = 0; i < emotionList.length; i++) {
     var e = emotionList[i];
     var display = (e === "__default__") ? "默认（无情绪）" : (EMOTION_KEY_MAP[e] || e);
-    numberedList += (i + 1) + ". " + display + "
-    ";
+    numberedList += (i + 1) + ". " + display + "\n";
   }
 
-  var prompt = "【角色】你是小说对话情绪分析专家，擅长根据上下文判断人物真实关系与潜台词。
-  " +
-  "【任务】请从以下情绪列表中，选择最贴合当前对话内容的一种情绪。
-  " +
-  "可选情绪列表（只需回复数字序号）：
-  " + numberedList +
-  (context && context.trim() ? "小说上下文片段：" + context + "
-    " : "
-    ") +
-    "当前对话内容：" + text + "
-    " +
+  var prompt = "【角色】你是小说对话情绪分析专家，擅长根据上下文判断人物真实关系与潜台词。\n  " +
+  "【任务】请从以下情绪列表中，选择最贴合当前对话内容的一种情绪。\n  " +
+  "可选情绪列表（只需回复数字序号）：\n  " + numberedList +
+  (context && context.trim() ? "小说上下文片段：" + context + "\n    " : "\n    ") +
+    "当前对话内容：" + text + "\n    " +
     "请只回复一个数字（例如：1），不要回复任何其他内容。";
 
     var apiConfig;

@@ -72,6 +72,7 @@
   - 动态生成情绪列表，新增 confused/grievance/weak 三个 key
   - 建立 Git 仓库、历史版本文件夹、AGENTS.md 规范
   - 使用 js-beautify 格式化 2.95 code 字段，生成独立 `多角色朗读2.95.js` 文件（7198行，方便调阅）
+  - **修复 Rhino 跨行字符串报错**：`analyzeSentimentWithEmotionList` 中 prompt 拼接使用实际换行符，Rhino 报 "字符串文字没有限制"，已改为 `\n` 转义
 - **注意事项**：
   - 2.93 原文件已被覆盖（无备份）
   - GitHub Token 曾在命令历史中泄露（需撤销）
