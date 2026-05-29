@@ -2,7 +2,35 @@
 
 ## 版本变更记录
 
-### v2.93（当前最新版）
+### v3.00【重构版】（开发中）
+- **全新架构**：从单文件 37,000+ 行改为模块化源码 + 构建系统
+- **新增 `src/` 源码目录**：按功能拆分为 6 个模块组（core/roles/local/api/emotion/tts）
+- **新增 `build/build.js` 构建脚本**：`node build/build.js` 一键将 `src/` 模块拼接为 TTS Server 可用的 `.json`
+- **新增 `dist/` 构建产物目录**：存放最终输出的 `.json` 文件
+- **Phase 1 完成**：搭建最小可运行骨架（7 个模块，28,000+ 字符）
+- **Phase 2 完成**：移植核心能力（14 个模块，~255K 字符）
+  - `roles/11-character-manager.js` — 角色记录、缓存读写、姓名分析、别名校验、发音人分配（2948行，移植自 2.94）
+  - `api/30-dual-key-manager.js` — 双密钥轮询 (`DualKeyManager`)
+  - `api/31-concurrent-request.js` — 多线程并发请求 (`concurrentApiRequest`)
+  - `api/32-vote-merge.js` — 姓名/性别/年龄三级投票 + 别名合并
+  - `api/34-backup-model.js` — 备用模型故障切换
+  - `local/20-local-parser.js` — 本地免API解析工具（1167行，移植自 2.97 v109）
+  - `emotion/40-emotion-module.js` — 16种情绪配置 + 提取 + 日志
+- **Phase 3 进行中**：融合优化
+  - **忙等待修复**：全局替换 `while(Date.now()-start<ms){}` 为 `safeSleep(ms)`（基于 `java.lang.Thread.sleep()`），已替换 4 处
+  - **本地解析开关**：`00-config.js` 新增 `ENABLE_LOCAL_NO_API_DIALOG_ATTRIBUTION`（默认 1）和 `ENABLE_LOCAL_EMOTION_CORRECTION`（默认 1）
+  - **handleText 接入本地解析**：`51-speech-rule.js` 对话分支已接入 `__localNoApiResolveFromPrevCue` / `__localNoApiResolveFromActionCueInJreadContext` / `tryJreadAbaShortCommandAttribution`
+  - **handleText 接入 CharacterManager**：本地解析未命中时自动调用 `characterManager.processCharacter()`
+  - **本地情绪修正函数**：`20-local-parser.js` 追加 `normalizeRuleEmotionNameForLocal` / `inferStrongLocalEmotion` / `applyLocalDialogueEmotionCorrection`（移植自 2.97）
+  - **构建验证**：`dist/多角色朗读3.00【重构版】.json` 259,051 字符，14 模块，`node -c` 语法检查通过
+- **待完成**：
+  - 缓存隔离（按 `bookName + chapterIndex` 隔离，替代全局 `dialog_cache.json`）
+  - 情绪模块深度集成（API prompt 中要求返回 emotion，processCharacter 中应用修正）
+  - 发音人池扩展（当前精简版 100/类，目标 2300+）
+  - 旁白引用严谨判断（`__jreadStructuralIsNarrationQuoteContext`）在 handleText 中的调用
+  - 音效关键词匹配（`yinxiao.json` 读取、正则匹配）
+
+### v2.93（上一稳定版）
 - 基于 v2.92 稳定版
 - **借鉴 2.97 调试日志格式**：增加 `ENABLE_EMOTION_DEBUG_LOG` 开关（默认关闭）
 - `logEmotionFromResults` 新增 `【运行时情绪】| 序号= | 类型= | 标签= | 情绪= | 文本=` 详细日志
@@ -72,43 +100,41 @@
 
 ## 会话摘要（每次关闭前更新）
 
-### 2025-05-28 本次会话
-- **当前最新版本**：v2.94（基于 2.93 + 备用模型修复）
+### 2026-05-29 本次会话
+- **当前最新版本**：v3.00【重构版】Phase 3 进行中
 - **主目录结构**：
-  - `多角色朗读2.94...json`（最新版）
-  - `多角色朗读2.93...json`（原始稳定版，保留）
-  - `多角色朗读2.92...json`（原始稳定版，保留）
-  - `ttsrv-plugin-猫剪豆问.json`
-  - `AGENTS.md`（项目规范）
-  - `TODO.md`（本文件）
-  - `js/`（提取的 .js 文件）
-  - `模块/`（独立模块）
-  - `历史版本/`（2.85-2.92 + 2.93原始备份）
-- **仓库状态**：GitHub + cnb.cool 双仓库同步，origin 已配置一键双推
+  - `src/`（模块化源码目录，14 个模块）
+    - `core/` — `00-config.js` / `01-utils.js` / `02-file-io.js` / `03-jread-marker.js`
+    - `roles/` — `10-role-config.js` / `11-character-manager.js`
+    - `local/` — `20-local-parser.js`
+    - `api/` — `30-dual-key-manager.js` / `31-concurrent-request.js` / `32-vote-merge.js` / `34-backup-model.js`
+    - `emotion/` — `40-emotion-module.js`
+    - `tts/` — `50-tags-generator.js` / `51-speech-rule.js`
+    - `main.js` — 构建清单
+  - `build/build.js` — 构建脚本
+  - `dist/多角色朗读3.00【重构版】.json` — Phase 3 构建产物（259,051 字符）
+  - `js/多角色朗读3.00【重构版】.js` — 同步提取的调阅文件
 - **已完成**：
-  - 建立 Git 仓库、历史版本文件夹、AGENTS.md 规范
-  - **回退到 v2.92**：删除 v2.93-2.95 所有情绪桥接相关代码（跨行字符串、JsExtensions 类型不兼容，Rhino 环境无法稳定运行）
-  - 主目录清理：删除 2.95.js、bug.txt、2.95.json 及相关备份
-  - 历史版本清理：删除 2.93、2.94 文件
-  - **建立 `js/` 文件夹**：每次修改 `.json` 后运行 `node extract-js.js` 自动提取 `code` 字段为 `.js` 文件，方便 AI 调阅和人类阅读
-  - 已提取：`js/多角色朗读2.92.js`（6629 行）、`js/ttsrv-plugin-猫剪豆问.js`（2918 行）
-  - **创建 v2.93**：基于 2.92 稳定版，借鉴 2.97 调试日志格式
-  - 增加 `ENABLE_EMOTION_DEBUG_LOG` 开关（默认关闭）
-  - `logEmotionFromResults` 新增 `【运行时情绪】| 序号= | 类型= | 标签= | 情绪= | 文本=` 详细日志
-  - 版本号同步：文件名、顶层 name/version、code 内 name 全处更新为 2.93
-  - **修复备用模型不调用**：`BackupModelManager` 定义在第 671 行，`DualKeyManager` 内部 `loadKeyFile()` 在第 619 行提前调用，导致 `typeof BackupModelManager === 'undefined'`，备用模型配置未被加载。已将 `BackupModelManager` + `_lastBackupStatus` 移到 `DualKeyManager` IIFE 之前。
-  - **统一备用模型故障切换**：删除分散在 `analyzeCharacter`/`checkAliasByApi`/`refineAliasGroupByApi` 三处的接力代码，改用 2.84 风格统一在 `concurrentApiRequest` 内部触发（`successCount <= 0` 时自动启用备用模型并发接力）
-  - **提取备用模型模块**：`模块/backup-model-manager.js`（215行）
-    - 包含 `BackupModelManager` 完整 IIFE、`logBackupInitStatus`、`_lastBackupStatus`
-    - `tryBackupModelRelay` 使用 2.84 正确的并发接力实现（Java AtomicInteger/CountDownLatch/Thread）
-    - 支持单结果模式和多结果投票模式，主力全部失败后自动触发，成功后立即复位静默
-    - 可独立复用，支持 module.exports 导出
+  - 忙等待修复：全局替换 `while(Date.now()-start<ms){}` → `safeSleep(ms)`（4 处）
+  - `ENABLE_LOCAL_NO_API_DIALOG_ATTRIBUTION` / `ENABLE_LOCAL_EMOTION_CORRECTION` 开关添加到 `00-config.js`
+  - `51-speech-rule.js` handleText 接入本地免 API 解析（3 个优先级分支）和 `CharacterManager.processCharacter()`
+  - `20-local-parser.js` 追加本地轻量情绪修正函数（`normalizeRuleEmotionNameForLocal` / `inferStrongLocalEmotion` / `applyLocalDialogueEmotionCorrection`）
+  - 构建验证通过，语法检查通过
 - **注意事项**：
-  - 2.93 原文件已被覆盖（无备份）
-  - GitHub Token 曾在命令历史中泄露（需撤销）
+  - 缓存隔离、情绪模块深度集成、发音人池扩展、旁白引用严谨判断、音效匹配等仍在待办
+  - v3.00 与 v2.94 并行存在，互不覆盖
 
 ## 当前任务
-- [ ] 
+- [x] Phase 1：搭建模块化骨架（完成）
+- [x] Phase 2：移植核心能力（完成）
+- [x] Phase 3 子任务：忙等待修复（完成）
+- [x] Phase 3 子任务：handleText 接入本地解析 + CharacterManager（完成）
+- [x] Phase 3 子任务：本地情绪修正函数移植（完成）
+- [ ] Phase 3 子任务：缓存隔离改造（按 bookName + chapterIndex）
+- [ ] Phase 3 子任务：情绪模块深度集成（API prompt 返回 emotion）
+- [ ] Phase 3 子任务：旁白引用严谨判断在 handleText 中调用
+- [ ] Phase 3 子任务：音效关键词匹配
 
 ## 长期规划
-- [ ] 
+- [ ] 完成 v3.00 重构并替代 v2.94 成为主版本
+- [ ] 将别名图谱/远程上传等高级功能以独立开关形式接入 v3.00
