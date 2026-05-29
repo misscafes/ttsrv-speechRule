@@ -1,4 +1,10 @@
 
+function padZero(num, length) {
+  num = num.toString();
+  while (num.length < length) num = '0' + num;
+  return num;
+}
+
 // ===================== 角色配置（集中管理，视觉工整）=====================
 // 1. 主角配置：[显示前缀, 性别, 年龄, 发音人前缀, 数量]
 var MAIN_ROLES_CONFIG = [

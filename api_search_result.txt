@@ -1,0 +1,80 @@
+=== httpPost ===
+Line 450:         var response = ttsrv.httpPost(
+Line 1429:       try { ttsrv.httpPost(GRAPH_REMOTE_ENDPOINT, JSON.stringify(payload), headers); } catch (postErr) {}
+Line 1824:     var response = ttsrv.httpPost(apiConfig.endpoint, JSON.stringify(requestData), headers);
+
+=== 姓名分析 / nameAnalyze ===
+Line 230:       nameAnalyze: { list: [], index: 0, indexFile: "nameKeyIndex.txt" }, // 姓名性别年龄分析
+Line 318:               // 有##：前面=姓名分析密钥，后面=别名分析密钥
+Line 328:           pools.nameAnalyze.list = parseSingleGroup(nameContent);
+Line 332:           pools.nameAnalyze.list = fillApiListToMinCount(pools.nameAnalyze.list, MIN_CONCURRENT_COUNT);
+Line 336:           loadIndex("nameAnalyze");
+Line 339:           ["nameAnalyze", "aliasAnalyze"].forEach(function(scene) {
+Line 348:           pools.nameAnalyze.list = [];
+Line 379:   // 公开：【姓名分析场景调用】获取下一个密钥，保留原方法，兼容旧逻辑
+Line 381:       var list = getAvailableApiList("nameAnalyze", 1);
+Line 472:           console.log("【" + (scene === "nameAnalyze" ? "🔴🔴🔴✅ 姓名分析" : "🔵🔵🔵✅ 别名校验") + "成功！】 单结果模式，立即使用，模型：" + apiConfig.model + "，密钥末尾4位：" + apiConfig.key.slice(-4));
+Line 478:           console.log("【" + (scene === "nameAnalyze" ? "🔴🔴🔴 姓名分析" : "🔵🔵🔵 别名校验") + "成功" + currentSuccessNum + "/" + targetSuccessCount + "个】 模型：" + apiConfig.model + "，密钥末尾4位：" + apiConfig.key.slice(-4));
+Line 541: // ===================== 最终完整版：姓名分析结果投票函数（日志开关+对话原文打印+格式优化）=====================
+Line 828:   console.log("【🔴🔴🔴✅ 姓名分析投票完成】 处理了" + sortedSeqList.length + "个对话，基于" + successResults.length + "个API结果");
+Line 2965:       "nameAnalyze",
+Line 3081:   // 同步延时函数（和姓名分析逻辑对齐）
+
+=== 别名校验 / aliasAnalyze ===
+Line 47: // 别名校验分析API：单独超时时间（不修改则默认使用全局超时）
+Line 231:       aliasAnalyze: { list: [], index: 0, indexFile: "aliasKeyIndex.txt" }  // 别名校验分析
+Line 329:           pools.aliasAnalyze.list = parseSingleGroup(aliasContent);
+Line 333:           pools.aliasAnalyze.list = fillApiListToMinCount(pools.aliasAnalyze.list, MIN_CONCURRENT_COUNT);
+Line 337:           loadIndex("aliasAnalyze");
+Line 339:           ["nameAnalyze", "aliasAnalyze"].forEach(function(scene) {
+Line 349:           pools.aliasAnalyze.list = [];
+Line 386:       var list = getAvailableApiList("aliasAnalyze", 1);
+Line 472:           console.log("【" + (scene === "nameAnalyze" ? "🔴🔴🔴✅ 姓名分析" : "🔵🔵🔵✅ 别名校验") + "成功！】 单结果模式，立即使用，模型：" + apiConfig.model + "，密钥末尾4位：" + apiConfig.key.slice(-4));
+Line 478:           console.log("【" + (scene === "nameAnalyze" ? "🔴🔴🔴 姓名分析" : "🔵🔵🔵 别名校验") + "成功" + currentSuccessNum + "/" + targetSuccessCount + "个】 模型：" + apiConfig.model + "，密钥末尾4位：" + apiConfig.key.slice(-4));
+Line 901:  //   console.log("【🔵🔵🔵✅ 别名校验投票完成】 无有效别名结果，使用最晚返回的结果");
+Line 960:   console.log("【🔵🔵🔵✅ 别名校验投票完成】 选中主名：" + selectedMainName + "，基于" + successResults.length + "个API结果");
+Line 1272:     "alias_check_start": "别名校验开始",
+Line 1274:     "alias_check_result": "别名校验结果",
+Line 1802:     var apiList = DualKeyManager.getAvailableApiList("aliasAnalyze", 1);
+Line 1803:     if (!apiList || apiList.length === 0) throw new Error("无可用别名校验API");
+Line 3041: //  //console.log("【API别名校验】仅提取前" + MAX_ALIAS_CHECK_CHARACTERS + "个同性角色（目标性别：" + (targetGender || "无") + "），实际有效：" + apiLimitedRecords.length + "个");
+Line 3103:   graphRemoteSetChapter(graphBuildChapterKey(chapterFullContent || this.contextHistory2 || ""), "别名校验");
+Line 3263:       "aliasAnalyze",
+Line 3285:     console.error("【别名校验】所有重试均失败，默认判定为非别名");
+... (truncated)
+
+=== miyue.txt ===
+Line 227:   var keyFileName = "miyue.txt"; // 密钥文件路径，和原逻辑一致
+
+=== 并发 / concurrent ===
+Line 28: var bingfa = 1;//默认3并发数
+Line 233:   // 【新增：并发最小数量配置，可直接修改】
+Line 252:   // 【新增：核心辅助函数 - 自动填充API列表到最小并发数】
+Line 393:       getAvailableApiList: getAvailableApiList // 新增：给并发工具调用
+Line 400: // ===================== 修复后：通用并发API请求工具（彻底解决提前唤醒问题，严格等待指定数量结果）=====================
+Line 401: function concurrentApiRequest(scene, requestBuilder, responseParser, maxConcurrent, timeout) {
+Line 402:   // 移除5的上限限制，仅保留最小1并发的合法性校验
+Line 417:   var successCount = new java.util.concurrent.atomic.AtomicInteger(0); // 已成功的请求数
+Line 418:   var finishedRequestCount = new java.util.concurrent.atomic.AtomicInteger(0); // 已完成的请求总数（成功+失败）
+Line 421:   // 需要等待的成功结果数量（不超过实际并发数）
+Line 424:   var countDownLatch = new java.util.concurrent.CountDownLatch(1);
+Line 426:   var hasWakedUp = new java.util.concurrent.atomic.AtomicBoolean(false);
+Line 428:   // ===================== 核心：按规则获取本次并发的API列表 =====================
+Line 430:   var concurrentCount = apiList.length;
+Line 432:   if (concurrentCount === 0) {
+Line 433:     console.error("【并发" + scene + "】无可用API密钥，终止并发");
+Line 436:   console.log("【并发" + scene + "】启动，目标等待成功数：" + targetSuccessCount + "，并发总数：" + concurrentCount);
+Line 481:             console.log("【并发" + scene + "】已达到目标成功数" + targetSuccessCount + "个，停止等待，开始处理结果");
+Line 489:         console.error("【并发" + scene + "】请求失败：" + errorMsg);
+Line 494:         if (needWaitMultiResult && finishedNum >= concurrentCount && hasWakedUp.compareAndSet(false, true)) {
+Line 495:           console.log("【并发" + scene + "】所有" + concurrentCount + "个请求已完成，共收集到" + successCount.get() + "个有效结果，开始处理");
+Line 502:   // 为每个API创建独立并发线程
+Line 515:     var waitSuccess = countDownLatch.await(timeout, java.util.concurrent.TimeUnit.MILLISECONDS);
+Line 517:       errors.push("并发请求超时（" + timeout/1000 + "秒），已收集到" + successCount.get() + "个有效结果");
+Line 518:       console.error("【并发" + scene + "】请求超时，已收集" + successCount.get() + "个结果，开始处理");
+Line 522:     console.error("【并发" + scene + "】主线程等待异常：" + e.message);
+Line 2961:   // ========== 核心修改：并发请求循环，传入对话映射到投票函数 ==========
+Line 2964:     var concurrentResult = concurrentApiRequest(
+Line 2971:     if (concurrentResult.success) {
+Line 2973:       if (concurrentResult.isMultiResult) {
+... (truncated)

@@ -1,0 +1,91 @@
+  890        var countKey = originalMainName;
+  891        if (enableMerge && nameToMainNameMap.hasOwnProperty(originalMainName)) {
+  892          countKey = nameToMainNameMap[originalMainName];
+  893        }
+  894        mainNameCountMap[countKey] = (mainNameCountMap[countKey] || 0) + 1;
+  895      }
+  896    }
+  897  
+  898    // 3. 无有效别名结果兜底
+  899    var hasValidAlias = Object.keys(mainNameCountMap).length > 0;
+  900    if (!hasValidAlias) {
+  901   //   console.log("【🔵🔵🔵✅ 别名校验投票完成】 无有效别名结果，使用最晚返回的结果");
+  902      return sortedByTime[0].data;
+  903    }
+  904  
+  905    // 4. 找出出现次数最多的主名
+  906    var maxCount = 0;
+  907    var topMainNames = [];
+  908    for (var mainName in mainNameCountMap) {
+  909      if (mainNameCountMap.hasOwnProperty(mainName)) {
+  910        if (mainNameCountMap[mainName] > maxCount) {
+  911          maxCount = mainNameCountMap[mainName];
+  912          topMainNames = [mainName];
+  913        } else if (mainNameCountMap[mainName] === maxCount) {
+  914          topMainNames.push(mainName);
+  915        }
+  916      }
+  917    }
+  918  
+  919    // 5. 平票选最晚返回的主名
+  920    var selectedMainName = topMainNames[0];
+  921    if (topMainNames.length > 1) {
+  922      for (var i = 0; i < sortedByTime.length; i++) {
+  923        var currentResult = sortedByTime[i].data;
+  924        if (!currentResult.isAlias || !currentResult.mainName) continue;
+  925        
+  926        var currentMainName = currentResult.mainName;
+  927        if (enableMerge && nameToMainNameMap.hasOwnProperty(currentMainName)) {
+  928          currentMainName = nameToMainNameMap[currentMainName];
+  929        }
+  930  
+  931        if (topMainNames.indexOf(currentMainName) !== -1) {
+  932          selectedMainName = currentMainName;
+  933          break;
+  934        }
+  935      }
+  936    }
+  937  
+  938    // 6. 找到选中主名对应的完整结果
+  939    var finalResult = null;
+  940    for (var i = 0; i < sortedByTime.length; i++) {
+  941      var currentResult = sortedByTime[i].data;
+  942      if (!currentResult.isAlias || !currentResult.mainName) continue;
+  943  
+  944      var currentMainName = currentResult.mainName;
+  945      if (enableMerge && nameToMainNameMap.hasOwnProperty(currentMainName)) {
+  946        currentMainName = nameToMainNameMap[currentMainName];
+  947      }
+  948  
+  949      if (currentMainName === selectedMainName) {
+  950        finalResult = currentResult;
+  951        break;
+  952      }
+  953    }
+  954  
+  955    // 兜底逻辑
+  956    if (!finalResult) {
+  957      finalResult = sortedByTime[0].data;
+  958    }
+  959  
+  960    console.log("【🔵🔵🔵✅ 别名校验投票完成】 选中主名：" + selectedMainName + "，基于" + successResults.length + "个API结果");
+  961    return finalResult;
+  962  }
+  963  
+  964  // ===================== 新增：别名清洗结果投票函数（主名+别名清洗专用）=====================
+  965  function voteAliasRefineResult(successResults) {
+  966    if (!successResults || !Array.isArray(successResults) || successResults.length === 0) {
+  967      return null;
+  968    }
+  969  
+  970    // 按返回时间从晚到早排序，平票时优先最晚返回
+  971    var sortedByTime = successResults.sort(function(a, b) {
+  972      return b.timestamp - a.timestamp;
+  973    });
+  974  
+  975    // 仅保留结构合法的结果
+  976    var validResults = [];
+  977    for (var i = 0; i < sortedByTime.length; i++) {
+  978      var item = sortedByTime[i];
+  979      if (!item || !item.data) continue;
+  980  

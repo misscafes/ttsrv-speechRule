@@ -1,0 +1,41 @@
+ 3255      if (typeof apiResult.isAlias !== "boolean") throw new Error("返回格式错误：\"isAlias\"必须是布尔值");
+ 3256      return apiResult;
+ 3257    }
+ 3258  
+ 3259    // ========== 核心修改：并发请求循环，适配多结果投票逻辑 ==========
+ 3260    while (currentRound < maxRetryRound && !finalResult) {
+ 3261      currentRound++;
+ 3262      var concurrentResult = concurrentApiRequest(
+ 3263        "aliasAnalyze",
+ 3264        buildAliasAnalyzeRequest,
+ 3265        parseAliasAnalyzeResponse,
+ 3266        null,
+ 3267        requestTimeout
+ 3268      );
+ 3269      if (concurrentResult.success) {
+ 3270        // 分支处理：单结果模式直接用，多结果模式走投票
+ 3271        if (concurrentResult.isMultiResult) {
+ 3272          finalResult = voteAliasAnalyzeResult(concurrentResult.data);
+ 3273        } else {
+ 3274          finalResult = concurrentResult.data;
+ 3275        }
+ 3276      } else {
+ 3277        if (currentRound < maxRetryRound) {
+ 3278          sleep(250);
+ 3279        }
+ 3280      }
+ 3281    }
+ 3282  
+ 3283    // 原有兜底逻辑完全保留
+ 3284    if (!finalResult) {
+ 3285      console.error("【别名校验】所有重试均失败，默认判定为非别名");
+ 3286      return { isAlias: false, mainName: null, reason: "API调用/解析异常，默认判定为非别名" };
+ 3287    }
+ 3288    // 原有宽松模式修正逻辑完全保留
+ 3289    if (mode === 2 && !finalResult.isAlias && finalResult.confidence && finalResult.confidence >= 80) {
+ 3290      finalResult.isAlias = true;
+ 3291      if (!finalResult.mainName && finalResult.reason) {
+ 3292        var mainNameMatch = finalResult.reason.match(/主名[：:]?\s*["']?([^"'\s,，]+)/);
+ 3293        if (mainNameMatch) {
+ 3294          finalResult.mainName = mainNameMatch[1];
+ 3295        }

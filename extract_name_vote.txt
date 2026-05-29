@@ -1,0 +1,91 @@
+  530        data: needWaitMultiResult ? successResults : successResults[0].data,
+  531        isMultiResult: needWaitMultiResult,
+  532        errors: errors
+  533      };
+  534    } else {
+  535      return { success: false, data: null, errors: errors };
+  536    }
+  537  }
+  538  
+  539  
+  540  
+  541  // ===================== 最终完整版：姓名分析结果投票函数（日志开关+对话原文打印+格式优化）=====================
+  542  function normalizeModelRelationList(apiResult) {
+  543    var rels = apiResult && (apiResult.__relations || apiResult.relations || apiResult._relations);
+  544    if (!rels || !Array.isArray(rels)) return [];
+  545    var out = [];
+  546    for (var i = 0; i < rels.length; i++) {
+  547      var r = rels[i] || {};
+  548      var a = graphNormalizeName(r.a || r.nameA || r.from || r.left);
+  549      var b = graphNormalizeName(r.b || r.nameB || r.to || r.right);
+  550      var type = graphSafeString(r.type || r.relation || "", 40);
+  551      if (graphIsInvalidName(a) || graphIsInvalidName(b) || a === b || !type) continue;
+  552      out.push({
+  553        a: a,
+  554        b: b,
+  555        type: type,
+  556        evidence: graphSafeString(r.evidence || r.reason || r.text || "", 180),
+  557        seq: graphSafeString(r.seq || r.sequence || "", 20),
+  558        confidence: Number(r.confidence || r.score || 0)
+  559      });
+  560    }
+  561    return out;
+  562  }
+  563  
+  564  function voteModelRelations(successResults) {
+  565    var bucket = {};
+  566    var out = [];
+  567    for (var i = 0; i < successResults.length; i++) {
+  568      var rels = normalizeModelRelationList(successResults[i].data);
+  569      for (var j = 0; j < rels.length; j++) {
+  570        var r = rels[j];
+  571        var pair = graphPairKey(r.a, r.b);
+  572        var key = pair + "||" + String(r.type).toLowerCase();
+  573        if (!bucket[key]) bucket[key] = { a: r.a, b: r.b, type: r.type, evidence: [], votes: 0, maxConfidence: 0, seq: r.seq || "" };
+  574        bucket[key].votes++;
+  575        if (r.evidence && bucket[key].evidence.length < 3) bucket[key].evidence.push(r.evidence);
+  576        if (r.confidence > bucket[key].maxConfidence) bucket[key].maxConfidence = r.confidence;
+  577      }
+  578    }
+  579    for (var k in bucket) {
+  580      if (!bucket.hasOwnProperty(k)) continue;
+  581      var item = bucket[k];
+  582      if (item.votes >= MODEL_RELATION_MIN_VOTES || item.maxConfidence >= 80) {
+  583        out.push({ a: item.a, b: item.b, type: item.type, evidence: item.evidence.join(" | "), seq: item.seq, confidence: item.maxConfidence, votes: item.votes });
+  584      }
+  585    }
+  586    return out;
+  587  }
+  588  function voteNameAnalyzeResult(successResults, dialogTextMap) {
+  589    // 入参兜底，避免不传参数报错
+  590    if (!successResults || !Array.isArray(successResults) || successResults.length === 0) {
+  591      return null;
+  592    }
+  593    // 对话文本映射兜底，非对象/未传则用空对象
+  594    dialogTextMap = (typeof dialogTextMap === 'object' && dialogTextMap !== null) ? dialogTextMap : {};
+  595  
+  596    // 共用顶部开关，0=关闭合并，1=开启合并
+  597    var enableMerge = ENABLE_ALIAS_VOTE_MERGE === 1;
+  598    var nameToMainNameMap = {};
+  599  
+  600    // ========== 优化核心：直接读内存映射表，无重复遍历 ==========
+  601    if (enableMerge) {
+  602      // 优先复用内存里已经生成好的别名映射表（checkAliasByApi时已生成，实时更新）
+  603      if (typeof characterManager !== 'undefined' && characterManager.nameToMainNameMap) {
+  604        nameToMainNameMap = characterManager.nameToMainNameMap;
+  605      } 
+  606      // 极端兜底：映射表不存在时，仅遍历一次内存变量生成，绝不读本地文件
+  607      else if (typeof characterManager !== 'undefined' && Array.isArray(characterManager.characterRecords)) {
+  608        var records = characterManager.characterRecords;
+  609        for (var i = 0; i < records.length; i++) {
+  610          var record = records[i];
+  611          if (!record || !record.name) continue;
+  612          var mainName = record.name.trim();
+  613          // 主名映射自身
+  614          nameToMainNameMap[mainName] = mainName;
+  615          // 别名映射到主名
+  616          if (record.aliases && record.aliases.trim()) {
+  617            var aliasList = record.aliases.split("|")
+  618              .map(function(alias) { return alias.trim(); })
+  619              .filter(function(alias) { return alias && alias !== mainName; });
+  620            for (var j = 0; j < aliasList.length; j++) {

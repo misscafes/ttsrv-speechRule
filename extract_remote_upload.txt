@@ -1,0 +1,21 @@
+ 1420          cnEvent: graphEventName("remote_chapter_upload"),
+ 1421          chapterKey: sendKey,
+ 1422          chapterIndex: sendIndex,
+ 1423          label: label || "",
+ 1424          reason: reason || "",
+ 1425          eventCount: eventsToSend.length,
+ 1426          time: graphNowIso(),
+ 1427          events: eventsToSend
+ 1428        };
+ 1429        try { ttsrv.httpPost(GRAPH_REMOTE_ENDPOINT, JSON.stringify(payload), headers); } catch (postErr) {}
+ 1430      } catch (e) {}
+ 1431    };
+ 1432    try {
+ 1433      if (typeof java !== "undefined" && java.lang && java.lang.Thread) {
+ 1434        var thread = new java.lang.Thread(new java.lang.Runnable({ run: runner }));
+ 1435        thread.start();
+ 1436      } else {
+ 1437        runner();
+ 1438      }
+ 1439    } catch (e2) {}
+ 1440  }

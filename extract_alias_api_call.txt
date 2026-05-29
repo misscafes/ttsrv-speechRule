@@ -1,0 +1,61 @@
+ 1790  };
+ 1791  
+ 1792  CharacterManager.prototype.buildGraphConflictVerifyPrompt = function(payload) {
+ 1793    return "你是小说人物正反图谱冲突校验器。请只根据输入的图谱、共现统计、当前证据和上下文判断两个人名是否同一具体人物。\n" +
+ 1794      "判定原则：别名、化名、本名、名字、自称、以某名出现、上下文交替称呼通常支持same_person；两人直接对话、并列出现、互相称呼、主仆/朋友/敌对等关系通常支持different_person；证据不足返回uncertain。\n" +
+ 1795      "如果图谱里已有一边明显由误写、串名、闭合扩散造成，请指出应保留哪一边。\n" +
+ 1796      "必须只输出JSON：{\"relation\":\"same_person|different_person|uncertain\",\"confidence\":0-100,\"wrongSide\":\"positive|negative|none\",\"reason\":\"简短中文原因\"}\n" +
+ 1797      "输入：\n" + JSON.stringify(payload, null, 2);
+ 1798  };
+ 1799  
+ 1800  CharacterManager.prototype.callGraphConflictVerifier = function(prompt) {
+ 1801    try {
+ 1802      var apiList = DualKeyManager.getAvailableApiList("aliasAnalyze", 1);
+ 1803      if (!apiList || apiList.length === 0) throw new Error("无可用别名校验API");
+ 1804      var apiConfig = apiList[0];
+ 1805      var requestTimeout = parseInt(GRAPH_CONFLICT_VERIFY_TIMEOUT, 10) || ALIAS_ANALYZE_TIMEOUT || 45000;
+ 1806      var requestData = {
+ 1807        model: apiConfig.model,
+ 1808        messages: [
+ 1809          { role: "system", content: "严格遵守格式要求，仅输出JSON，格式错误则任务失败" },
+ 1810          { role: "user", content: prompt }
+ 1811        ],
+ 1812        temperature: 0.1,
+ 1813        thinking: { type: "disabled" },
+ 1814        disable_think: true,
+ 1815        no_chain_of_thought: true,
+ 1816        do_sample: false
+ 1817      };
+ 1818      var headers = {
+ 1819        "Content-Type": "application/json",
+ 1820        "Authorization": "Bearer " + apiConfig.key,
+ 1821        "Connection": "keep-alive",
+ 1822        "Timeout": String(requestTimeout)
+ 1823      };
+ 1824      var response = ttsrv.httpPost(apiConfig.endpoint, JSON.stringify(requestData), headers);
+ 1825      var body = String(response.body().string() || "{}");
+ 1826      var outer = JSON.parse(body);
+ 1827      if (!outer.choices || !outer.choices[0] || !outer.choices[0].message) throw new Error("缺少choices[0].message");
+ 1828      var content = String(outer.choices[0].message.content || "").trim();
+ 1829      var parsed = graphParseJsonObject(content);
+ 1830      if (!parsed) throw new Error("校验JSON解析失败");
+ 1831      return {
+ 1832        relation: graphNormalizeVerifiedRelation(parsed.relation || parsed.result || parsed.type),
+ 1833        confidence: Number(parsed.confidence || parsed.score || 0),
+ 1834        wrongSide: graphSafeString(parsed.wrongSide || parsed.wrong || parsed.errorSide || "", 20),
+ 1835        reason: graphSafeString(parsed.reason || parsed.evidence || "", 300),
+ 1836        raw: graphSafeString(content, 500)
+ 1837      };
+ 1838    } catch (e) {
+ 1839      return { relation: "failed", confidence: 0, wrongSide: "", reason: graphSafeString(e && e.message ? e.message : e, 260), raw: "" };
+ 1840    }
+ 1841  };
+ 1842  
+ 1843  CharacterManager.prototype.verifyGraphConflictAndFix = function(kind, a, b, score, reason, extra, stage, options) {
+ 1844    if (!ENABLE_ALIAS_GRAPH || !ENABLE_GRAPH_CONFLICT_MODEL_VERIFY) return { allow: true, verified: false };
+ 1845    options = options || {};
+ 1846    var defaultAllow = options.defaultAllow !== false;
+ 1847    kind = kind === "negative" ? "negative" : "positive";
+ 1848    a = graphNormalizeName(a);
+ 1849    b = graphNormalizeName(b);
+ 1850    if (graphIsInvalidName(a) || graphIsInvalidName(b) || a === b) return { allow: defaultAllow, verified: false };

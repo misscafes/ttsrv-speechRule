@@ -1,0 +1,41 @@
+ 2955        hasSeqResult = true;
+ 2956      }
+ 2957      if (!hasSeqResult) throw new Error("返回格式错误：没有任何有效序号结果");
+ 2958      return parsedResult;
+ 2959    }
+ 2960  
+ 2961    // ========== 核心修改：并发请求循环，传入对话映射到投票函数 ==========
+ 2962    while (currentRound < maxRetryRound && !batchResult) {
+ 2963      currentRound++;
+ 2964      var concurrentResult = concurrentApiRequest(
+ 2965        "nameAnalyze",
+ 2966        buildNameAnalyzeRequest.bind(this),
+ 2967        parseNameAnalyzeResponse,
+ 2968        null,
+ 2969        requestTimeout
+ 2970      );
+ 2971      if (concurrentResult.success) {
+ 2972        // 分支处理：单结果模式直接用，多结果模式走投票，传入dialogTextMap对话映射
+ 2973        if (concurrentResult.isMultiResult) {
+ 2974          batchResult = voteNameAnalyzeResult(concurrentResult.data, dialogTextMap);
+ 2975        } else {
+ 2976          batchResult = concurrentResult.data;
+ 2977        }
+ 2978      } else {
+ 2979        if (currentRound < maxRetryRound) {
+ 2980          sleep(250);
+ 2981        }
+ 2982      }
+ 2983    }
+ 2984  
+ 2985    // 原有降级逻辑完全保留
+ 2986    if (!batchResult) {
+ 2987      console.error("【批量分析】所有重试均失败，走降级兜底逻辑");
+ 2988      return this.analyzeCharacterFallback(fullText, characterId);
+ 2989    }
+ 2990    // ========== 原有后续逻辑完全保留，零改动 ==========
+ 2991    var seqReg = /【(\d{2})】[\s\S]*?(["“])([\s\S]*?)(["”])/g;
+ 2992    var match;
+ 2993    var dialogList = [];
+ 2994    while ((match = seqReg.exec(fullBatchContent)) !== null) {
+ 2995      var seq = match[1];

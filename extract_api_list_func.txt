@@ -1,0 +1,41 @@
+  360        var totalAvailable = sceneConfig.list.length;
+  361        // 无可用密钥，返回空数组，后续走兜底
+  362        if (totalAvailable === 0) return [];
+  363        // 未指定数量，返回全部可用
+  364        if (!needCount || needCount <= 0) needCount = totalAvailable;
+  365        // 需求数量超过总可用，返回全部
+  366        if (needCount > totalAvailable) needCount = totalAvailable;
+  367        var result = [];
+  368        var currentIndex = sceneConfig.index;
+  369        // 按轮换规则取密钥，循环取数
+  370        for (var i = 0; i < needCount; i++) {
+  371            var targetIndex = (currentIndex + i) % totalAvailable;
+  372            result.push(sceneConfig.list[targetIndex]);
+  373        }
+  374        // 更新索引，下次从当前结束的位置继续，实现轮询不重复
+  375        sceneConfig.index = (currentIndex + needCount) % totalAvailable;
+  376        saveIndex(scene);
+  377        return result;
+  378    }
+  379    // 公开：【姓名分析场景调用】获取下一个密钥，保留原方法，兼容旧逻辑
+  380    function getNextNameAnalyzeKey() {
+  381        var list = getAvailableApiList("nameAnalyze", 1);
+  382        return list.length > 0 ? list[0] : defaultConfig;
+  383    }
+  384    // 公开：【别名分析场景调用】获取下一个密钥，保留原方法，兼容旧逻辑
+  385    function getNextAliasAnalyzeKey() {
+  386        var list = getAvailableApiList("aliasAnalyze", 1);
+  387        return list.length > 0 ? list[0] : defaultConfig;
+  388    }
+  389    // 暴露方法
+  390    return {
+  391        getNextNameAnalyzeKey: getNextNameAnalyzeKey,
+  392        getNextAliasAnalyzeKey: getNextAliasAnalyzeKey,
+  393        getAvailableApiList: getAvailableApiList // 新增：给并发工具调用
+  394    };
+  395  })();
+  396  
+  397  
+  398  
+  399  
+  400  // ===================== 修复后：通用并发API请求工具（彻底解决提前唤醒问题，严格等待指定数量结果）=====================

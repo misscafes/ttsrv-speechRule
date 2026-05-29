@@ -1,0 +1,76 @@
+ 3035        // 仅保留与目标性别相同的角色（去空格避免匹配误差）
+ 3036        return record.gender.trim() === targetGender.trim();
+ 3037    });
+ 3038  
+ 3039    // 截取过滤后的前50个角色（确保不超过限制）
+ 3040    var apiLimitedRecords = filteredRecords.slice(0, MAX_ALIAS_CHECK_CHARACTERS);
+ 3041  //  //console.log("【API别名校验】仅提取前" + MAX_ALIAS_CHECK_CHARACTERS + "个同性角色（目标性别：" + (targetGender || "无") + "），实际有效：" + apiLimitedRecords.length + "个");
+ 3042  
+ 3043    // 遍历“过滤后+截取后”的角色记录，提取主名和别名
+ 3044    for (var i = 0; i < apiLimitedRecords.length; i++) {
+ 3045        var record = apiLimitedRecords[i];
+ 3046        if (!record) continue;
+ 3047        var mainName = record.name.trim();
+ 3048        if (!mainName) continue;
+ 3049  
+ 3050        // 1. 添加主名（去重）
+ 3051        allNamesSet.add(mainName);
+ 3052        nameMap[mainName] = mainName;
+ 3053  
+ 3054        // 2. 添加别名（去重，且不与主名重复）
+ 3055        if (record.aliases && record.aliases.trim()) {
+ 3056            var aliasList = record.aliases.split("|")
+ 3057                .map(alias => alias.trim())
+ 3058                .filter(alias => alias && alias !== mainName); // 排除与主名相同的别名
+ 3059            for (var j = 0; j < aliasList.length; j++) {
+ 3060                var alias = aliasList[j];
+ 3061                allNamesSet.add(alias);
+ 3062                nameMap[alias] = mainName; // 别名关联到主名
+ 3063            }
+ 3064        }
+ 3065    }
+ 3066  
+ 3067    // 3. 转换为API要求的格式：[{name:"XXX"},{name:"XXX"}]（无重复，符合JSON规范）
+ 3068    var nameListForApi = Array.from(allNamesSet).map(name => ({ name: name }));
+ 3069    // 4. 保留原映射关系（用于后续别名匹配逻辑，不传给API）
+ 3070    this.nameToMainNameMap = nameMap;
+ 3071  
+ 3072    //console.log("【传给API的角色列表】共" + nameListForApi.length + "个（主名+别名），列表预览：" + JSON.stringify(nameListForApi.slice(0, 5)) + "...");
+ 3073    return nameListForApi;
+ 3074  };
+ 3075  
+ 3076  
+ 3077  CharacterManager.prototype.checkAliasByApi = function(newName, chapterFullContent, newCharacterGender, currentDialogueText, mode) {
+ 3078    // mode参数：1=严谨模式(100%)，2=宽松模式(80%)，默认使用全局bieming变量
+ 3079    mode = mode || bieming || 2;
+ 3080    
+ 3081    // 同步延时函数（和姓名分析逻辑对齐）
+ 3082    function sleep(ms) {
+ 3083      var start = Date.now();
+ 3084      while (Date.now() - start < ms) {}
+ 3085    }
+ 3086    // ========== 原有基础参数校验完全保留 ==========
+ 3087    chapterFullContent = chapterFullContent || "";
+ 3088    newName = newName || "";
+ 3089    
+ 3090    if (!newName || newName.trim() === "" || !chapterFullContent || chapterFullContent.trim() === "") {
+ 3091      return null;
+ 3092    }
+ 3093    // 原有本地角色列表获取逻辑完全保留
+ 3094    var nameListForApi = this.getAllCharacterNamesAndAliases(newCharacterGender);
+ 3095    if (nameListForApi.length === 0) {
+ 3096      return null;
+ 3097    }  if (this.updateAliasGraphsFromCache) {
+ 3098      try {
+ 3099        var graphCache = readDialogCache();
+ 3100        this.updateAliasGraphsFromCache(graphCache.dialogList || [], chapterFullContent || "", graphCache.relationEvidence || []);
+ 3101      } catch (graphCacheErr) {}
+ 3102    }
+ 3103    graphRemoteSetChapter(graphBuildChapterKey(chapterFullContent || this.contextHistory2 || ""), "别名校验");
+ 3104    var graphEvidenceHint = this.buildAliasEvidenceHint ? this.buildAliasEvidenceHint(newName, chapterFullContent, currentDialogueText, newCharacterGender, "") : "";
+ 3105    graphRemoteLog("alias_check_start", { newName: newName.trim(), mode: mode, localRoleCount: nameListForApi.length, hasGraphHint: !!graphEvidenceHint });
+ 3106    aliasShortLog("校验 " + newName.trim());
+ 3107    
+ 3108    // 根据mode选择不同的prompt（完全保留原有prompt）
+ 3109    var prompt;
+ 3110    if (mode === 1) {

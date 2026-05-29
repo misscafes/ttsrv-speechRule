@@ -1,0 +1,141 @@
+  220  var DualKeyManager = (function() {
+  221    // 兜底默认配置，和原代码完全对齐
+  222    var defaultConfig = {
+  223        endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+  224        model: "glm-4.6v-flash",
+  225        key: 'b26b869ffd7e4a1dac61666db27de213.ayAJYkmqeA1w3OL'
+  226    };
+  227    var keyFileName = "miyue.txt"; // 密钥文件路径，和原逻辑一致
+  228    // 两个场景独立的配置
+  229    var pools = {
+  230        nameAnalyze: { list: [], index: 0, indexFile: "nameKeyIndex.txt" }, // 姓名性别年龄分析
+  231        aliasAnalyze: { list: [], index: 0, indexFile: "aliasKeyIndex.txt" }  // 别名校验分析
+  232    };
+  233    // 【新增：并发最小数量配置，可直接修改】
+  234    var MIN_CONCURRENT_COUNT = 3;
+  235  
+  236    // 私有：加载单场景的轮换索引
+  237    function loadIndex(scene) {
+  238        try {
+  239            var idx = parseInt(ttsrv.readTxtFile(pools[scene].indexFile), 10);
+  240            pools[scene].index = !isNaN(idx) && idx >= 0 ? idx : 0;
+  241        } catch (e) {
+  242            pools[scene].index = 0;
+  243        }
+  244    }
+  245    // 私有：保存单场景的轮换索引
+  246    function saveIndex(scene) {
+  247        try {
+  248            ttsrv.writeTxtFile(pools[scene].indexFile, pools[scene].index.toString());
+  249        } catch (e) {}
+  250    }
+  251  
+  252    // 【新增：核心辅助函数 - 自动填充API列表到最小并发数】
+  253    // 规则：1组→重复3次，2组→轮流补全到3个，≥3组→不改动
+  254    function fillApiListToMinCount(apiList, minCount) {
+  255        if (!apiList || !Array.isArray(apiList)) return [];
+  256        minCount = parseInt(minCount, 10) || MIN_CONCURRENT_COUNT;
+  257        var originalLength = apiList.length;
+  258        
+  259        // 空列表直接返回，走兜底逻辑
+  260        if (originalLength === 0) return [];
+  261        // 数量已满足要求，直接返回原列表副本
+  262        if (originalLength >= minCount) return apiList.slice();
+  263        
+  264        // 不足最小数量，循环重复原列表补全
+  265        var filledList = [];
+  266        for (var i = 0; i < minCount; i++) {
+  267            var targetIndex = i % originalLength; // 循环取原列表索引
+  268            filledList.push(apiList[targetIndex]);
+  269        }
+  270        return filledList;
+  271    }
+  272  
+  273    // 私有：解析单组密钥内容，完全保留原@@逻辑
+  274    function parseSingleGroup(content) {
+  275        var pool = [];
+  276        if (!content || content.trim() === "") return pool;
+  277        var contentTrim = content.trim();
+  278        // 原逻辑：有@@按【地址@@模型@@密钥】分组，每3个为一组
+  279        if (contentTrim.indexOf("@@") !== -1) {
+  280            var splitArr = contentTrim.split("@@");
+  281            for (var i = 0; i < splitArr.length; i += 3) {
+  282                var endpoint = splitArr[i] ? splitArr[i].trim() : "";
+  283                var model = splitArr[i + 1] ? splitArr[i + 1].trim() : "";
+  284                var key = splitArr[i + 2] ? splitArr[i + 2].trim() : "";
+  285                // 原地址格式化逻辑完全保留
+  286                if (endpoint) {
+  287                    if (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
+  288                    if (endpoint.endsWith("/chat/completions")) endpoint = endpoint.slice(0, -17);
+  289                    endpoint += "/chat/completions";
+  290                }
+  291                // 仅密钥非空时加入池，空字段用默认值兜底
+  292                if (key) {
+  293                    pool.push({
+  294                        endpoint: endpoint || defaultConfig.endpoint,
+  295                        model: model || defaultConfig.model,
+  296                        key: key
+  297                    });
+  298                }
+  299            }
+  300        } else {
+  301            // 原逻辑：无@@，整段内容为单密钥，用默认地址和模型
+  302            pool.push({
+  303                endpoint: defaultConfig.endpoint,
+  304                model: defaultConfig.model,
+  305                key: contentTrim
+  306            });
+  307        }
+  308        return pool;
+  309    }
+  310  
+  311    // 私有：加载并解析整个密钥文件，按##拆分双场景
+  312    function loadKeyFile() {
+  313        try {
+  314            var fileContent = ttsrv.readTxtFile(keyFileName).trim();
+  315            var hasSplit = fileContent.indexOf("##") !== -1;
+  316            var nameContent, aliasContent;
+  317            if (hasSplit) {
+  318                // 有##：前面=姓名分析密钥，后面=别名分析密钥
+  319                var splitArr = fileContent.split("##");
+  320                nameContent = splitArr[0] ? splitArr[0].trim() : "";
+  321                aliasContent = splitArr[1] ? splitArr[1].trim() : "";
+  322            } else {
+  323                // 无##：两个场景共用同一套密钥
+  324                nameContent = fileContent;
+  325                aliasContent = fileContent;
+  326            }
+  327            // 分别解析两个场景的密钥池
+  328            pools.nameAnalyze.list = parseSingleGroup(nameContent);
+  329            pools.aliasAnalyze.list = parseSingleGroup(aliasContent);
+  330  
+  331            // ===================== 【核心修改：自动补全API列表到3个】=====================
+  332            pools.nameAnalyze.list = fillApiListToMinCount(pools.nameAnalyze.list, MIN_CONCURRENT_COUNT);
+  333            pools.aliasAnalyze.list = fillApiListToMinCount(pools.aliasAnalyze.list, MIN_CONCURRENT_COUNT);
+  334  
+  335            // 加载两个场景的独立索引
+  336            loadIndex("nameAnalyze");
+  337            loadIndex("aliasAnalyze");
+  338            // 校验索引范围，避免超出池长度
+  339            ["nameAnalyze", "aliasAnalyze"].forEach(function(scene) {
+  340                if (pools[scene].list.length > 0 && pools[scene].index >= pools[scene].list.length) {
+  341                    pools[scene].index = pools[scene].index % pools[scene].list.length;
+  342                    saveIndex(scene);
+  343                }
+  344            });
+  345            return true;
+  346        } catch (e) {
+  347            // 文件读取失败，两个场景都用空池，兜底默认配置
+  348            pools.nameAnalyze.list = [];
+  349            pools.aliasAnalyze.list = [];
+  350            return false;
+  351        }
+  352    }
+  353  
+  354    // 新增：【核心】获取当前场景的可用API密钥列表（支持指定获取数量，自动轮换）
+  355    function getAvailableApiList(scene, needCount) {
+  356        // 每次调用强制重新读取密钥文件，保留热更新特性
+  357        loadKeyFile();
+  358        var sceneConfig = pools[scene];
+  359        if (!sceneConfig) return [];
+  360        var totalAvailable = sceneConfig.list.length;
