@@ -49,7 +49,7 @@ var jsonObj = {
 // 写入 dist/ 最终产物
 var distFileName = mainConfig.name + '.json';
 var distPath = path.join(DIST_DIR, distFileName);
-fs.writeFileSync(distPath, JSON.stringify([jsonObj], null, 4));
+fs.writeFileSync(distPath, JSON.stringify(jsonObj, null, 4));
 console.log('【构建成功】dist/' + distFileName + ' (' + finalCode.length + ' 字符)');
 
 // 同步写入 js/ 供调阅
