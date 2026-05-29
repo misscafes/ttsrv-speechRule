@@ -72,8 +72,8 @@ var DualKeyManager = (function() {
               var key = splitArr[i + 2] ? splitArr[i + 2].trim() : "";
               // 原地址格式化逻辑完全保留
               if (endpoint) {
-                  if (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
-                  if (endpoint.endsWith("/chat/completions")) endpoint = endpoint.slice(0, -17);
+                  if (endpoint.lastIndexOf("/") === endpoint.length - 1) endpoint = endpoint.slice(0, -1);
+                  if (endpoint.lastIndexOf("/chat/completions") === endpoint.length - 17) endpoint = endpoint.slice(0, -17);
                   endpoint += "/chat/completions";
               }
               // 仅密钥非空时加入池，空字段用默认值兜底

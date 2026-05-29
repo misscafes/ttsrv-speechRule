@@ -28,8 +28,8 @@ var BackupModelManager = (function() {
         var model = splitArr[i + 1] ? splitArr[i + 1].trim() : "";
         var key = splitArr[i + 2] ? splitArr[i + 2].trim() : "";
         if (endpoint) {
-          if (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
-          if (endpoint.endsWith("/chat/completions")) endpoint = endpoint.slice(0, -17);
+          if (endpoint.lastIndexOf("/") === endpoint.length - 1) endpoint = endpoint.slice(0, -1);
+          if (endpoint.lastIndexOf("/chat/completions") === endpoint.length - 17) endpoint = endpoint.slice(0, -17);
           endpoint += "/chat/completions";
         }
         if (key) {

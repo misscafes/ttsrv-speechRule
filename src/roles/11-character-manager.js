@@ -306,8 +306,8 @@ function graphEvidenceHasStrongSamePersonPhrase(a, b, evidence) {
   var reg2 = new RegExp(eb + headGap + link + bodyGap + ea);
   if (!(reg1.test(evidence) || reg2.test(evidence))) return false;
   var pluralSubject = /(\u8fd9|\u90a3)?(\u4e8c\u4eba|\u4e24\u4eba|\u4e09\u4eba|\u51e0\u4eba|\u4ed6\u4eec|\u5979\u4eec|\u4e24\u8005|\u53cc\u65b9)/.test(evidence);
-  var listedPair = new RegExp(ea + "[^\u3002\uff01\uff1f\\n]{0,8}(?:\u548c|\u4e0e|\u53ca|\u8ddf)[^\u3002\uff01\uff1f\\n]{0,8}" + eb).test(evidence) ||
-    new RegExp(eb + "[^\u3002\uff01\uff1f\\n]{0,8}(?:\u548c|\u4e0e|\u53ca|\u8ddf)[^\u3002\uff01\uff1f\\n]{0,8}" + ea).test(evidence);
+  var listedPair = new RegExp(ea + "[^。！？\\n]{0,8}(?:和|与|及|跟)[^。！？\\n]{0,8}" + eb).test(evidence) ||
+    new RegExp(eb + "[^。！？\\n]{0,8}(?:和|与|及|跟)[^。！？\\n]{0,8}" + ea).test(evidence);
   if (pluralSubject && listedPair) return false;
   return true;
 }
@@ -1570,7 +1570,7 @@ CharacterManager.prototype.analyzeCharacter = function(fullText, characterId, al
 
 
 CharacterManager.prototype.getAllCharacterNamesAndAliases = function(targetGender) {
-  var allNamesSet = new Set(); // 用Set自动去重：存储所有主名+别名
+  var allNamesSet = {}; // 用对象模拟Set自动去重：存储所有主名+别名
   var nameMap = {}; // 保留主名与别名的对应关系（主名→主名，别名→主名）
 
   // 核心逻辑：先过滤同性角色，再取前MAX_ALIAS_CHECK_CHARACTERS（50）个
@@ -1593,24 +1593,34 @@ CharacterManager.prototype.getAllCharacterNamesAndAliases = function(targetGende
       if (!mainName) continue;
 
       // 1. 添加主名（去重）
-      allNamesSet.add(mainName);
+      if (!allNamesSet[mainName]) allNamesSet[mainName] = true;
       nameMap[mainName] = mainName;
 
       // 2. 添加别名（去重，且不与主名重复）
       if (record.aliases && record.aliases.trim()) {
-          var aliasList = record.aliases.split("|")
-              .map(alias => alias.trim())
-              .filter(alias => alias && alias !== mainName); // 排除与主名相同的别名
-          for (var j = 0; j < aliasList.length; j++) {
-              var alias = aliasList[j];
-              allNamesSet.add(alias);
+          var aliasList = record.aliases.split("|");
+          var filteredAliases = [];
+          for (var aIdx = 0; aIdx < aliasList.length; aIdx++) {
+              var alias = aliasList[aIdx].trim();
+              if (alias && alias !== mainName) {
+                  filteredAliases.push(alias);
+              }
+          }
+          for (var j = 0; j < filteredAliases.length; j++) {
+              var alias = filteredAliases[j];
+              if (!allNamesSet[alias]) allNamesSet[alias] = true;
               nameMap[alias] = mainName; // 别名关联到主名
           }
       }
   }
 
   // 3. 转换为API要求的格式：[{name:"XXX"},{name:"XXX"}]（无重复，符合JSON规范）
-  var nameListForApi = Array.from(allNamesSet).map(name => ({ name: name }));
+  var nameListForApi = [];
+  for (var nameKey in allNamesSet) {
+      if (allNamesSet.hasOwnProperty(nameKey)) {
+          nameListForApi.push({ name: nameKey });
+      }
+  }
   // 4. 保留原映射关系（用于后续别名匹配逻辑，不传给API）
   this.nameToMainNameMap = nameMap;
 
