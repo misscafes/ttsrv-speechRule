@@ -67,3 +67,46 @@ function safeWriteJson(fileName, data) {
         return false;
     }
 }
+
+// -------------------- 缓存隔离：动态文件名生成 --------------------
+
+/**
+ * 将字符串转为安全文件名（移除非法字符，限制长度）
+ * @param {string} raw
+ * @param {number} maxLen
+ * @returns {string}
+ */
+function safeFileName(raw, maxLen) {
+    maxLen = maxLen || 80;
+    var s = String(raw || "").trim();
+    // 替换 Windows/Android 文件系统非法字符
+    s = s.replace(/[\\/:*?"<>|]/g, "_");
+    // 替换控制字符和空白
+    s = s.replace(/[\x00-\x1f\x7f\s]/g, "_");
+    if (s.length > maxLen) s = s.substring(0, maxLen);
+    return s || "default";
+}
+
+/**
+ * 获取当前对话缓存文件名（按 bookName + chapterIndex 隔离）
+ * 优先从 cache_book_context_meta.json 读取，失败则回退 dialog_cache.json
+ * @returns {string}
+ */
+function getDialogCacheFileName() {
+    try {
+        var meta = safeReadJson("cache_book_context_meta.json", null);
+        if (meta && typeof meta === "object") {
+            var bookName = String(meta.bookName || meta.book || meta.bookTitle || meta.title || "").trim();
+            var chapterIndex = meta.chapterIndex;
+            if (bookName) {
+                var safeBook = safeFileName(bookName, 60);
+                var suffix = chapterIndex !== undefined && chapterIndex !== null
+                    ? "_ch" + String(chapterIndex)
+                    : "";
+                return "dialog_cache_" + safeBook + suffix + ".json";
+            }
+        }
+    } catch (e) {}
+    // 无上下文时回退到全局默认文件名
+    return "dialog_cache.json";
+}

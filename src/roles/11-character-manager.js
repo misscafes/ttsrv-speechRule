@@ -1532,7 +1532,10 @@ CharacterManager.prototype.analyzeCharacter = function(fullText, characterId, al
       dialogContent: rawDialog,
       name: itemResult.name,
       gender: itemResult.gender,
-      age: itemResult.age
+      age: itemResult.age,
+      emotion: typeof applyLocalDialogueEmotionCorrection === 'function'
+          ? applyLocalDialogueEmotionCorrection(rawDialog, itemResult.emotion || "无")
+          : (itemResult.emotion || "无")
     });
   }
   var newCache = {
@@ -1546,6 +1549,16 @@ CharacterManager.prototype.analyzeCharacter = function(fullText, characterId, al
   }
   var currentSeq = padZero(targetIndex + 1, 2);
   var currentResult = batchResult[currentSeq] || this.analyzeCharacterFallback(fullText, characterId);
+  var currentDialogueText = "";
+  for (var __cdi = 0; __cdi < allDialogues.length; __cdi++) {
+      if (allDialogues[__cdi].id === characterId) {
+          currentDialogueText = allDialogues[__cdi].text;
+          break;
+      }
+  }
+  currentResult.emotion = typeof applyLocalDialogueEmotionCorrection === 'function'
+      ? applyLocalDialogueEmotionCorrection(currentDialogueText, currentResult.emotion || "无")
+      : (currentResult.emotion || "无");
   shuohua = currentResult.name;
   return currentResult;
 };
@@ -2221,6 +2234,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
                   return {
                       text: cleanText,
                       tag: targetMainRecord.voice || "default",
+                      emotion: analysis.emotion || "无",
                       characterInfo: targetMainRecord
                   };
               }
@@ -2240,7 +2254,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
   // 原有新建/更新角色逻辑（适配targetMainRecord）
   if (newCharacterName === "未知") {
       var tag = "duihua";  // 未知不辨性别的角色使用duihua标签
-      return { text: cleanText, tag: tag };
+      return { text: cleanText, tag: tag, emotion: analysis.emotion || "无" };
   }
   
   // 若未匹配到主角色记录，执行原有新建角色逻辑
@@ -2250,7 +2264,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
           var tag2 = analysis.gender === "男" ? "duihuaA" : 
                     analysis.gender === "女" ? "duihuaB" : 
                     "duihua";
-          return { text: cleanText, tag: tag2 };
+          return { text: cleanText, tag: tag2, emotion: analysis.emotion || "无" };
       }
       targetMainRecord = {
           name: newCharacterName,
@@ -2291,7 +2305,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
       if (targetMainRecord.usageCount === 100) {
           this.moveRecordToTop(targetMainRecord.name);
           this.saveRecords();
-          return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };
+          return { text: cleanText, tag: targetMainRecord.voice || "default", emotion: analysis.emotion || "无", characterInfo: targetMainRecord };
       }
       if (targetMainRecord.usageCount === 50) {
           if (!targetMainRecord.voice || targetMainRecord.voice === "") {
@@ -2309,7 +2323,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
               }
           }
           this.moveRecordToTop(targetMainRecord.name);
-          return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };
+          return { text: cleanText, tag: targetMainRecord.voice || "default", emotion: analysis.emotion || "无", characterInfo: targetMainRecord };
       }
       if (!targetMainRecord.voice || targetMainRecord.voice === "") {
           targetMainRecord.voice = this.assignVoice(analysis.gender, analysis.age);
@@ -2317,7 +2331,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
               var tag3 = analysis.gender === "男" ? "duihuaA" : 
                         analysis.gender === "女" ? "duihuaB" : 
                         "duihua";
-              return { text: cleanText, tag: tag3 };
+              return { text: cleanText, tag: tag3, emotion: analysis.emotion || "无" };
           }
           targetMainRecord.gender = analysis.gender;
           targetMainRecord.age = analysis.age;
@@ -2348,7 +2362,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
       }
   }
   this.saveRecords();
-  return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };
+  return { text: cleanText, tag: targetMainRecord.voice || "default", emotion: analysis.emotion || "无", characterInfo: targetMainRecord };
 };
 
 
@@ -2384,7 +2398,8 @@ function getCacheNarrationList() {
   // ===================== 终极兼容版：根源读取函数（直接替换原函数即可）=====================
 function readDialogCache() {
   try {
-      var content = ttsrv.readTxtFile("dialog_cache.json");
+      var cacheFileName = typeof getDialogCacheFileName === 'function' ? getDialogCacheFileName() : "dialog_cache.json";
+      var content = ttsrv.readTxtFile(cacheFileName);
       // 兼容空文件、空字符串：直接走兜底
       if (!content || content.trim() === "") {
           return { currentIndex: 1, dialogList: [], relationEvidence: [] };
@@ -2427,7 +2442,8 @@ function readDialogCache() {
   // 写入对话缓存文件
   function writeDialogCache(cacheData) {
     try {
-        ttsrv.writeTxtFile("dialog_cache.json", JSON.stringify(cacheData, null, 2));
+        var cacheFileName = typeof getDialogCacheFileName === 'function' ? getDialogCacheFileName() : "dialog_cache.json";
+        ttsrv.writeTxtFile(cacheFileName, JSON.stringify(cacheData, null, 2));
         return true;
     } catch (e) {
         return false;
@@ -2852,7 +2868,7 @@ function matchDialogFromCache(currentDialogText) {
 
 
 CharacterManager.prototype.analyzeCharacterFallback = function(fullText, characterId) {
-  return { name: "未知", gender: Math.random() > 0.5 ? "男" : "女", age: Math.random() > 0.5 ? "青年" : "中年" };
+  return { name: "未知", gender: Math.random() > 0.5 ? "男" : "女", age: Math.random() > 0.5 ? "青年" : "中年", emotion: "无" };
 };
 
 

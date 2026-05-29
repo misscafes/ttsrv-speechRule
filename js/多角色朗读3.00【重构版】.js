@@ -209,6 +209,22 @@ function isSingleKeywordRepeat(text, keywords) {
     return { isRepeat: false, keyword: null };
 }
 
+// -------------------- 音效去引号（最小化移植自 2.97）--------------------
+
+/**
+ * 去除常见拟声词/音效词的引号，避免被误判为对白
+ * @param {string} text
+ * @returns {string}
+ */
+function removeSoundEffectQuotes(text) {
+    if (!text) return "";
+    // 覆盖最常见的拟声词，按使用频率排序
+    var soundWords = "咔嚓|哗啦|轰隆|咕噜|滴答|叮咚|咚咚|哐当|噼啪|扑通|吧嗒|吱呀|嘎吱|嗡嗡|砰|啪|叮|咚|咣|轰|嗒|沙沙|唰唰|淅沥|咕咚|啪嗒|骨碌碌|唰|铛|咻|嗖|嘭|嚓|咣当|咕嘟|唧唧|喳喳|呱嗒|嗒嗒|哒哒|铮铮|嗡|呲|咝|呜呜|呼呼|飕飕|轰隆隆|咕噜噜|叮铃铃|哐啷|噗|哧|咿呀|吱吱|轧轧|萧萧|簌簌|呱呱|呱唧|啾啾|啁啾|嘤嘤|营营|泠泠|淙淙|潺潺|溅溅|汩汩|哗哗|哗啦啦|澎湃|汹涌|嘎巴|嘎嘣|噗通|噗嗤|嗤嗤|咻咻|嗖嗖|呜|呼|呼啦|哗啦啦|嘟|嘟噜|噜噜|哞|咩|喵|汪|嗷|咯|咯吱|叽叽|嘶嘶|吼|唳|吠|叮当|哐当|砰砰|乓乓|咣当|嘀嗒|哒哒|嘟嘟|哔哔|噗噗|哧哧|咝咝|唰唰|沥沥|飒飒|萧萧|簌簌|轰轰|咕咕|吱吱|嘎嘎|当当|铮铮|嗡嗡|呜呜|呼呼|哗哗|咚咚|咯噔|咕叽|咕噜咕噜|噼啪|噼噼啪啪|叮叮当|吱嘎吱嘎|轰隆轰隆|咕咚咕咚|吧嗒吧嗒|嘀嗒嘀嗒|沙沙沙|飒飒飒|嗡嗡嗡|喵呜|汪汪汪|咩咩咩|哞哞哞|呱呱呱|叽叽叽|喳喳喳|啾啾啾|嘶嘶嘶|呼呼呼|呜呜呜|哒哒哒|嗒嗒嗒|砰砰砰|乓乓乓|嚓嚓嚓|唰唰唰|淅沥沥|哗哗哗|咕咕咕|咚咚咚|吱吱吱|嘎嘎嘎|当当当|铮铮铮|噗噗噗|哧哧哧|咻咻咻|嗖嗖嗖|飕飕飕|哐当哐当|咕噜咕噜|噼里啪啦|稀里哗啦|丁零当啷|叽里咕噜|乒乒乓乓|淅淅沥沥|窸窸窣窣|滴滴答答|叮叮当当|轰轰隆隆|噼噼啪啪|吱吱呀呀|哔哔剥剥|咔咔嚓嚓|扑扑簌簌|踢踢踏踏|咕嘟咕嘟|呼哧呼哧|咯吱咯吱|当啷当啷|哗啦哗啦|呱嗒呱嗒|咣当咣当|扑通扑通|吧唧吧唧|沙啦沙啦|簌啦簌啦|霍啦霍啦|咝啦咝啦|哧溜哧溜|嘟噜嘟噜|哔剥哔剥|噼啪噼啪";
+    // 匹配引号内 1~3 个音效词（可带末尾标点）
+    var regex = new RegExp('["""]((?:(' + soundWords + ')([！？。，；：、]*)){1,3})["""]', 'g');
+    return text.replace(regex, '$1');
+}
+
 
 /* ===== core/02-file-io.js ===== */
 // ===================== core/02-file-io.js =====================
@@ -279,6 +295,49 @@ function safeWriteJson(fileName, data) {
         console.log("【文件IO】JSON 写入失败 " + fileName + " | " + e);
         return false;
     }
+}
+
+// -------------------- 缓存隔离：动态文件名生成 --------------------
+
+/**
+ * 将字符串转为安全文件名（移除非法字符，限制长度）
+ * @param {string} raw
+ * @param {number} maxLen
+ * @returns {string}
+ */
+function safeFileName(raw, maxLen) {
+    maxLen = maxLen || 80;
+    var s = String(raw || "").trim();
+    // 替换 Windows/Android 文件系统非法字符
+    s = s.replace(/[\\/:*?"<>|]/g, "_");
+    // 替换控制字符和空白
+    s = s.replace(/[\x00-\x1f\x7f\s]/g, "_");
+    if (s.length > maxLen) s = s.substring(0, maxLen);
+    return s || "default";
+}
+
+/**
+ * 获取当前对话缓存文件名（按 bookName + chapterIndex 隔离）
+ * 优先从 cache_book_context_meta.json 读取，失败则回退 dialog_cache.json
+ * @returns {string}
+ */
+function getDialogCacheFileName() {
+    try {
+        var meta = safeReadJson("cache_book_context_meta.json", null);
+        if (meta && typeof meta === "object") {
+            var bookName = String(meta.bookName || meta.book || meta.bookTitle || meta.title || "").trim();
+            var chapterIndex = meta.chapterIndex;
+            if (bookName) {
+                var safeBook = safeFileName(bookName, 60);
+                var suffix = chapterIndex !== undefined && chapterIndex !== null
+                    ? "_ch" + String(chapterIndex)
+                    : "";
+                return "dialog_cache_" + safeBook + suffix + ".json";
+            }
+        }
+    } catch (e) {}
+    // 无上下文时回退到全局默认文件名
+    return "dialog_cache.json";
 }
 
 
@@ -2199,7 +2258,10 @@ CharacterManager.prototype.analyzeCharacter = function(fullText, characterId, al
       dialogContent: rawDialog,
       name: itemResult.name,
       gender: itemResult.gender,
-      age: itemResult.age
+      age: itemResult.age,
+      emotion: typeof applyLocalDialogueEmotionCorrection === 'function'
+          ? applyLocalDialogueEmotionCorrection(rawDialog, itemResult.emotion || "无")
+          : (itemResult.emotion || "无")
     });
   }
   var newCache = {
@@ -2213,6 +2275,16 @@ CharacterManager.prototype.analyzeCharacter = function(fullText, characterId, al
   }
   var currentSeq = padZero(targetIndex + 1, 2);
   var currentResult = batchResult[currentSeq] || this.analyzeCharacterFallback(fullText, characterId);
+  var currentDialogueText = "";
+  for (var __cdi = 0; __cdi < allDialogues.length; __cdi++) {
+      if (allDialogues[__cdi].id === characterId) {
+          currentDialogueText = allDialogues[__cdi].text;
+          break;
+      }
+  }
+  currentResult.emotion = typeof applyLocalDialogueEmotionCorrection === 'function'
+      ? applyLocalDialogueEmotionCorrection(currentDialogueText, currentResult.emotion || "无")
+      : (currentResult.emotion || "无");
   shuohua = currentResult.name;
   return currentResult;
 };
@@ -2888,6 +2960,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
                   return {
                       text: cleanText,
                       tag: targetMainRecord.voice || "default",
+                      emotion: analysis.emotion || "无",
                       characterInfo: targetMainRecord
                   };
               }
@@ -2907,7 +2980,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
   // 原有新建/更新角色逻辑（适配targetMainRecord）
   if (newCharacterName === "未知") {
       var tag = "duihua";  // 未知不辨性别的角色使用duihua标签
-      return { text: cleanText, tag: tag };
+      return { text: cleanText, tag: tag, emotion: analysis.emotion || "无" };
   }
   
   // 若未匹配到主角色记录，执行原有新建角色逻辑
@@ -2917,7 +2990,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
           var tag2 = analysis.gender === "男" ? "duihuaA" : 
                     analysis.gender === "女" ? "duihuaB" : 
                     "duihua";
-          return { text: cleanText, tag: tag2 };
+          return { text: cleanText, tag: tag2, emotion: analysis.emotion || "无" };
       }
       targetMainRecord = {
           name: newCharacterName,
@@ -2958,7 +3031,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
       if (targetMainRecord.usageCount === 100) {
           this.moveRecordToTop(targetMainRecord.name);
           this.saveRecords();
-          return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };
+          return { text: cleanText, tag: targetMainRecord.voice || "default", emotion: analysis.emotion || "无", characterInfo: targetMainRecord };
       }
       if (targetMainRecord.usageCount === 50) {
           if (!targetMainRecord.voice || targetMainRecord.voice === "") {
@@ -2976,7 +3049,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
               }
           }
           this.moveRecordToTop(targetMainRecord.name);
-          return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };
+          return { text: cleanText, tag: targetMainRecord.voice || "default", emotion: analysis.emotion || "无", characterInfo: targetMainRecord };
       }
       if (!targetMainRecord.voice || targetMainRecord.voice === "") {
           targetMainRecord.voice = this.assignVoice(analysis.gender, analysis.age);
@@ -2984,7 +3057,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
               var tag3 = analysis.gender === "男" ? "duihuaA" : 
                         analysis.gender === "女" ? "duihuaB" : 
                         "duihua";
-              return { text: cleanText, tag: tag3 };
+              return { text: cleanText, tag: tag3, emotion: analysis.emotion || "无" };
           }
           targetMainRecord.gender = analysis.gender;
           targetMainRecord.age = analysis.age;
@@ -3015,7 +3088,7 @@ CharacterManager.prototype.processCharacter = function (fullText, characterId, a
       }
   }
   this.saveRecords();
-  return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };
+  return { text: cleanText, tag: targetMainRecord.voice || "default", emotion: analysis.emotion || "无", characterInfo: targetMainRecord };
 };
 
 
@@ -3051,7 +3124,8 @@ function getCacheNarrationList() {
   // ===================== 终极兼容版：根源读取函数（直接替换原函数即可）=====================
 function readDialogCache() {
   try {
-      var content = ttsrv.readTxtFile("dialog_cache.json");
+      var cacheFileName = typeof getDialogCacheFileName === 'function' ? getDialogCacheFileName() : "dialog_cache.json";
+      var content = ttsrv.readTxtFile(cacheFileName);
       // 兼容空文件、空字符串：直接走兜底
       if (!content || content.trim() === "") {
           return { currentIndex: 1, dialogList: [], relationEvidence: [] };
@@ -3094,7 +3168,8 @@ function readDialogCache() {
   // 写入对话缓存文件
   function writeDialogCache(cacheData) {
     try {
-        ttsrv.writeTxtFile("dialog_cache.json", JSON.stringify(cacheData, null, 2));
+        var cacheFileName = typeof getDialogCacheFileName === 'function' ? getDialogCacheFileName() : "dialog_cache.json";
+        ttsrv.writeTxtFile(cacheFileName, JSON.stringify(cacheData, null, 2));
         return true;
     } catch (e) {
         return false;
@@ -3519,7 +3594,7 @@ function matchDialogFromCache(currentDialogText) {
 
 
 CharacterManager.prototype.analyzeCharacterFallback = function(fullText, characterId) {
-  return { name: "未知", gender: Math.random() > 0.5 ? "男" : "女", age: Math.random() > 0.5 ? "青年" : "中年" };
+  return { name: "未知", gender: Math.random() > 0.5 ? "男" : "女", age: Math.random() > 0.5 ? "青年" : "中年", emotion: "无" };
 };
 
 
@@ -6509,6 +6584,10 @@ var SpeechRuleJS = {
 
       // 3. 基础文本预处理（保留 2.94 核心预处理）
       text = text.replace(/[(]([\u4E00-\u9Fa5]{1,5})音效[)]/g, "");
+      // 去除常见拟声词引号，避免误判为对白
+      if (typeof removeSoundEffectQuotes === 'function') {
+          text = removeSoundEffectQuotes(text);
+      }
       text = text.replace(/"([\u4E00-\u9FFF]{1,15})"/g, "$1");
       text = text.replace(/[〖〗''〈〔〕〉]/g, "");
       text = text.replace(/("[^""]+$)/g, "$1\"");
@@ -6563,14 +6642,26 @@ var SpeechRuleJS = {
 
               // 尝试本地免 API 解析（总开关控制）
               if (typeof ENABLE_LOCAL_NO_API_DIALOG_ATTRIBUTION !== 'undefined' && ENABLE_LOCAL_NO_API_DIALOG_ATTRIBUTION === 1) {
-                  // 优先级 1：前文明确提示
+                  // 优先级 1：旁白引用严谨判断（书面载体/概念引用 → 旁白）
+                  try {
+                      if (typeof tryJreadEmbeddedShortQuoteNarration === 'function') {
+                          var narrationCheck = tryJreadEmbeddedShortQuoteNarration(line);
+                          if (narrationCheck && narrationCheck.name === "旁白") {
+                              result.push({ text: cleanText, tag: "narration" });
+                              console.log("【旁白引用】命中 | 来源=" + (narrationCheck.__source || "embedded") + " | 文本=" + cleanText.substring(0, 30));
+                              continue;
+                          }
+                      }
+                  } catch (e) {}
+
+                  // 优先级 2：前文明确提示
                   try {
                       if (typeof __localNoApiResolveFromPrevCue === 'function') {
                           resolvedRole = __localNoApiResolveFromPrevCue(cleanText, "");
                       }
                   } catch (e) {}
 
-                  // 优先级 2：动作承接软校验
+                  // 优先级 3：动作承接软校验
                   if (!resolvedRole) {
                       try {
                           if (typeof __localNoApiResolveFromActionCueInJreadContext === 'function') {
@@ -6579,7 +6670,7 @@ var SpeechRuleJS = {
                       } catch (e) {}
                   }
 
-                  // 优先级 3：A-B-A 短命令修正
+                  // 优先级 4：A-B-A 短命令修正
                   if (!resolvedRole) {
                       try {
                           if (typeof tryJreadAbaShortCommandAttribution === 'function') {
@@ -6591,12 +6682,17 @@ var SpeechRuleJS = {
 
               var finalTag = "duihua";
               var finalText = cleanText;
+              var finalEmotion = "";
 
               if (resolvedRole && resolvedRole.name && typeof characterManager !== 'undefined') {
                   // 本地解析命中，查找对应发音人
                   var record = characterManager.findCharacterRecord(resolvedRole.name);
                   if (record && record.voice) {
                       finalTag = record.voice;
+                  }
+                  // 本地解析如有情绪，一并附加
+                  if (resolvedRole.emotion && resolvedRole.emotion !== "无") {
+                      finalEmotion = resolvedRole.emotion;
                   }
                   console.log("【本地解析】命中 | 来源=" + (resolvedRole.__source || "local") + " | 姓名=" + resolvedRole.name + " | 文本=" + cleanText.substring(0, 30));
               } else if (typeof characterManager !== 'undefined' && characterManager.processCharacter) {
@@ -6606,10 +6702,18 @@ var SpeechRuleJS = {
                       if (apiResult && apiResult.tag) {
                           finalTag = apiResult.tag;
                           finalText = apiResult.text || cleanText;
+                          if (apiResult.emotion && apiResult.emotion !== "无") {
+                              finalEmotion = apiResult.emotion;
+                          }
                       }
                   } catch (e) {
                       console.log("【角色分析】API 调用失败：" + e);
                   }
+              }
+
+              // 情绪后缀拼接（仅在 ENABLE_EMOTION 开启且情绪非空时）
+              if (ENABLE_EMOTION && finalEmotion) {
+                  finalTag = finalTag + "|" + finalEmotion;
               }
 
               result.push({ text: finalText, tag: finalTag });

@@ -16,19 +16,20 @@
   - `api/34-backup-model.js` — 备用模型故障切换
   - `local/20-local-parser.js` — 本地免API解析工具（1167行，移植自 2.97 v109）
   - `emotion/40-emotion-module.js` — 16种情绪配置 + 提取 + 日志
-- **Phase 3 进行中**：融合优化
+- **Phase 3 完成**：融合优化
   - **忙等待修复**：全局替换 `while(Date.now()-start<ms){}` 为 `safeSleep(ms)`（基于 `java.lang.Thread.sleep()`），已替换 4 处
   - **本地解析开关**：`00-config.js` 新增 `ENABLE_LOCAL_NO_API_DIALOG_ATTRIBUTION`（默认 1）和 `ENABLE_LOCAL_EMOTION_CORRECTION`（默认 1）
   - **handleText 接入本地解析**：`51-speech-rule.js` 对话分支已接入 `__localNoApiResolveFromPrevCue` / `__localNoApiResolveFromActionCueInJreadContext` / `tryJreadAbaShortCommandAttribution`
   - **handleText 接入 CharacterManager**：本地解析未命中时自动调用 `characterManager.processCharacter()`
   - **本地情绪修正函数**：`20-local-parser.js` 追加 `normalizeRuleEmotionNameForLocal` / `inferStrongLocalEmotion` / `applyLocalDialogueEmotionCorrection`（移植自 2.97）
-  - **构建验证**：`dist/多角色朗读3.00【重构版】.json` 259,051 字符，14 模块，`node -c` 语法检查通过
+  - **缓存隔离改造**：`02-file-io.js` 新增 `getDialogCacheFileName()` 按 `bookName + chapterIndex` 动态生成隔离文件名；`11-character-manager.js` 的 `readDialogCache` / `writeDialogCache` 已接入
+  - **情绪模块深度集成**：`analyzeCharacter` 返回结果添加 `emotion` 字段（经 `applyLocalDialogueEmotionCorrection` 修正）；`processCharacter` 所有 return 路径均携带 `emotion`；`51-speech-rule.js` handleText 将 emotion 拼接为 tag 后缀（如 `duihuaA|开心`）
+  - **旁白引用严谨判断**：`51-speech-rule.js` 对话分支已接入 `tryJreadEmbeddedShortQuoteNarration`，书面载体/概念引用自动降级为旁白
+  - **音效关键词匹配**：`01-utils.js` 新增 `removeSoundEffectQuotes()` 覆盖 200+ 常见拟声词，`51-speech-rule.js` 预处理阶段自动调用
+  - **构建验证**：`dist/多角色朗读3.00【重构版】.json` 264,116 字符，14 模块，`node -c` 语法检查通过
 - **待完成**：
-  - 缓存隔离（按 `bookName + chapterIndex` 隔离，替代全局 `dialog_cache.json`）
-  - 情绪模块深度集成（API prompt 中要求返回 emotion，processCharacter 中应用修正）
   - 发音人池扩展（当前精简版 100/类，目标 2300+）
-  - 旁白引用严谨判断（`__jreadStructuralIsNarrationQuoteContext`）在 handleText 中的调用
-  - 音效关键词匹配（`yinxiao.json` 读取、正则匹配）
+  - 实机测试验证
 
 ### v2.93（上一稳定版）
 - 基于 v2.92 稳定版
@@ -101,7 +102,7 @@
 ## 会话摘要（每次关闭前更新）
 
 ### 2026-05-29 本次会话
-- **当前最新版本**：v3.00【重构版】Phase 3 进行中
+- **当前最新版本**：v3.00【重构版】Phase 3 完成
 - **主目录结构**：
   - `src/`（模块化源码目录，14 个模块）
     - `core/` — `00-config.js` / `01-utils.js` / `02-file-io.js` / `03-jread-marker.js`
@@ -112,28 +113,31 @@
     - `tts/` — `50-tags-generator.js` / `51-speech-rule.js`
     - `main.js` — 构建清单
   - `build/build.js` — 构建脚本
-  - `dist/多角色朗读3.00【重构版】.json` — Phase 3 构建产物（259,051 字符）
+  - `dist/多角色朗读3.00【重构版】.json` — Phase 3 构建产物（264,116 字符）
   - `js/多角色朗读3.00【重构版】.js` — 同步提取的调阅文件
 - **已完成**：
   - 忙等待修复：全局替换 `while(Date.now()-start<ms){}` → `safeSleep(ms)`（4 处）
-  - `ENABLE_LOCAL_NO_API_DIALOG_ATTRIBUTION` / `ENABLE_LOCAL_EMOTION_CORRECTION` 开关添加到 `00-config.js`
-  - `51-speech-rule.js` handleText 接入本地免 API 解析（3 个优先级分支）和 `CharacterManager.processCharacter()`
-  - `20-local-parser.js` 追加本地轻量情绪修正函数（`normalizeRuleEmotionNameForLocal` / `inferStrongLocalEmotion` / `applyLocalDialogueEmotionCorrection`）
+  - 缓存隔离改造：`getDialogCacheFileName()` 按 `bookName + chapterIndex` 动态生成隔离文件名
+  - 情绪模块深度集成：`analyzeCharacter` / `processCharacter` / `handleText` 全链路 emotion 字段传递与修正
+  - 旁白引用严谨判断：`tryJreadEmbeddedShortQuoteNarration` 在 handleText 对话分支中优先执行
+  - 音效关键词匹配：`removeSoundEffectQuotes()` 覆盖 200+ 拟声词，预处理阶段自动调用
   - 构建验证通过，语法检查通过
 - **注意事项**：
-  - 缓存隔离、情绪模块深度集成、发音人池扩展、旁白引用严谨判断、音效匹配等仍在待办
+  - 发音人池扩展（100/类 → 2300+）仍为长期待办
   - v3.00 与 v2.94 并行存在，互不覆盖
+  - 尚未在 TTS Server 实机测试
 
 ## 当前任务
 - [x] Phase 1：搭建模块化骨架（完成）
 - [x] Phase 2：移植核心能力（完成）
-- [x] Phase 3 子任务：忙等待修复（完成）
-- [x] Phase 3 子任务：handleText 接入本地解析 + CharacterManager（完成）
-- [x] Phase 3 子任务：本地情绪修正函数移植（完成）
-- [ ] Phase 3 子任务：缓存隔离改造（按 bookName + chapterIndex）
-- [ ] Phase 3 子任务：情绪模块深度集成（API prompt 返回 emotion）
-- [ ] Phase 3 子任务：旁白引用严谨判断在 handleText 中调用
-- [ ] Phase 3 子任务：音效关键词匹配
+- [x] Phase 3：融合优化（完成）
+  - [x] 忙等待修复
+  - [x] 缓存隔离改造
+  - [x] 情绪模块深度集成
+  - [x] 旁白引用严谨判断
+  - [x] 音效关键词匹配
+- [ ] 发音人池扩展（当前精简版 100/类，目标 2300+）
+- [ ] 实机测试验证
 
 ## 长期规划
 - [ ] 完成 v3.00 重构并替代 v2.94 成为主版本

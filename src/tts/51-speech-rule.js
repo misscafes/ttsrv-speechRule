@@ -86,6 +86,10 @@ var SpeechRuleJS = {
 
       // 3. 基础文本预处理（保留 2.94 核心预处理）
       text = text.replace(/[(]([\u4E00-\u9Fa5]{1,5})音效[)]/g, "");
+      // 去除常见拟声词引号，避免误判为对白
+      if (typeof removeSoundEffectQuotes === 'function') {
+          text = removeSoundEffectQuotes(text);
+      }
       text = text.replace(/"([\u4E00-\u9FFF]{1,15})"/g, "$1");
       text = text.replace(/[〖〗''〈〔〕〉]/g, "");
       text = text.replace(/("[^""]+$)/g, "$1\"");
@@ -140,14 +144,26 @@ var SpeechRuleJS = {
 
               // 尝试本地免 API 解析（总开关控制）
               if (typeof ENABLE_LOCAL_NO_API_DIALOG_ATTRIBUTION !== 'undefined' && ENABLE_LOCAL_NO_API_DIALOG_ATTRIBUTION === 1) {
-                  // 优先级 1：前文明确提示
+                  // 优先级 1：旁白引用严谨判断（书面载体/概念引用 → 旁白）
+                  try {
+                      if (typeof tryJreadEmbeddedShortQuoteNarration === 'function') {
+                          var narrationCheck = tryJreadEmbeddedShortQuoteNarration(line);
+                          if (narrationCheck && narrationCheck.name === "旁白") {
+                              result.push({ text: cleanText, tag: "narration" });
+                              console.log("【旁白引用】命中 | 来源=" + (narrationCheck.__source || "embedded") + " | 文本=" + cleanText.substring(0, 30));
+                              continue;
+                          }
+                      }
+                  } catch (e) {}
+
+                  // 优先级 2：前文明确提示
                   try {
                       if (typeof __localNoApiResolveFromPrevCue === 'function') {
                           resolvedRole = __localNoApiResolveFromPrevCue(cleanText, "");
                       }
                   } catch (e) {}
 
-                  // 优先级 2：动作承接软校验
+                  // 优先级 3：动作承接软校验
                   if (!resolvedRole) {
                       try {
                           if (typeof __localNoApiResolveFromActionCueInJreadContext === 'function') {
@@ -156,7 +172,7 @@ var SpeechRuleJS = {
                       } catch (e) {}
                   }
 
-                  // 优先级 3：A-B-A 短命令修正
+                  // 优先级 4：A-B-A 短命令修正
                   if (!resolvedRole) {
                       try {
                           if (typeof tryJreadAbaShortCommandAttribution === 'function') {
@@ -168,12 +184,17 @@ var SpeechRuleJS = {
 
               var finalTag = "duihua";
               var finalText = cleanText;
+              var finalEmotion = "";
 
               if (resolvedRole && resolvedRole.name && typeof characterManager !== 'undefined') {
                   // 本地解析命中，查找对应发音人
                   var record = characterManager.findCharacterRecord(resolvedRole.name);
                   if (record && record.voice) {
                       finalTag = record.voice;
+                  }
+                  // 本地解析如有情绪，一并附加
+                  if (resolvedRole.emotion && resolvedRole.emotion !== "无") {
+                      finalEmotion = resolvedRole.emotion;
                   }
                   console.log("【本地解析】命中 | 来源=" + (resolvedRole.__source || "local") + " | 姓名=" + resolvedRole.name + " | 文本=" + cleanText.substring(0, 30));
               } else if (typeof characterManager !== 'undefined' && characterManager.processCharacter) {
@@ -183,10 +204,18 @@ var SpeechRuleJS = {
                       if (apiResult && apiResult.tag) {
                           finalTag = apiResult.tag;
                           finalText = apiResult.text || cleanText;
+                          if (apiResult.emotion && apiResult.emotion !== "无") {
+                              finalEmotion = apiResult.emotion;
+                          }
                       }
                   } catch (e) {
                       console.log("【角色分析】API 调用失败：" + e);
                   }
+              }
+
+              // 情绪后缀拼接（仅在 ENABLE_EMOTION 开启且情绪非空时）
+              if (ENABLE_EMOTION && finalEmotion) {
+                  finalTag = finalTag + "|" + finalEmotion;
               }
 
               result.push({ text: finalText, tag: finalTag });
