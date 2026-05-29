@@ -6523,7 +6523,7 @@ var SpeechRuleJS = {
         input = input.replace(/「(.*?)」/g, "\n「括号3】$1\n").toString();
         input = input.replace(/『(.*?)』/g, "\n『括号4】$1\n").toString();
         var counter = 1;
-        input = input.replace(/(["\"])(.*?)(["\"])/g, function(match, p1, p2, p3) {
+        input = input.replace(/(["""])(.*?)(["""])/g, function(match, p1, p2, p3) {
             return ("\n" + p1 + "【" + (counter++) + "】" + p2 + p3 + "\n").toString();
         });
         return input.toString();
@@ -6576,7 +6576,7 @@ var SpeechRuleJS = {
       for (var i = 0; i < lines.length; i++) {
           var line = lines[i].trim();
           if (!line) continue;
-          var dm = line.match(/^["\"](【\d+】)(.*?)["\"]$/);
+          var dm = line.match(/^["""](【\d+】)(.*?)["""]$/);
           if (dm) allDialogues.push({ id: dm[1], text: line });
       }
 
@@ -6606,7 +6606,7 @@ var SpeechRuleJS = {
           }
 
           // 5.2 对话（以引号包裹且含【序号】）
-          var dialogueMatch = line.match(/^["\"](【\d+】)(.*?)["\"]$/);
+          var dialogueMatch = line.match(/^["""](【\d+】)(.*?)["""]$/);
           if (dialogueMatch) {
               var seq = dialogueMatch[1];
               var cleanText = dialogueMatch[2].trim();
