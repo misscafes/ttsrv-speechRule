@@ -35,6 +35,22 @@ for (var i = 0; i < mainConfig.modules.length; i++) {
 
 var finalCode = codeParts.join('\n\n');
 
+// 预执行完整 code，提取 SpeechRuleJS.tags / SpeechRuleJS.tagsData 写入 JSON 顶层
+// TTS Server UI 直接读取 JSON 顶层的 tags/tagsData 来显示标签列表
+var tags = null;
+var tagsData = null;
+try {
+    eval(finalCode);
+    if (typeof SpeechRuleJS !== 'undefined' && SpeechRuleJS.tags) {
+        tags = SpeechRuleJS.tags;
+    }
+    if (typeof SpeechRuleJS !== 'undefined' && SpeechRuleJS.tagsData) {
+        tagsData = SpeechRuleJS.tagsData;
+    }
+} catch (e) {
+    console.error('【构建警告】预提取 tags/tagsData 失败：' + e.message);
+}
+
 // 组装 JSON 对象（朗读规则结构）
 var jsonObj = {
     id: Date.now(),
@@ -45,6 +61,8 @@ var jsonObj = {
     author: mainConfig.author,
     code: finalCode
 };
+if (tags) jsonObj.tags = tags;
+if (tagsData) jsonObj.tagsData = tagsData;
 
 // 写入 dist/ 最终产物
 var distFileName = mainConfig.name + '.json';
