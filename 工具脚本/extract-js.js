@@ -1,11 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 
-// 找到所有根目录下的 .json 文件（排除历史版本和dist目录）
-const files = fs.readdirSync('.').filter(f => f.endsWith('.json'));
+// 项目根目录（上级目录）
+const rootDir = path.join(__dirname, '..');
+const jsDir = path.join(rootDir, 'js');
+
+// 找到项目根目录下的 .json 文件（排除子目录中的）
+const files = fs.readdirSync(rootDir).filter(f => f.endsWith('.json'));
 
 files.forEach(jsonFile => {
-    const data = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
+    const jsonPath = path.join(rootDir, jsonFile);
+    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
     let code = null;
     
     // 支持两种结构：顶层 .code 或子对象 .code
@@ -22,9 +27,9 @@ files.forEach(jsonFile => {
     }
     
     if (code) {
-        const jsFile = path.join('js', jsonFile.replace('.json', '.js'));
+        const jsFile = path.join(jsDir, jsonFile.replace('.json', '.js'));
         fs.writeFileSync(jsFile, code, 'utf8');
-        console.log('✅ 提取:', jsonFile, '->', jsFile);
+        console.log('✅ 提取:', jsonFile, '->', path.relative(rootDir, jsFile));
     } else {
         console.log('⚠️ 跳过:', jsonFile, '(无code字段)');
     }
