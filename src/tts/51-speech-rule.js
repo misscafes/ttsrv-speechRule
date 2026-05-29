@@ -99,6 +99,9 @@ var SpeechRuleJS = {
 
       // 4. 使用 fx 进行初步分割
       var processed = this.fx(text);
+      // 还原引号占位符（TTS Server 预处理时替换的）
+      processed = processed.replace(/###LEFT_QUOTE###/g, "\"").toString();
+      processed = processed.replace(/###RIGHT_QUOTE###/g, "\"").toString();
       var lines = processed.split("\n");
       var allDialogues = [];
 
@@ -114,6 +117,8 @@ var SpeechRuleJS = {
       for (var i = 0; i < lines.length; i++) {
           var line = lines[i].trim();
           if (!line) continue;
+          // 还原所有占位符（括号、引号等特殊符号）
+          line = this.restoreTargetContentSymbols(line);
 
           // 5.1 括号发音人
           if (line.indexOf("【括号1】") === 0) {
