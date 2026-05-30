@@ -2,6 +2,19 @@
 
 ## 版本变更记录
 
+### v2.104（本次新建）
+- 基于 **v2.103** 修复别名清洗合并后别名丢失 + 插件/规则数据不同步问题
+- **问题根因1**：`normalizeAliasRefineResult` 只保留 `confirmedAliases` 中的别名，旧别名中未被删除但也没被 AI 重复确认的，全部被丢弃。如果 AI 返回 `mainName = newName` 或 `confirmedAliases = []`，`newName` 也会被 `pushAlias` 过滤，导致最终 `aliases` 只剩主名
+- **修复内容1**：
+  1. `pushAlias` 中用 `mainRecord.name` 过滤（而非 `refineResult.mainName`），避免 AI 建议的新主名和 `newName` 相同导致误删
+  2. `newName` 补充时增加 `newName !== mainRecord.name` 判断
+  3. 先保留旧别名中未被 `removedAliases` 明确删除的，再叠加 `confirmedAliases` 中的新别名（兜底，防止 API 漏写旧别名）
+- **问题根因2**：`saveRecords()` 只写 `characterRecords.json`，不写 `shuming.书名.json`；插件刷新时从 `shuming.书名.json` 读取（换书时的备份），导致插件读到旧数据并覆盖回 `characterRecords.json`
+- **修复内容2**：`saveRecords()` 末尾同步写入 `shuming.当前书名.json`，保持备份和实时数据一致
+- **插件修复（v6.70）**：`refreshCharacterData()` 从 `characterRecords.json`（实时数据）读取，不再从 `shuming.书名.json`（换书备份）读取
+- 保留 v2.103 全部特性（换书完全隔离角色列表、别名合并、data.json 智能备份、零 HTTP 依赖）
+- 文件名：`多角色朗读2.104【修复别名丢失+同步shuming+别名合并发音人轮询+增强别名校验版v77+备用模型接力】.json`
+
 ### v2.103（本次新建）
 - 基于 **v2.101** 优化换书逻辑：切换书籍时完全隔离角色列表，避免旧书角色混入新书
 - **问题根因**：v2.100 引入的别名合并逻辑会在换书时把 `characterRecords.json`（旧书角色）和 `gengxin.json`（新书历史角色）合并，导致即使切换到全新书籍，旧书角色仍会残留
@@ -123,6 +136,23 @@
 - **新增备用模型**：集成 `BackupModelManager` + `concurrentApiRequest`/`directApiRequest` 故障切换
 
 ## 会话摘要
+
+### 2026-05-30 本次会话（新增 v2.104，修复别名丢失 + 插件同步问题）
+- **当前最新版本**：v2.104（朗读规则）/ v6.70（角色管理插件）/ v2.94（主版本）
+- **本次工作**：
+  - 修复别名清洗合并后别名不显示、不添加的问题（v2.104）
+  - 根因：`normalizeAliasRefineResult` 丢弃旧别名 + `pushAlias` 用 `refineResult.mainName` 过滤导致 `newName` 被误删
+  - 修复 `saveRecords()` 同步写入 `shuming.书名.json`，避免插件刷新读到旧备份（v2.104）
+  - 修复插件 `refreshCharacterData()` 从 `characterRecords.json` 读取实时数据（v6.70）
+- **主目录结构**：
+  - `多角色朗读2.104【修复别名丢失+同步shuming+别名合并发音人轮询+增强别名校验版v77+备用模型接力】.json` — 本次新建（最新可用版本）
+  - `C:/date/ttsrv-plugin/ttsrv-plugin-角色管理6.70.json` — 插件修复版本
+  - `js/` — 各版本提取的调阅文件
+  - `历史版本/` — 归档的旧版本 json
+- **注意事项**：
+  - v2.104 修复了别名清洗后旧别名丢失的问题，旧别名中未被 `removedAliases` 明确删除的会被保留
+  - 插件 v6.70 刷新按钮改为读取 `characterRecords.json` 实时数据，不再读取 `shuming.书名.json` 备份
+  - `saveRecords()` 每次保存时同步更新 `shuming.当前书名.json`，保持备份和实时数据一致
 
 ### 2026-05-30 本次会话（新增 v2.101，修复 v2.100 导入报错）
 - **当前最新版本**：v2.94（主版本）/ v2.101（2.85版v77+备用模型分支）/ v2.86（2.85v77+备用模型分支）
