@@ -1,80 +1,97 @@
-
-function padZero(num, length) {
-  num = num.toString();
-  while (num.length < length) num = '0' + num;
-  return num;
-}
-
-// ===================== 角色配置（集中管理，视觉工整）=====================
-// 1. 主角配置：[显示前缀, 性别, 年龄, 发音人前缀, 数量]
-var MAIN_ROLES_CONFIG = [
-  ['主角 男主', '主角', '男主', '男主', 20],
-  ['主角 女主', '主角', '女主', '女主', 20]
-];
-// 2. 批量角色配置：[类型前缀, 性别, 年龄, 发音人前缀, 数量]
-var BATCH_ROLES = [
-  ['女/少女', '女', '少女', '少女', 300],
-  ['男/少年', '男', '少年', '少年', 300],
-  ['女/女青年', '女', '女青年', '女青年', 300],
-  ['男/男青年', '男', '男青年', '男青年', 300],
-  ['女/女中年', '女', '女中年', '女中年', 300],
-  ['男/男中年', '男', '男中年', '男中年', 300],
-  ['女/女老年', '女', '女老年', '女老年', 300],
-  ['男/男老年', '男', '男老年', '男老年', 300],
-  ['女/女童', '女', '女童', '女童', 300],
-  ['男/男童', '男', '男童', '男童', 300],
-  ['男/特殊', '特殊', '特殊', '特殊男', 20],
-  ['女/特殊', '特殊', '特殊', '特殊女', 20]
-];
-// 3. 特殊角色配置：[键名, 性别, 年龄, 发音人标签]
-var SPECIAL_ROLES = [
-  ['【】括号发音人', '特殊', '系统', '括号1'],
-  ['在线音效', '特', '特殊', '括号2'],
-  ['「」括号发音人', '特', '特殊', '括号3'],
-  ['『对话旁白』', '特殊', '旁白', '括号4']
-];
-// ===================== 生成角色对象（逻辑简洁，无冗余）=====================
-var GENSHIN_CHARACTERS = (function () {
-  var chars = {};
-
-  // 生成主角（从 MAIN_ROLES_CONFIG 动态生成）
-  for (var idx = 0; idx < MAIN_ROLES_CONFIG.length; idx++) {
-      var cfg = MAIN_ROLES_CONFIG[idx];
-      var displayPrefix = cfg[0], gender = cfg[1], age = cfg[2], voicePrefix = cfg[3], count = cfg[4];
-      for (var i = 1; i <= count; i++) {
-          // 显示名
-          var seqDisplay = padZero(i, 2);
-          // voice标签
-          var seqVoice = (voicePrefix === '男主') ? i.toString() : padZero(i, 2);
-          var name = '【' + displayPrefix + seqDisplay + '】';
-          chars[name] = { gender: gender, age: age, voice: voicePrefix + seqVoice };
-      }
-  }
-
-  // 生成批量角色
-  BATCH_ROLES.forEach(function (item) {
-      var type = item[0], gender = item[1], age = item[2], voicePre = item[3], count = item[4];
-      for (var i = 1; i <= count; i++) {
-          var seq = padZero(i, 2);
-          var name = '【' + type + seq + '】';
-          chars[name] = { gender: gender, age: age, voice: voicePre + seq };
-      }
-  });
-
-  // 生成特殊角色
-  SPECIAL_ROLES.forEach(function (item) {
-      chars[item[0]] = { gender: item[1], age: item[2], voice: item[3] };
-  });
-
-  return chars;
-})();
-
-// ===================== 标签映射（关键：让标签列表显示所有角色）=====================
-if (typeof SpeechRuleJS !== 'undefined' && SpeechRuleJS.tags) {
-  for (var key in GENSHIN_CHARACTERS) {
-      if (GENSHIN_CHARACTERS.hasOwnProperty(key)) {
-          var voiceTag = GENSHIN_CHARACTERS[key].voice;
-          SpeechRuleJS.tags[voiceTag] = key;
-      }
-  }
-}
+org.mozilla.javascript.EvaluatorException: 字符串文字没有限制 (<Unknown>#2786)
+	at org.mozilla.javascript.DefaultErrorReporter.runtimeError(DefaultErrorReporter.java:23)
+	at org.mozilla.javascript.DefaultErrorReporter.error(DefaultErrorReporter.java:18)
+	at org.mozilla.javascript.Parser.addError(Parser.java:14)
+	at org.mozilla.javascript.Parser.addError(Parser.java:2)
+	at org.mozilla.javascript.Parser.addError(Parser.java:1)
+	at org.mozilla.javascript.TokenStream.getToken(TokenStream.java:1223)
+	at org.mozilla.javascript.Parser.peekToken(Parser.java:10)
+	at org.mozilla.javascript.Parser.unaryExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.expExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.mulExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.addExpr(Parser.java:28)
+	at org.mozilla.javascript.Parser.shiftExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.relExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.eqExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.bitAndExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.bitXorExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.bitOrExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.andExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.orExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.nullishCoalescingExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.condExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.assignExpr(Parser.java:23)
+	at org.mozilla.javascript.Parser.expr(Parser.java:1)
+	at org.mozilla.javascript.Parser.parenExpr(Parser.java:39)
+	at org.mozilla.javascript.Parser.primaryExpr(Parser.java:133)
+	at org.mozilla.javascript.Parser.memberExpr(Parser.java:9)
+	at org.mozilla.javascript.Parser.unaryExpr(Parser.java:229)
+	at org.mozilla.javascript.Parser.expExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.mulExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.addExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.shiftExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.relExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.eqExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.bitAndExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.bitXorExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.bitOrExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.andExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.orExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.nullishCoalescingExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.condExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.assignExpr(Parser.java:23)
+	at org.mozilla.javascript.Parser.assignExpr(Parser.java:76)
+	at org.mozilla.javascript.Parser.expr(Parser.java:1)
+	at org.mozilla.javascript.Parser.statementHelper(Parser.java:97)
+	at org.mozilla.javascript.Parser.statement(Parser.java:6)
+	at org.mozilla.javascript.Parser.parseFunctionBody(Parser.java:152)
+	at org.mozilla.javascript.Parser.function(Parser.java:34)
+	at org.mozilla.javascript.Parser.function(Parser.java:1)
+	at org.mozilla.javascript.Parser.primaryExpr(Parser.java:125)
+	at org.mozilla.javascript.Parser.memberExpr(Parser.java:9)
+	at org.mozilla.javascript.Parser.unaryExpr(Parser.java:229)
+	at org.mozilla.javascript.Parser.expExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.mulExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.addExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.shiftExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.relExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.eqExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.bitAndExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.bitXorExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.bitOrExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.andExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.orExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.nullishCoalescingExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.condExpr(Parser.java:1)
+	at org.mozilla.javascript.Parser.assignExpr(Parser.java:23)
+	at org.mozilla.javascript.Parser.assignExpr(Parser.java:76)
+	at org.mozilla.javascript.Parser.expr(Parser.java:1)
+	at org.mozilla.javascript.Parser.nameOrLabel(Parser.java:19)
+	at org.mozilla.javascript.Parser.statementHelper(Parser.java:303)
+	at org.mozilla.javascript.Parser.statement(Parser.java:6)
+	at org.mozilla.javascript.Parser.parse(Parser.java:36)
+	at org.mozilla.javascript.Parser.parse(Parser.java:6)
+	at org.mozilla.javascript.Context.parse(Context.java:20)
+	at org.mozilla.javascript.Context.compileImpl(Context.java:81)
+	at org.mozilla.javascript.Context.compileString(Context.java:2)
+	at org.mozilla.javascript.Context.compileString(Context.java:1)
+	at org.mozilla.javascript.Context.evaluateString(Context.java:1)
+	at L4.e.execute$lambda$2(RhinoScriptEngine.kt:80)
+	at L4.e.execute(RhinoScriptEngine.kt:15)
+	at s5.a.a(SpeechRuleEngine.kt:15)
+	at k5.h.g(SpeechRuleEditViewModel.kt:34)
+	at k5.h.f(SpeechRuleEditViewModel.kt:21)
+	at d5.F0.invoke(R8$$SyntheticClass:70)
+	at W4.F.invokeSuspend(LoggerBottomSheet.kt:15)
+	at e8.a.resumeWith(ContinuationImpl.kt:9)
+	at P9.S.run(DispatchedTask.kt:111)
+	at F0.n0.X(AndroidUiDispatcher.android.kt:7)
+	at F0.n0$c.run(AndroidUiDispatcher.android.kt:3)
+	at android.os.Handler.handleCallback(Handler.java:995)
+	at android.os.Handler.dispatchMessage(Handler.java:103)
+	at android.os.Looper.loopOnce(Looper.java:273)
+	at android.os.Looper.loop(Looper.java:363)
+	at android.app.ActivityThread.main(ActivityThread.java:10060)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:632)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:975)
