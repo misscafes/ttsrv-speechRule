@@ -1530,7 +1530,487 @@ function graphBookCacheSafeKey(bookName, bookUrl) {
   bookName = graphSafeString(bookName || "", 120).trim();
   bookUrl = graphSafeString(bookUrl || "", 500).trim();
   var key = bookName || (bookUrl ? ("book-" + graphHash(bookUrl)) : "default");
-  key = key.replace(/[\\/:*?"<>|]/g, "_");\n  key = key.replace(/[\s\u3000]+/g, "_");\n  key = key.replace(/_+/g, "_");\n  key = key.replace(/^_+|_+$/g, "");\n  if (!key) key = "default";\n  if (key.length > 80) key = key.substring(0, 80);\n  return key;\n}\n\nfunction graphBookCacheFile(prefix, bookKey) {\n  bookKey = graphBookCacheSafeKey(bookKey || "default", "");\n  return prefix + "." + bookKey + ".json";\n}\n\nfunction graphBuildStableChapterKey(bookUrl, chapterIndex) {\n  bookUrl = graphSafeString(bookUrl || "", 500);\n  chapterIndex = graphSafeString(chapterIndex == null ? "" : chapterIndex, 80);\n  if (bookUrl || chapterIndex) return "chapter:" + graphHash(bookUrl + "#" + chapterIndex);\n  return "chapter:unknown";\n}\n\nfunction graphBuildChapterKey(text) {\n  if (typeof graphCurrentChapterKey !== "undefined" && graphCurrentChapterKey) return graphCurrentChapterKey;\n  if (typeof graphCurrentChapterIndex !== "undefined" && graphCurrentChapterIndex !== "") return "chapter:" + graphCurrentChapterIndex;\n  return "chapter:unknown";\n}\n\nfunction graphSetCurrentChapterKey(bookUrl, chapterIndex) {\n  try {\n    graphRemoteEnsureLoaded();\n    var newBookUrl = graphSafeString(bookUrl || "", 500);\n    var newIndex = graphSafeString(chapterIndex == null ? "" : chapterIndex, 80);\n    var newKey = graphBuildStableChapterKey(newBookUrl, newIndex);\n    var oldIndex = graphCurrentChapterIndex || graphRemoteChapterIndex || "";\n    var oldBookUrl = graphCurrentBookUrl || "";\n    var oldKey = graphCurrentChapterKey || graphRemoteChapterKey || "";\n    var realSwitch = (oldIndex !== "" && newIndex !== "" && String(oldIndex) !== String(newIndex)) || (oldBookUrl !== "" && newBookUrl !== "" && oldBookUrl !== newBookUrl);\n\n    if (realSwitch) {\n      graphRemoteFlushChapter("真实章节切换", oldKey || graphRemoteChapterKey || ("chapter:" + oldIndex), "章节切换", oldIndex);\n    }\n\n    graphCurrentBookUrl = newBookUrl;\n    graphCurrentChapterIndex = newIndex;\n    graphCurrentChapterKey = newKey;\n    graphRemoteChapterKey = newKey;\n    graphRemoteChapterIndex = newIndex;\n    graphRemoteWriteLocal();\n  } catch (e) {}\n}\n\nfunction graphRemoteSetChapter(chapterKey, label) {\n  if (!graphRemoteEnabled()) return;\n  graphRemoteEnsureLoaded();\n  chapterKey = graphSafeString(chapterKey || graphBuildChapterKey(""), 120);\n  if (!graphRemoteChapterKey) {\n    graphRemoteChapterKey = chapterKey;\n    graphRemoteChapterIndex = graphCurrentChapterIndex || graphRemoteChapterIndex || "";\n    graphRemoteWriteLocal();\n  }\n}\n\nfunction graphRemoteLog(eventType, data) {\n  if (!graphRemoteEnabled()) return;\n  try {\n    graphRemoteEnsureLoaded();\n    graphRemoteQueue.push({\n      source: GRAPH_RULE_SOURCE,\n      eventType: eventType,\n      cnEvent: graphEventName(eventType),\n      chapterKey: graphRemoteChapterKey || graphCurrentChapterKey || "",\n      chapterIndex: graphRemoteChapterIndex || graphCurrentChapterIndex || "",\n      time: graphNowIso(),\n      data: data || {}\n    });\n    while (graphRemoteQueue.length > GRAPH_REMOTE_MAX_QUEUE) graphRemoteQueue.shift();\n    graphRemoteWriteLocal();\n  } catch (e) {}\n}\n\nfunction graphRemoteFlushChapter(reason, chapterKey, label, chapterIndex) {\n  if (!graphRemoteEnabled()) return;\n  graphRemoteEnsureLoaded();\n  if (!graphRemoteQueue || graphRemoteQueue.length === 0) return;\n  var eventsToSend = graphRemoteQueue.slice(0);\n  var sendKey = chapterKey || graphRemoteChapterKey || "unknown";\n  var sendIndex = chapterIndex || graphRemoteChapterIndex || graphCurrentChapterIndex || "";\n  graphRemoteQueue = [];\n  graphRemoteWriteLocal();\n  graphShortLog("上传章节日志" + eventsToSend.length + "条");\n\n  var runner = function() {\n    try {\n      var headers = { "Content-Type": "application/json", "Connection": "keep-alive" };\n      if (GRAPH_REMOTE_TOKEN) headers["Authorization"] = "Bearer " + GRAPH_REMOTE_TOKEN;\n      var payload = {\n        source: GRAPH_RULE_SOURCE,\n        eventType: "remote_chapter_upload",\n        cnEvent: graphEventName("remote_chapter_upload"),\n        chapterKey: sendKey,\n        chapterIndex: sendIndex,\n        label: label || "",\n        reason: reason || "",\n        eventCount: eventsToSend.length,\n        time: graphNowIso(),\n        events: eventsToSend\n      };\n      try { ttsrv.httpPost(GRAPH_REMOTE_ENDPOINT, JSON.stringify(payload), headers); } catch (postErr) {}\n    } catch (e) {}\n  };\n  try {\n    if (typeof java !== "undefined" && java.lang && java.lang.Thread) {\n      var thread = new java.lang.Thread(new java.lang.Runnable({ run: runner }));\n      thread.start();\n    } else {\n      runner();\n    }\n  } catch (e2) {}\n}\n\nfunction graphReadJsonSafe(fileName, fallback) {\n  try {\n    var content = ttsrv.readTxtFile(fileName);\n    var text = content != null ? String(content).trim() : "";\n    if (!text) return fallback;\n    var parsed = JSON.parse(text);\n    return parsed || fallback;\n  } catch (e) {\n    return fallback;\n  }\n}\n\nfunction graphWriteJsonSafe(fileName, data) {\n  try { ttsrv.writeTxtFile(fileName, JSON.stringify(data || {}, null, 2)); } catch (e) {}\n}\n\nfunction graphNormalizeName(name) {\n  return graphSafeString(name, 40).trim();\n}\n\nfunction graphIsGroupName(name) {\n  if (!ENABLE_GRAPH_GROUP_NAME_FILTER) return false;\n  name = graphNormalizeName(name);\n  if (!name) return false;\n  if (/^(众人|众修士|众弟子|诸人|诸修|二人|两人|三人|四人|几人|数人|一行人|一群人|众女|众男)$/.test(name)) return true;\n  if (/^[一二两三四五六七八九十数几0-9]+(名|个|位|群).*(修士|女子|男子|弟子|人|老者|大汉|少年|少女|儒生|汉子)$/.test(name)) return true;\n  if (/(众人|众修士|众弟子|四名|三名|两名|数名|几名|一群|一行)$/.test(name)) return true;\n  return false;\n}\n\nfunction graphIsAliasGroupName(name) {\n  name = graphNormalizeName(name);\n  if (!name) return false;\n  if (graphIsGroupName(name)) return true;\n  if (/^(\u4f17\u4eba|\u4f17\u4fee\u58eb|\u4f17\u5f1f\u5b50|\u8bf8\u4eba|\u8bf8\u4fee|\u4e8c\u4eba|\u4e24\u4eba|\u4e09\u4eba|\u56db\u4eba|\u51e0\u4eba|\u6570\u4eba|\u4e00\u884c\u4eba|\u4e00\u7fa4\u4eba|\u5176\u4ed6\u51e0\u4eba|\u5176\u4ed6\u4fee\u58eb|\u5728\u5750\u4fee\u58eb)$/.test(name)) return true;\n  if (/[\u4e00\u4e8c\u4e24\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u6570\u51e00-9]+(\u540d|\u4e2a|\u4f4d|\u4eba).*(\u4fee\u58eb|\u5973\u5b50|\u7537\u5b50|\u5f1f\u5b50|\u8001\u8005|\u5927\u6c49|\u5c11\u5e74|\u5c11\u5973|\u5112\u751f|\u6c49\u5b50|\u6cd5\u58eb|\u957f\u8001|\u50e7\u4eba|\u4eba)/.test(name)) return true;\n  if (/^(\u9ad8\u77ee|\u4e00\u9ad8\u4e00\u77ee|\u4e00\u80d6\u4e00\u7626|\u4e00\u7537\u4e00\u5973|\u4e24\u7537|\u4e24\u5973).*(\u4fee\u58eb|\u7537\u5b50|\u5973\u5b50|\u6cd5\u58eb|\u8001\u8005|\u4eba)/.test(name)) return true;\n  if (/(\u4e8c\u4eba|\u4e24\u4eba|\u4e09\u4eba|\u56db\u4eba|\u51e0\u4eba|\u6570\u4eba|\u4f17\u4eba|\u4e00\u884c\u4eba|\u4e00\u7fa4\u4eba)$/.test(name)) return true;\n  return false;\n}\n\nfunction graphAliasMergeBlockReason(a, b) {\n  if (!ENABLE_ALIAS_GROUP_MEMBER_MERGE_BLOCK) return "";\n  a = graphNormalizeName(a);\n  b = graphNormalizeName(b);\n  if (!a || !b || a === b) return "";\n  var groupA = graphIsAliasGroupName(a);\n  var groupB = graphIsAliasGroupName(b);\n  if (groupA !== groupB) return "\u7fa4\u4f53/\u5355\u4eba\u4e0d\u5408\u5e76";\n  return "";\n}\n\nfunction graphEvidenceHasStrongSamePersonPhrase(a, b, evidence) {\n  a = graphNormalizeName(a);\n  b = graphNormalizeName(b);\n  evidence = graphSafeString(evidence || "", 300);\n  if (!a || !b || !evidence) return false;\n  var ea = graphEscapeRegExp(a);\n  var eb = graphEscapeRegExp(b);\n  var link = "(?:\u5373|\u5373\u662f|\u5373\u4e3a|\u5c31\u662f|\u6b63\u662f)";\n  var headGap = "[\\s\\u3000,\uff0c\u3001:\uff1a\u201c\u201d\u2018\u2019\u300a\u300b\u3010\u3011\\(\\)\uff08\uff09]{0,8}";\n  var bodyGap = "[^\u3002\uff01\uff1f\\n]{0,80}";\n  var reg1 = new RegExp(ea + headGap + link + bodyGap + eb);\n  var reg2 = new RegExp(eb + headGap + link + bodyGap + ea);\n  if (!(reg1.test(evidence) || reg2.test(evidence))) return false;\n  var pluralSubject = /(\u8fd9|\u90a3)?(\u4e8c\u4eba|\u4e24\u4eba|\u4e09\u4eba|\u51e0\u4eba|\u4ed6\u4eec|\u5979\u4eec|\u4e24\u8005|\u53cc\u65b9)/.test(evidence);\n  var listedPair = new RegExp(ea + "[^\u3002\uff01\uff1f\\n]{0,8}(?:\u548c|\u4e0e|\u53ca|\u8ddf)[^\u3002\uff01\uff1f\\n]{0,8}" + eb).test(evidence) ||\n    new RegExp(eb + "[^\u3002\uff01\uff1f\\n]{0,8}(?:\u548c|\u4e0e|\u53ca|\u8ddf)[^\u3002\uff01\uff1f\\n]{0,8}" + ea).test(evidence);\n  if (pluralSubject && listedPair) return false;\n  return true;\n}\n\nfunction graphSamePersonEvidenceBlockReason(a, b, evidence) {\n  if (!ENABLE_MODEL_SAME_PERSON_EVIDENCE_GUARD) return "";\n  var groupReason = graphAliasMergeBlockReason(a, b);\n  if (groupReason) return groupReason;\n  evidence = graphSafeString(evidence || "", 300);\n  if (!evidence) return "";\n  var hasExplicitAlias = /(\u53c8\u53eb|\u4e5f\u53eb|\u540d\u53eb|\u5168\u540d|\u5c0f\u540d|\u5916\u53f7|\u5316\u540d|\u7ef0\u53f7|\u88ab\u79f0\u4e3a|\u88ab\u79f0\u4f5c|\u672c\u540d|\u539f\u540d|\u771f\u540d|\u5373\u4e3a|\u4e3a\u540c\u4e00\u4eba|\u540c\u4e00\u4eba|\u540c\u4e00\u540d|\u540c\u4e00\u4f4d)/.test(evidence) || graphEvidenceHasStrongSamePersonPhrase(a, b, evidence);\n  var hasPluralOrInteraction = /(\u5171\u540c|\u4e00\u8d77|\u4e00\u540c|\u540c\u4e3a|\u5747\u4e3a|\u7686\u4e3a|\u4e8c\u4eba|\u4e24\u4eba|\u4e09\u4eba|\u51e0\u4eba|\u6570\u4eba|\u53cc\u65b9|\u5f7c\u6b64|\u4e92\u76f8|\u540c\u884c|\u4ea4\u8c08|\u5bf9\u8bdd|\u5546\u8bae|\u8c0b\u5212|\u8ba8\u8bba|\u5408\u4f5c|\u5173\u7cfb|\u540c\u5c5e|\u5e76\u5217|\u548c|\u4e0e|\u53ca|\u8ddf)/.test(evidence);\n  if (hasPluralOrInteraction && !hasExplicitAlias) return "\u5171\u540c/\u4e92\u52a8\u8bc1\u636e\u4e0d\u662f\u540c\u4eba";\n  return "";\n}\n\n\nfunction graphIsInvalidName(name) {\n  name = graphNormalizeName(name);\n  if (!name) return true;\n  if (name === "未知" || name === "旁白" || name === "系统") return true;\n  if (name.indexOf("群众") === 0) return true;\n  if (graphIsGroupName(name)) return true;\n  if (name.length > 16) return true;\n  if (/^(男|女|男人|女人|男子|女子|老者|少年|少女|青年|中年|老人|小孩|师兄|师姐|师弟|师妹)$/.test(name)) return true;\n  return false;\n}\n\nfunction graphEscapeRegExp(str) {\n  return graphSafeString(str, 80).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");\n}\n\nfunction graphHash(text) {\n  text = graphSafeString(text, 4000);\n  var h = 0;\n  for (var i = 0; i < text.length; i++) {\n    h = ((h << 5) - h + text.charCodeAt(i)) | 0;\n  }\n  return String(h);\n}\n\nfunction graphPairKey(a, b) {\n  a = graphNormalizeName(a);\n  b = graphNormalizeName(b);\n  return a < b ? a + "||" + b : b + "||" + a;\n}\n\nfunction graphSplitAliases(record) {\n  var out = [];\n  function addOne(x) {\n    x = graphNormalizeName(x);\n    if (!x || out.indexOf(x) !== -1) return;\n    out.push(x);\n  }\n  if (!record) return out;\n  addOne(record.name);\n  var arr = graphSafeString(record.aliases, 300).split("|");\n  for (var i = 0; i < arr.length; i++) addOne(arr[i]);\n  return out;\n}\n\nfunction graphAddWeightedEdge(graph, a, b, score, reason, extra) {\n  a = graphNormalizeName(a);\n  b = graphNormalizeName(b);\n  if (!a || !b || a === b) return false;\n  if (!graph[a]) graph[a] = {};\n  if (!graph[b]) graph[b] = {};\n  if (!graph[a][b]) graph[a][b] = { score: 0, count: 0, reasons: [], lastSeen: "" };\n  if (!graph[b][a]) graph[b][a] = { score: 0, count: 0, reasons: [], lastSeen: "" };\n  function update(edge) {\n    edge.score = Math.min(99, Number(edge.score || 0) + Number(score || 0));\n    edge.count = Number(edge.count || 0) + 1;\n    edge.lastSeen = graphNowIso();\n    var r = graphSafeString(reason || "evidence", 80);\n    if (!edge.reasons) edge.reasons = [];\n    if (edge.reasons.length < 12 && edge.reasons.indexOf(r) === -1) edge.reasons.push(r);\n    if (extra) edge.extra = graphSafeString(extra, 180);\n  }\n  update(graph[a][b]);\n  update(graph[b][a]);\n  return true;\n}\n\nfunction graphGetEdgeScore(graph, a, b) {\n  a = graphNormalizeName(a);\n  b = graphNormalizeName(b);\n  if (!a || !b || !graph || !graph[a] || !graph[a][b]) return 0;\n  return Number(graph[a][b].score || 0);\n}\n\nfunction graphGetEdgeReasons(graph, a, b) {\n  a = graphNormalizeName(a);\n  b = graphNormalizeName(b);\n  if (!a || !b || !graph || !graph[a] || !graph[a][b]) return [];\n  return graph[a][b].reasons || [];\n}\n\nfunction graphGetEdgeSnapshot(graph, a, b) {\n  a = graphNormalizeName(a);\n  b = graphNormalizeName(b);\n  if (!a || !b || !graph || !graph[a] || !graph[a][b]) return null;\n  var e = graph[a][b] || {};\n  return {\n    score: Number(e.score || 0),\n    count: Number(e.count || 0),\n    reasons: e.reasons || [],\n    extra: graphSafeString(e.extra || "", 180),\n    lastSeen: graphSafeString(e.lastSeen || "", 40)\n  };\n}\n\nfunction graphRemoveEdge(graph, a, b) {\n  a = graphNormalizeName(a);\n  b = graphNormalizeName(b);\n  if (!a || !b || !graph) return false;\n  var removed = false;\n  if (graph[a] && graph[a][b]) { delete graph[a][b]; removed = true; }\n  if (graph[b] && graph[b][a]) { delete graph[b][a]; removed = true; }\n  return removed;\n}\n\nfunction graphParseJsonObject(text) {\n  text = graphSafeString(text || "", 4000).replace(/\x60\x60\x60json|\x60\x60\x60/g, "").trim();\n  try { return JSON.parse(text); } catch (e) {}\n  var start = text.indexOf("{");\n  var end = text.lastIndexOf("}");\n  if (start >= 0 && end > start) {\n    try { return JSON.parse(text.substring(start, end + 1)); } catch (e2) {}\n  }\n  return null;\n}\n\nfunction graphNormalizeVerifiedRelation(v) {\n  v = graphSafeString(v || "", 60).toLowerCase();\n  if (v === "different" || v === "different_person" || v === "negative" || v.indexOf("不同") !== -1 || v.indexOf("不是") !== -1 || v.indexOf("非") !== -1 || v.indexOf("different") !== -1 || v.indexOf("not") !== -1) return "different_person";\n  if (v === "same" || v === "same_person" || v === "positive" || v.indexOf("同一") !== -1 || v.indexOf("同人") !== -1 || v.indexOf("别名") !== -1 || v.indexOf("alias") !== -1) return "same_person";\n  return "uncertain";\n}\n\nfunction graphGetPairStats(stats, a, b) {\n  if (!stats) return null;\n  a = graphNormalizeName(a);\n  b = graphNormalizeName(b);\n  if (!a || !b || a === b) return null;\n  if (graphIsGroupName(a) || graphIsGroupName(b)) return null;\n  var key = graphPairKey(a, b);\n  if (!stats[key]) {\n    stats[key] = { a: a, b: b, chapterCount: 0, sameSentence: 0, adjacentSpeaker: 0, directInteraction: 0, listedTogether: 0, explicitRelation: 0, positiveMention: 0, modelPositive: 0, modelNegative: 0, updatedAt: "" };\n  }\n  return stats[key];\n}\n\nfunction graphCurrentChapterId() {\n  return graphSafeString((typeof graphCurrentChapterIndex !== "undefined" && graphCurrentChapterIndex) || (typeof graphRemoteChapterIndex !== "undefined" && graphRemoteChapterIndex) || "unknown", 80);\n}\n\nfunction graphPruneSeenMap(seenMap) {\n  try {\n    var keys = Object.keys(seenMap || {});\n    var max = parseInt(GRAPH_CHAPTER_EVIDENCE_MAX, 10) || 3000;\n    if (keys.length <= max) return;\n    keys.sort(function(a, b) { return String(seenMap[a]).localeCompare(String(seenMap[b])); });\n    while (keys.length > max) delete seenMap[keys.shift()];\n  } catch (e) {}\n}\n\nfunction graphMarkChapterEvidenceOnce(stats, a, b, reason) {\n  if (!ENABLE_GRAPH_CHAPTER_DEDUP || !stats) return true;\n  a = graphNormalizeName(a);\n  b = graphNormalizeName(b);\n  if (!a || !b || a === b) return false;\n  if (!stats.__chapterEvidenceSeen) stats.__chapterEvidenceSeen = {};\n  var key = graphCurrentChapterId() + "|" + graphPairKey(a, b) + "|" + graphSafeString(reason || "", 80);\n  if (stats.__chapterEvidenceSeen[key]) return false;\n  stats.__chapterEvidenceSeen[key] = graphNowIso();\n  graphPruneSeenMap(stats.__chapterEvidenceSeen);\n  return true;\n}\n\nfunction graphSortNames3(a, b, c) {\n  var arr = [graphNormalizeName(a), graphNormalizeName(b), graphNormalizeName(c)];\n  arr.sort();\n  return arr;\n}\n\nfunction graphTriadKey(a, b, c, kind) {\n  var arr = graphSortNames3(a, b, c);\n  return graphSafeString(kind || "triad", 20) + "|" + arr.join("|");\n}\n\nfunction graphIsNegativeClosureReason(reason) {\n  reason = graphSafeString(reason || "", 80);\n  if (reason === "direct_interaction_between_two_names") return true;\n  if (reason === "model_direct_interaction") return true;\n  if (reason === "explicit_relationship_two_people") return true;\n  if (reason === "model_relationship") return true;\n  if (ENABLE_GRAPH_TRIAD_USE_ADJACENT && reason === "adjacent_speaker_cooccur") return true;\n  return false;\n}\n\nfunction graphIsPositiveClosureReason(reason) {\n  reason = graphSafeString(reason || "", 80);\n  return reason === "model_same_person" || reason === "explicit_same_person_statement" || reason === "alias_refine_confirmed" || reason === "positive_chain_closed";\n}\n\nfunction graphEdgeHasClosureReason(edge, positive) {\n  if (!edge || !edge.reasons) return false;\n  for (var i = 0; i < edge.reasons.length; i++) {\n    if (positive ? graphIsPositiveClosureReason(edge.reasons[i]) : graphIsNegativeClosureReason(edge.reasons[i])) return true;\n  }\n  return false;\n}\n\nfunction graphCollectClosureNeighbors(graph, name, positive) {\n  var out = [];\n  name = graphNormalizeName(name);\n  if (!graph || !graph[name]) return out;\n  var max = parseInt(GRAPH_CLOSURE_MAX_NEIGHBORS, 10) || 80;\n  for (var n in graph[name]) {\n    if (!graph[name].hasOwnProperty(n)) continue;\n    if (out.length >= max) break;\n    n = graphNormalizeName(n);\n    if (!n || n === name || graphIsInvalidName(n)) continue;\n    if (graphEdgeHasClosureReason(graph[name][n], positive)) out.push(n);\n  }\n  return out;\n}\n\nfunction graphPruneScans(scanMap) {\n  try {\n    var keys = Object.keys(scanMap || {});\n    if (keys.length <= 80) return;\n    keys.sort(function(a, b) { return String(scanMap[a]).localeCompare(String(scanMap[b])); });\n    while (keys.length > 80) delete scanMap[keys.shift()];\n  } catch (e) {}\n}\n\nCharacterManager.prototype.loadAliasGraphData = function() {\n  this.aliasPositiveGraph = graphReadJsonSafe(this.aliasPositiveGraphFile || "alias_positive_graph.json", {});\n  this.aliasNegativeGraph = graphReadJsonSafe(this.aliasNegativeGraphFile || "alias_negative_graph.json", {});\n};\n\nCharacterManager.prototype.saveAliasGraphData = function() {\n  graphWriteJsonSafe(this.aliasPositiveGraphFile || "alias_positive_graph.json", this.aliasPositiveGraph || {});\n  graphWriteJsonSafe(this.aliasNegativeGraphFile || "alias_negative_graph.json", this.aliasNegativeGraph || {});\n};\n\nCharacterManager.prototype.loadAliasCooccurStats = function() {\n  this.aliasCooccurStats = graphReadJsonSafe(this.aliasCooccurStatsFile || "alias_cooccur_stats.json", {});\n};\n\nCharacterManager.prototype.saveAliasCooccurStats = function() {\n  graphWriteJsonSafe(this.aliasCooccurStatsFile || "alias_cooccur_stats.json", this.aliasCooccurStats || {});\n};\n\nCharacterManager.prototype.resetGraphConflictVerifyBudgetIfNeeded = function() {\n  var chapterId = graphCurrentChapterId();\n  if (this.graphConflictVerifyChapterId !== chapterId) {\n    this.graphConflictVerifyChapterId = chapterId;\n    this.graphConflictVerifyCount = 0;\n    this.graphConflictVerifySeen = {};\n  }\n};\n\nCharacterManager.prototype.graphConflictVerifyBudgetOk = function(a, b, stage) {\n  this.resetGraphConflictVerifyBudgetIfNeeded();\n  var maxPerChapter = parseInt(GRAPH_CONFLICT_VERIFY_MAX_PER_CHAPTER, 10);\n  if (isNaN(maxPerChapter) || maxPerChapter < 1) maxPerChapter = 6;\n  var key = graphCurrentChapterId() + "|" + graphPairKey(a, b) + "|" + graphSafeString(stage || "", 60);\n  if (this.graphConflictVerifySeen[key]) {\n    graphRemoteLog("graph_conflict_verify_skip", { a: graphNormalizeName(a), b: graphNormalizeName(b), stage: stage || "", reason: "same_pair_stage_seen" });\n    return false;\n  }\n  if (Number(this.graphConflictVerifyCount || 0) >= maxPerChapter) {\n    graphRemoteLog("graph_conflict_verify_skip", { a: graphNormalizeName(a), b: graphNormalizeName(b), stage: stage || "", reason: "chapter_budget_exhausted", maxPerChapter: maxPerChapter });\n    return false;\n  }\n  this.graphConflictVerifySeen[key] = graphNowIso();\n  this.graphConflictVerifyCount = Number(this.graphConflictVerifyCount || 0) + 1;\n  return true;\n};\n\nCharacterManager.prototype.buildGraphConflictVerifyPrompt = function(payload) {\n  return "你是小说人物正反图谱冲突校验器。请只根据输入的图谱、共现统计、当前证据和上下文判断两个人名是否同一具体人物。\n" +\n    "判定原则：别名、化名、本名、名字、自称、以某名出现、上下文交替称呼通常支持same_person；两人直接对话、并列出现、互相称呼、主仆/朋友/敌对等关系通常支持different_person；证据不足返回uncertain。\n" +\n    "评分标准：\n" +\n    "1. 明确出现A是B的名字、B是A的名字、A以B之名、B以A之名、A自称B、B自称A、A即B、A就是B、A名为B、B名为A、上下文多次交替称呼且无互相对话矛盾时，relation=same_person，confidence必须>=90。\n" +\n    "2. 明确出现A与B直接对话、互相称呼、A和B并列、二人/双方/我二人、主仆/师徒/敌友/契约等两人关系，且没有明确别名证据时，relation=different_person，confidence必须>=85。\n" +\n    "3. 如果正图谱证据只来自positive_chain_closed，但反图谱有直接对话、并列、模型different_person等强证据，优先判different_person，confidence>=85，并标记wrongSide=positive。\n" +\n    "4. 如果反图谱证据只来自model_same_person_blocked或共现误伤，但当前证据明确是名字/化名/自称，优先判same_person，confidence>=90，并标记wrongSide=negative。\n" +\n    "5. 只有证据互相矛盾且无法分辨、或上下文不足时，才返回uncertain或confidence<80。\n" +\n    "如果图谱里已有一边明显由误写、串名、闭合扩散造成，请指出应保留哪一边。\n" +\n    "必须只输出JSON：{\"relation\":\"same_person|different_person|uncertain\",\"confidence\":0-100,\"wrongSide\":\"positive|negative|none\",\"reason\":\"简短中文原因\"}\n" +
+  key = key.replace(/[\\/:*?"<>|]/g, "_");
+  key = key.replace(/[\s\u3000]+/g, "_");
+  key = key.replace(/_+/g, "_");
+  key = key.replace(/^_+|_+$/g, "");
+  if (!key) key = "default";
+  if (key.length > 80) key = key.substring(0, 80);
+  return key;
+}
+
+function graphBookCacheFile(prefix, bookKey) {
+  bookKey = graphBookCacheSafeKey(bookKey || "default", "");
+  return prefix + "." + bookKey + ".json";
+}
+
+function graphBuildStableChapterKey(bookUrl, chapterIndex) {
+  bookUrl = graphSafeString(bookUrl || "", 500);
+  chapterIndex = graphSafeString(chapterIndex == null ? "" : chapterIndex, 80);
+  if (bookUrl || chapterIndex) return "chapter:" + graphHash(bookUrl + "#" + chapterIndex);
+  return "chapter:unknown";
+}
+
+function graphBuildChapterKey(text) {
+  if (typeof graphCurrentChapterKey !== "undefined" && graphCurrentChapterKey) return graphCurrentChapterKey;
+  if (typeof graphCurrentChapterIndex !== "undefined" && graphCurrentChapterIndex !== "") return "chapter:" + graphCurrentChapterIndex;
+  return "chapter:unknown";
+}
+
+function graphSetCurrentChapterKey(bookUrl, chapterIndex) {
+  try {
+    graphRemoteEnsureLoaded();
+    var newBookUrl = graphSafeString(bookUrl || "", 500);
+    var newIndex = graphSafeString(chapterIndex == null ? "" : chapterIndex, 80);
+    var newKey = graphBuildStableChapterKey(newBookUrl, newIndex);
+    var oldIndex = graphCurrentChapterIndex || graphRemoteChapterIndex || "";
+    var oldBookUrl = graphCurrentBookUrl || "";
+    var oldKey = graphCurrentChapterKey || graphRemoteChapterKey || "";
+    var realSwitch = (oldIndex !== "" && newIndex !== "" && String(oldIndex) !== String(newIndex)) || (oldBookUrl !== "" && newBookUrl !== "" && oldBookUrl !== newBookUrl);
+
+    if (realSwitch) {
+      graphRemoteFlushChapter("真实章节切换", oldKey || graphRemoteChapterKey || ("chapter:" + oldIndex), "章节切换", oldIndex);
+    }
+
+    graphCurrentBookUrl = newBookUrl;
+    graphCurrentChapterIndex = newIndex;
+    graphCurrentChapterKey = newKey;
+    graphRemoteChapterKey = newKey;
+    graphRemoteChapterIndex = newIndex;
+    graphRemoteWriteLocal();
+  } catch (e) {}
+}
+
+function graphRemoteSetChapter(chapterKey, label) {
+  if (!graphRemoteEnabled()) return;
+  graphRemoteEnsureLoaded();
+  chapterKey = graphSafeString(chapterKey || graphBuildChapterKey(""), 120);
+  if (!graphRemoteChapterKey) {
+    graphRemoteChapterKey = chapterKey;
+    graphRemoteChapterIndex = graphCurrentChapterIndex || graphRemoteChapterIndex || "";
+    graphRemoteWriteLocal();
+  }
+}
+
+function graphRemoteLog(eventType, data) {
+  if (!graphRemoteEnabled()) return;
+  try {
+    graphRemoteEnsureLoaded();
+    graphRemoteQueue.push({
+      source: GRAPH_RULE_SOURCE,
+      eventType: eventType,
+      cnEvent: graphEventName(eventType),
+      chapterKey: graphRemoteChapterKey || graphCurrentChapterKey || "",
+      chapterIndex: graphRemoteChapterIndex || graphCurrentChapterIndex || "",
+      time: graphNowIso(),
+      data: data || {}
+    });
+    while (graphRemoteQueue.length > GRAPH_REMOTE_MAX_QUEUE) graphRemoteQueue.shift();
+    graphRemoteWriteLocal();
+  } catch (e) {}
+}
+
+function graphRemoteFlushChapter(reason, chapterKey, label, chapterIndex) {
+  if (!graphRemoteEnabled()) return;
+  graphRemoteEnsureLoaded();
+  if (!graphRemoteQueue || graphRemoteQueue.length === 0) return;
+  var eventsToSend = graphRemoteQueue.slice(0);
+  var sendKey = chapterKey || graphRemoteChapterKey || "unknown";
+  var sendIndex = chapterIndex || graphRemoteChapterIndex || graphCurrentChapterIndex || "";
+  graphRemoteQueue = [];
+  graphRemoteWriteLocal();
+  graphShortLog("上传章节日志" + eventsToSend.length + "条");
+
+  var runner = function() {
+    try {
+      var headers = { "Content-Type": "application/json", "Connection": "keep-alive" };
+      if (GRAPH_REMOTE_TOKEN) headers["Authorization"] = "Bearer " + GRAPH_REMOTE_TOKEN;
+      var payload = {
+        source: GRAPH_RULE_SOURCE,
+        eventType: "remote_chapter_upload",
+        cnEvent: graphEventName("remote_chapter_upload"),
+        chapterKey: sendKey,
+        chapterIndex: sendIndex,
+        label: label || "",
+        reason: reason || "",
+        eventCount: eventsToSend.length,
+        time: graphNowIso(),
+        events: eventsToSend
+      };
+      try { ttsrv.httpPost(GRAPH_REMOTE_ENDPOINT, JSON.stringify(payload), headers); } catch (postErr) {}
+    } catch (e) {}
+  };
+  try {
+    if (typeof java !== "undefined" && java.lang && java.lang.Thread) {
+      var thread = new java.lang.Thread(new java.lang.Runnable({ run: runner }));
+      thread.start();
+    } else {
+      runner();
+    }
+  } catch (e2) {}
+}
+
+function graphReadJsonSafe(fileName, fallback) {
+  try {
+    var content = ttsrv.readTxtFile(fileName);
+    var text = content != null ? String(content).trim() : "";
+    if (!text) return fallback;
+    var parsed = JSON.parse(text);
+    return parsed || fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function graphWriteJsonSafe(fileName, data) {
+  try { ttsrv.writeTxtFile(fileName, JSON.stringify(data || {}, null, 2)); } catch (e) {}
+}
+
+function graphNormalizeName(name) {
+  return graphSafeString(name, 40).trim();
+}
+
+function graphIsGroupName(name) {
+  if (!ENABLE_GRAPH_GROUP_NAME_FILTER) return false;
+  name = graphNormalizeName(name);
+  if (!name) return false;
+  if (/^(众人|众修士|众弟子|诸人|诸修|二人|两人|三人|四人|几人|数人|一行人|一群人|众女|众男)$/.test(name)) return true;
+  if (/^[一二两三四五六七八九十数几0-9]+(名|个|位|群).*(修士|女子|男子|弟子|人|老者|大汉|少年|少女|儒生|汉子)$/.test(name)) return true;
+  if (/(众人|众修士|众弟子|四名|三名|两名|数名|几名|一群|一行)$/.test(name)) return true;
+  return false;
+}
+
+function graphIsAliasGroupName(name) {
+  name = graphNormalizeName(name);
+  if (!name) return false;
+  if (graphIsGroupName(name)) return true;
+  if (/^(\u4f17\u4eba|\u4f17\u4fee\u58eb|\u4f17\u5f1f\u5b50|\u8bf8\u4eba|\u8bf8\u4fee|\u4e8c\u4eba|\u4e24\u4eba|\u4e09\u4eba|\u56db\u4eba|\u51e0\u4eba|\u6570\u4eba|\u4e00\u884c\u4eba|\u4e00\u7fa4\u4eba|\u5176\u4ed6\u51e0\u4eba|\u5176\u4ed6\u4fee\u58eb|\u5728\u5750\u4fee\u58eb)$/.test(name)) return true;
+  if (/[\u4e00\u4e8c\u4e24\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u6570\u51e00-9]+(\u540d|\u4e2a|\u4f4d|\u4eba).*(\u4fee\u58eb|\u5973\u5b50|\u7537\u5b50|\u5f1f\u5b50|\u8001\u8005|\u5927\u6c49|\u5c11\u5e74|\u5c11\u5973|\u5112\u751f|\u6c49\u5b50|\u6cd5\u58eb|\u957f\u8001|\u50e7\u4eba|\u4eba)/.test(name)) return true;
+  if (/^(\u9ad8\u77ee|\u4e00\u9ad8\u4e00\u77ee|\u4e00\u80d6\u4e00\u7626|\u4e00\u7537\u4e00\u5973|\u4e24\u7537|\u4e24\u5973).*(\u4fee\u58eb|\u7537\u5b50|\u5973\u5b50|\u6cd5\u58eb|\u8001\u8005|\u4eba)/.test(name)) return true;
+  if (/(\u4e8c\u4eba|\u4e24\u4eba|\u4e09\u4eba|\u56db\u4eba|\u51e0\u4eba|\u6570\u4eba|\u4f17\u4eba|\u4e00\u884c\u4eba|\u4e00\u7fa4\u4eba)$/.test(name)) return true;
+  return false;
+}
+
+function graphAliasMergeBlockReason(a, b) {
+  if (!ENABLE_ALIAS_GROUP_MEMBER_MERGE_BLOCK) return "";
+  a = graphNormalizeName(a);
+  b = graphNormalizeName(b);
+  if (!a || !b || a === b) return "";
+  var groupA = graphIsAliasGroupName(a);
+  var groupB = graphIsAliasGroupName(b);
+  if (groupA !== groupB) return "\u7fa4\u4f53/\u5355\u4eba\u4e0d\u5408\u5e76";
+  return "";
+}
+
+function graphEvidenceHasStrongSamePersonPhrase(a, b, evidence) {
+  a = graphNormalizeName(a);
+  b = graphNormalizeName(b);
+  evidence = graphSafeString(evidence || "", 300);
+  if (!a || !b || !evidence) return false;
+  var ea = graphEscapeRegExp(a);
+  var eb = graphEscapeRegExp(b);
+  var link = "(?:\u5373|\u5373\u662f|\u5373\u4e3a|\u5c31\u662f|\u6b63\u662f)";
+  var headGap = "[\\s\\u3000,\uff0c\u3001:\uff1a\u201c\u201d\u2018\u2019\u300a\u300b\u3010\u3011\\(\\)\uff08\uff09]{0,8}";
+  var bodyGap = "[^\u3002\uff01\uff1f\\n]{0,80}";
+  var reg1 = new RegExp(ea + headGap + link + bodyGap + eb);
+  var reg2 = new RegExp(eb + headGap + link + bodyGap + ea);
+  if (!(reg1.test(evidence) || reg2.test(evidence))) return false;
+  var pluralSubject = /(\u8fd9|\u90a3)?(\u4e8c\u4eba|\u4e24\u4eba|\u4e09\u4eba|\u51e0\u4eba|\u4ed6\u4eec|\u5979\u4eec|\u4e24\u8005|\u53cc\u65b9)/.test(evidence);
+  var listedPair = new RegExp(ea + "[^\u3002\uff01\uff1f\\n]{0,8}(?:\u548c|\u4e0e|\u53ca|\u8ddf)[^\u3002\uff01\uff1f\\n]{0,8}" + eb).test(evidence) ||
+    new RegExp(eb + "[^\u3002\uff01\uff1f\\n]{0,8}(?:\u548c|\u4e0e|\u53ca|\u8ddf)[^\u3002\uff01\uff1f\\n]{0,8}" + ea).test(evidence);
+  if (pluralSubject && listedPair) return false;
+  return true;
+}
+
+function graphSamePersonEvidenceBlockReason(a, b, evidence) {
+  if (!ENABLE_MODEL_SAME_PERSON_EVIDENCE_GUARD) return "";
+  var groupReason = graphAliasMergeBlockReason(a, b);
+  if (groupReason) return groupReason;
+  evidence = graphSafeString(evidence || "", 300);
+  if (!evidence) return "";
+  var hasExplicitAlias = /(\u53c8\u53eb|\u4e5f\u53eb|\u540d\u53eb|\u5168\u540d|\u5c0f\u540d|\u5916\u53f7|\u5316\u540d|\u7ef0\u53f7|\u88ab\u79f0\u4e3a|\u88ab\u79f0\u4f5c|\u672c\u540d|\u539f\u540d|\u771f\u540d|\u5373\u4e3a|\u4e3a\u540c\u4e00\u4eba|\u540c\u4e00\u4eba|\u540c\u4e00\u540d|\u540c\u4e00\u4f4d)/.test(evidence) || graphEvidenceHasStrongSamePersonPhrase(a, b, evidence);
+  var hasPluralOrInteraction = /(\u5171\u540c|\u4e00\u8d77|\u4e00\u540c|\u540c\u4e3a|\u5747\u4e3a|\u7686\u4e3a|\u4e8c\u4eba|\u4e24\u4eba|\u4e09\u4eba|\u51e0\u4eba|\u6570\u4eba|\u53cc\u65b9|\u5f7c\u6b64|\u4e92\u76f8|\u540c\u884c|\u4ea4\u8c08|\u5bf9\u8bdd|\u5546\u8bae|\u8c0b\u5212|\u8ba8\u8bba|\u5408\u4f5c|\u5173\u7cfb|\u540c\u5c5e|\u5e76\u5217|\u548c|\u4e0e|\u53ca|\u8ddf)/.test(evidence);
+  if (hasPluralOrInteraction && !hasExplicitAlias) return "\u5171\u540c/\u4e92\u52a8\u8bc1\u636e\u4e0d\u662f\u540c\u4eba";
+  return "";
+}
+
+
+function graphIsInvalidName(name) {
+  name = graphNormalizeName(name);
+  if (!name) return true;
+  if (name === "未知" || name === "旁白" || name === "系统") return true;
+  if (name.indexOf("群众") === 0) return true;
+  if (graphIsGroupName(name)) return true;
+  if (name.length > 16) return true;
+  if (/^(男|女|男人|女人|男子|女子|老者|少年|少女|青年|中年|老人|小孩|师兄|师姐|师弟|师妹)$/.test(name)) return true;
+  return false;
+}
+
+function graphEscapeRegExp(str) {
+  return graphSafeString(str, 80).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function graphHash(text) {
+  text = graphSafeString(text, 4000);
+  var h = 0;
+  for (var i = 0; i < text.length; i++) {
+    h = ((h << 5) - h + text.charCodeAt(i)) | 0;
+  }
+  return String(h);
+}
+
+function graphPairKey(a, b) {
+  a = graphNormalizeName(a);
+  b = graphNormalizeName(b);
+  return a < b ? a + "||" + b : b + "||" + a;
+}
+
+function graphSplitAliases(record) {
+  var out = [];
+  function addOne(x) {
+    x = graphNormalizeName(x);
+    if (!x || out.indexOf(x) !== -1) return;
+    out.push(x);
+  }
+  if (!record) return out;
+  addOne(record.name);
+  var arr = graphSafeString(record.aliases, 300).split("|");
+  for (var i = 0; i < arr.length; i++) addOne(arr[i]);
+  return out;
+}
+
+function graphAddWeightedEdge(graph, a, b, score, reason, extra) {
+  a = graphNormalizeName(a);
+  b = graphNormalizeName(b);
+  if (!a || !b || a === b) return false;
+  if (!graph[a]) graph[a] = {};
+  if (!graph[b]) graph[b] = {};
+  if (!graph[a][b]) graph[a][b] = { score: 0, count: 0, reasons: [], lastSeen: "" };
+  if (!graph[b][a]) graph[b][a] = { score: 0, count: 0, reasons: [], lastSeen: "" };
+  function update(edge) {
+    edge.score = Math.min(99, Number(edge.score || 0) + Number(score || 0));
+    edge.count = Number(edge.count || 0) + 1;
+    edge.lastSeen = graphNowIso();
+    var r = graphSafeString(reason || "evidence", 80);
+    if (!edge.reasons) edge.reasons = [];
+    if (edge.reasons.length < 12 && edge.reasons.indexOf(r) === -1) edge.reasons.push(r);
+    if (extra) edge.extra = graphSafeString(extra, 180);
+  }
+  update(graph[a][b]);
+  update(graph[b][a]);
+  return true;
+}
+
+function graphGetEdgeScore(graph, a, b) {
+  a = graphNormalizeName(a);
+  b = graphNormalizeName(b);
+  if (!a || !b || !graph || !graph[a] || !graph[a][b]) return 0;
+  return Number(graph[a][b].score || 0);
+}
+
+function graphGetEdgeReasons(graph, a, b) {
+  a = graphNormalizeName(a);
+  b = graphNormalizeName(b);
+  if (!a || !b || !graph || !graph[a] || !graph[a][b]) return [];
+  return graph[a][b].reasons || [];
+}
+
+function graphGetEdgeSnapshot(graph, a, b) {
+  a = graphNormalizeName(a);
+  b = graphNormalizeName(b);
+  if (!a || !b || !graph || !graph[a] || !graph[a][b]) return null;
+  var e = graph[a][b] || {};
+  return {
+    score: Number(e.score || 0),
+    count: Number(e.count || 0),
+    reasons: e.reasons || [],
+    extra: graphSafeString(e.extra || "", 180),
+    lastSeen: graphSafeString(e.lastSeen || "", 40)
+  };
+}
+
+function graphRemoveEdge(graph, a, b) {
+  a = graphNormalizeName(a);
+  b = graphNormalizeName(b);
+  if (!a || !b || !graph) return false;
+  var removed = false;
+  if (graph[a] && graph[a][b]) { delete graph[a][b]; removed = true; }
+  if (graph[b] && graph[b][a]) { delete graph[b][a]; removed = true; }
+  return removed;
+}
+
+function graphParseJsonObject(text) {
+  text = graphSafeString(text || "", 4000).replace(/\x60\x60\x60json|\x60\x60\x60/g, "").trim();
+  try { return JSON.parse(text); } catch (e) {}
+  var start = text.indexOf("{");
+  var end = text.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    try { return JSON.parse(text.substring(start, end + 1)); } catch (e2) {}
+  }
+  return null;
+}
+
+function graphNormalizeVerifiedRelation(v) {
+  v = graphSafeString(v || "", 60).toLowerCase();
+  if (v === "different" || v === "different_person" || v === "negative" || v.indexOf("不同") !== -1 || v.indexOf("不是") !== -1 || v.indexOf("非") !== -1 || v.indexOf("different") !== -1 || v.indexOf("not") !== -1) return "different_person";
+  if (v === "same" || v === "same_person" || v === "positive" || v.indexOf("同一") !== -1 || v.indexOf("同人") !== -1 || v.indexOf("别名") !== -1 || v.indexOf("alias") !== -1) return "same_person";
+  return "uncertain";
+}
+
+function graphGetPairStats(stats, a, b) {
+  if (!stats) return null;
+  a = graphNormalizeName(a);
+  b = graphNormalizeName(b);
+  if (!a || !b || a === b) return null;
+  if (graphIsGroupName(a) || graphIsGroupName(b)) return null;
+  var key = graphPairKey(a, b);
+  if (!stats[key]) {
+    stats[key] = { a: a, b: b, chapterCount: 0, sameSentence: 0, adjacentSpeaker: 0, directInteraction: 0, listedTogether: 0, explicitRelation: 0, positiveMention: 0, modelPositive: 0, modelNegative: 0, updatedAt: "" };
+  }
+  return stats[key];
+}
+
+function graphCurrentChapterId() {
+  return graphSafeString((typeof graphCurrentChapterIndex !== "undefined" && graphCurrentChapterIndex) || (typeof graphRemoteChapterIndex !== "undefined" && graphRemoteChapterIndex) || "unknown", 80);
+}
+
+function graphPruneSeenMap(seenMap) {
+  try {
+    var keys = Object.keys(seenMap || {});
+    var max = parseInt(GRAPH_CHAPTER_EVIDENCE_MAX, 10) || 3000;
+    if (keys.length <= max) return;
+    keys.sort(function(a, b) { return String(seenMap[a]).localeCompare(String(seenMap[b])); });
+    while (keys.length > max) delete seenMap[keys.shift()];
+  } catch (e) {}
+}
+
+function graphMarkChapterEvidenceOnce(stats, a, b, reason) {
+  if (!ENABLE_GRAPH_CHAPTER_DEDUP || !stats) return true;
+  a = graphNormalizeName(a);
+  b = graphNormalizeName(b);
+  if (!a || !b || a === b) return false;
+  if (!stats.__chapterEvidenceSeen) stats.__chapterEvidenceSeen = {};
+  var key = graphCurrentChapterId() + "|" + graphPairKey(a, b) + "|" + graphSafeString(reason || "", 80);
+  if (stats.__chapterEvidenceSeen[key]) return false;
+  stats.__chapterEvidenceSeen[key] = graphNowIso();
+  graphPruneSeenMap(stats.__chapterEvidenceSeen);
+  return true;
+}
+
+function graphSortNames3(a, b, c) {
+  var arr = [graphNormalizeName(a), graphNormalizeName(b), graphNormalizeName(c)];
+  arr.sort();
+  return arr;
+}
+
+function graphTriadKey(a, b, c, kind) {
+  var arr = graphSortNames3(a, b, c);
+  return graphSafeString(kind || "triad", 20) + "|" + arr.join("|");
+}
+
+function graphIsNegativeClosureReason(reason) {
+  reason = graphSafeString(reason || "", 80);
+  if (reason === "direct_interaction_between_two_names") return true;
+  if (reason === "model_direct_interaction") return true;
+  if (reason === "explicit_relationship_two_people") return true;
+  if (reason === "model_relationship") return true;
+  if (ENABLE_GRAPH_TRIAD_USE_ADJACENT && reason === "adjacent_speaker_cooccur") return true;
+  return false;
+}
+
+function graphIsPositiveClosureReason(reason) {
+  reason = graphSafeString(reason || "", 80);
+  return reason === "model_same_person" || reason === "explicit_same_person_statement" || reason === "alias_refine_confirmed" || reason === "positive_chain_closed";
+}
+
+function graphEdgeHasClosureReason(edge, positive) {
+  if (!edge || !edge.reasons) return false;
+  for (var i = 0; i < edge.reasons.length; i++) {
+    if (positive ? graphIsPositiveClosureReason(edge.reasons[i]) : graphIsNegativeClosureReason(edge.reasons[i])) return true;
+  }
+  return false;
+}
+
+function graphCollectClosureNeighbors(graph, name, positive) {
+  var out = [];
+  name = graphNormalizeName(name);
+  if (!graph || !graph[name]) return out;
+  var max = parseInt(GRAPH_CLOSURE_MAX_NEIGHBORS, 10) || 80;
+  for (var n in graph[name]) {
+    if (!graph[name].hasOwnProperty(n)) continue;
+    if (out.length >= max) break;
+    n = graphNormalizeName(n);
+    if (!n || n === name || graphIsInvalidName(n)) continue;
+    if (graphEdgeHasClosureReason(graph[name][n], positive)) out.push(n);
+  }
+  return out;
+}
+
+function graphPruneScans(scanMap) {
+  try {
+    var keys = Object.keys(scanMap || {});
+    if (keys.length <= 80) return;
+    keys.sort(function(a, b) { return String(scanMap[a]).localeCompare(String(scanMap[b])); });
+    while (keys.length > 80) delete scanMap[keys.shift()];
+  } catch (e) {}
+}
+
+CharacterManager.prototype.loadAliasGraphData = function() {
+  this.aliasPositiveGraph = graphReadJsonSafe(this.aliasPositiveGraphFile || "alias_positive_graph.json", {});
+  this.aliasNegativeGraph = graphReadJsonSafe(this.aliasNegativeGraphFile || "alias_negative_graph.json", {});
+};
+
+CharacterManager.prototype.saveAliasGraphData = function() {
+  graphWriteJsonSafe(this.aliasPositiveGraphFile || "alias_positive_graph.json", this.aliasPositiveGraph || {});
+  graphWriteJsonSafe(this.aliasNegativeGraphFile || "alias_negative_graph.json", this.aliasNegativeGraph || {});
+};
+
+CharacterManager.prototype.loadAliasCooccurStats = function() {
+  this.aliasCooccurStats = graphReadJsonSafe(this.aliasCooccurStatsFile || "alias_cooccur_stats.json", {});
+};
+
+CharacterManager.prototype.saveAliasCooccurStats = function() {
+  graphWriteJsonSafe(this.aliasCooccurStatsFile || "alias_cooccur_stats.json", this.aliasCooccurStats || {});
+};
+
+CharacterManager.prototype.resetGraphConflictVerifyBudgetIfNeeded = function() {
+  var chapterId = graphCurrentChapterId();
+  if (this.graphConflictVerifyChapterId !== chapterId) {
+    this.graphConflictVerifyChapterId = chapterId;
+    this.graphConflictVerifyCount = 0;
+    this.graphConflictVerifySeen = {};
+  }
+};
+
+CharacterManager.prototype.graphConflictVerifyBudgetOk = function(a, b, stage) {
+  this.resetGraphConflictVerifyBudgetIfNeeded();
+  var maxPerChapter = parseInt(GRAPH_CONFLICT_VERIFY_MAX_PER_CHAPTER, 10);
+  if (isNaN(maxPerChapter) || maxPerChapter < 1) maxPerChapter = 6;
+  var key = graphCurrentChapterId() + "|" + graphPairKey(a, b) + "|" + graphSafeString(stage || "", 60);
+  if (this.graphConflictVerifySeen[key]) {
+    graphRemoteLog("graph_conflict_verify_skip", { a: graphNormalizeName(a), b: graphNormalizeName(b), stage: stage || "", reason: "same_pair_stage_seen" });
+    return false;
+  }
+  if (Number(this.graphConflictVerifyCount || 0) >= maxPerChapter) {
+    graphRemoteLog("graph_conflict_verify_skip", { a: graphNormalizeName(a), b: graphNormalizeName(b), stage: stage || "", reason: "chapter_budget_exhausted", maxPerChapter: maxPerChapter });
+    return false;
+  }
+  this.graphConflictVerifySeen[key] = graphNowIso();
+  this.graphConflictVerifyCount = Number(this.graphConflictVerifyCount || 0) + 1;
+  return true;
+};
+
+CharacterManager.prototype.buildGraphConflictVerifyPrompt = function(payload) {
+  return "你是小说人物正反图谱冲突校验器。请只根据输入的图谱、共现统计、当前证据和上下文判断两个人名是否同一具体人物。\n" +
+    "判定原则：别名、化名、本名、名字、自称、以某名出现、上下文交替称呼通常支持same_person；两人直接对话、并列出现、互相称呼、主仆/朋友/敌对等关系通常支持different_person；证据不足返回uncertain。\n" +
+    "评分标准：\n" +
+    "1. 明确出现A是B的名字、B是A的名字、A以B之名、B以A之名、A自称B、B自称A、A即B、A就是B、A名为B、B名为A、上下文多次交替称呼且无互相对话矛盾时，relation=same_person，confidence必须>=90。\n" +
+    "2. 明确出现A与B直接对话、互相称呼、A和B并列、二人/双方/我二人、主仆/师徒/敌友/契约等两人关系，且没有明确别名证据时，relation=different_person，confidence必须>=85。\n" +
+    "3. 如果正图谱证据只来自positive_chain_closed，但反图谱有直接对话、并列、模型different_person等强证据，优先判different_person，confidence>=85，并标记wrongSide=positive。\n" +
+    "4. 如果反图谱证据只来自model_same_person_blocked或共现误伤，但当前证据明确是名字/化名/自称，优先判same_person，confidence>=90，并标记wrongSide=negative。\n" +
+    "5. 只有证据互相矛盾且无法分辨、或上下文不足时，才返回uncertain或confidence<80。\n" +
+    "如果图谱里已有一边明显由误写、串名、闭合扩散造成，请指出应保留哪一边。\n" +
+    "必须只输出JSON：{\"relation\":\"same_person|different_person|uncertain\",\"confidence\":0-100,\"wrongSide\":\"positive|negative|none\",\"reason\":\"简短中文原因\"}\n" +
     "输入：\n" + JSON.stringify(payload, null, 2);
 };
 
@@ -3049,7 +3529,624 @@ CharacterManager.prototype.checkAliasByApi = function(newName, chapterFullConten
   if (mode === 2 && !finalResult.isAlias && finalResult.confidence && finalResult.confidence >= 80) {
     finalResult.isAlias = true;
     if (!finalResult.mainName && finalResult.reason) {
-      var mainNameMatch = finalResult.reason.match(/主名[：:]?\s*["']?([^"'\s,，]+)/);\n      if (mainNameMatch) {\n        finalResult.mainName = mainNameMatch[1];\n      }\n    }\n    if (!finalResult.mainName) {\n      for (var i = 0; i < nameListForApi.length; i++) {\n        var listName = nameListForApi[i].name;\n        if (finalResult.reason.indexOf(listName) !== -1) {\n          finalResult.mainName = listName;\n          break;\n        }\n      }\n    }\n  }\n  if (finalResult && finalResult.isAlias && finalResult.mainName) {\n    var aliasBlockReason = graphAliasMergeBlockReason(newName, finalResult.mainName);\n    if (aliasBlockReason) {\n      aliasShortLog("\u5408\u5e76\u62e6\u622a " + graphNormalizeName(newName) + "\u2192" + graphNormalizeName(finalResult.mainName));\n      graphRemoteLog("alias_merge_blocked", { stage: "alias_check", newName: graphNormalizeName(newName), mainName: graphNormalizeName(finalResult.mainName), reason: aliasBlockReason });\n      finalResult = { isAlias: false, mainName: null, reason: aliasBlockReason };\n    }\n  }\n  if (this.logAliasCheckFlow) this.logAliasCheckFlow(newName, finalResult, graphEvidenceHint, mode);\n  return finalResult;\n};\n\n// ===================== 新增：别名清洗API（主名+现有别名+新别名，清洗无关别名）=====================\nCharacterManager.prototype.refineAliasGroupByApi = function(mainRecord, newName, chapterFullContent, currentDialogueText) {\n  // 同步延时函数（和现有别名分析逻辑保持一致）\n  function sleep(ms) {\n    var start = Date.now();\n    while (Date.now() - start < ms) {}\n  }\n\n  if (!mainRecord || !mainRecord.name) return null;\n\n  newName = (newName || "").trim();\n  chapterFullContent = chapterFullContent || "";\n  currentDialogueText = currentDialogueText || "";\n\n  if (!newName) return null;\n\n  var mainName = mainRecord.name.trim();\n  var currentAliases = [];\n\n  if (mainRecord.aliases && mainRecord.aliases.trim()) {\n    currentAliases = mainRecord.aliases.split("|")\n      .map(function(alias) { return alias.trim(); })\n      .filter(function(alias) { return alias !== ""; });\n  }\n\n  // 保证主名一定在候选列表里\n  if (currentAliases.indexOf(mainName) === -1) {\n    currentAliases.unshift(mainName);\n  }\n\n  // 构建去重后的“主名+旧别名+新名字”\n  var aliasCandidates = [];\n  var seenAliasMap = {};\n  for (var i = 0; i < currentAliases.length; i++) {\n    var oldAlias = currentAliases[i];\n    if (oldAlias && !seenAliasMap[oldAlias]) {\n      seenAliasMap[oldAlias] = true;\n      aliasCandidates.push(oldAlias);\n    }\n  }\n  if (newName && !seenAliasMap[newName]) {\n    seenAliasMap[newName] = true;\n    aliasCandidates.push(newName);\n  }\n\n  var prompt =\n    "你是专业的小说人物别名清洗AI。你的任务是：已知【新名字】已经初步判断可能归属于【主名】，现在请继续判断【主名+现有别名列表+新名字】中，哪些名字真正属于同一个人物，哪些是历史误判留下的无关别名。\n\n" +\n    "【任务目标】\n" +\n    "1. 确认【新名字】是否确实属于【主名】对应的人物；\n" +\n    "2. 清洗【现有别名列表】中与【主名】无关的错误别名；\n" +\n    "3. 输出最终应该保留的别名列表，以及应剔除的无关别名；\n" +\n    "4. 主名必须是同一个人物的真正核心名称，若上下文明确显示主名本身选错了，也可以重新指定更合适的主名。\n\n" +\n    "【判断标准】\n" +\n    "1. 只有在上下文中明确或高度确定指向同一具体人物的名字，才能保留为 confirmedAliases；\n" +\n    "2. 如果某个别名明显属于其他人物、身份称呼不稳定、仅偶然被误判关联、或上下文无法支撑其属于主名，则加入 removedAliases；\n" +\n    "3. 不要因为名字相似、姓氏相同、身份相近就随意保留；\n" +\n    "4. 若【新名字】实际上并不属于该主名人物，则 isSamePerson=false；\n" +\n    "5. 如果主名本身应更换，请返回新的 mainName，并让 confirmedAliases 围绕新的 mainName 组织。\n\n" +\n    "【输入信息】\n" +\n    "【当前主名】\n" + mainName + "\n\n" +\n    "【当前主名及别名列表】\n" + aliasCandidates.join("|") + "\n\n" +\n    "【新名字】\n" + newName + "\n\n" +\n    "【当前对话】\n" + currentDialogueText + "\n\n" +\n    "【小说上下文】\n" + String(this.contextHistory2 || '').slice(-1000) + text2 + String(next100Chars || '').slice(0, 500) + "\n\n" +\n    "【输出要求】\n" +\n    "1. 仅输出JSON，不要输出解释文字；\n" +\n    "2. 必须包含以下字段：\n" +\n    "   - isSamePerson: 布尔值，true=新名字属于该主名人物，false=不属于\n" +\n    "   - mainName: 字符串或null，最终确认的主名\n" +\n    "   - confirmedAliases: 数组，最终确认属于该主名人物的别名列表（不必重复放主名）\n" +\n    "   - removedAliases: 数组，应从旧别名中剔除的无关别名\n" +\n    "   - reason: 字符串或null，简要说明依据\n\n" +\n    "【输出格式】\n" +\n    "{\n" +\n    '  "isSamePerson": true/false,\n' +\n    '  "mainName": "最终主名" 或 null,\n' +\n    '  "confirmedAliases": ["别名1","别名2"],\n' +\n    '  "removedAliases": ["错误别名1","错误别名2"],\n' +\n    '  "reason": "简要说明" 或 null\n' +\n    "}";\n\n  var finalResult = null;\n  var maxRetryRound = Math.ceil(CHARACTER_ANALYZE_RETRY_MAX / bingfa);\n  var currentRound = 0;\n  var requestTimeout = ALIAS_ANALYZE_TIMEOUT;\n\n  // 构建请求\n  function buildAliasRefineRequest(apiConfig) {\n    var requestData = {\n      model: apiConfig.model,\n      messages: [\n        { role: "system", content: "严格遵守格式要求，仅输出JSON，格式错误则任务失败" },\n        { role: "user", content: prompt }\n      ],\n      temperature: 0.1,\n      thinking: { type: "disabled" },\n      disable_think: true,\n      no_chain_of_thought: true,\n      do_sample: false\n    };\n    var headers = {\n      "Content-Type": "application/json",\n      "Authorization": "Bearer " + apiConfig.key,\n      "Connection": "keep-alive",\n      "Timeout": requestTimeout.toString()\n    };\n    return {\n      endpoint: apiConfig.endpoint,\n      data: requestData,\n      headers: headers\n    };\n  }\n\n  // 解析响应\n  function parseAliasRefineResponse(response) {\n    var responseBody = String(response.body().string() || "{}");\n    var apiOuterResponse = JSON.parse(responseBody);\n\n    if (!apiOuterResponse.choices || !apiOuterResponse.choices[0] || !apiOuterResponse.choices[0].message) {\n      throw new Error("API响应格式错误：缺少choices[0].message");\n    }\n\n    var actualResultContent = apiOuterResponse.choices[0].message.content.trim();\n    var cleanJson = actualResultContent.replace(/```json|```/g, "").trim();\n    var apiResult = JSON.parse(cleanJson);\n\n    var requiredFields = ["isSamePerson", "mainName", "confirmedAliases", "removedAliases", "reason"];\n    var missingFields = [];\n    for (var i = 0; i < requiredFields.length; i++) {\n      if (!apiResult.hasOwnProperty(requiredFields[i])) {\n        missingFields.push(requiredFields[i]);\n      }\n    }\n    if (missingFields.length > 0) {\n      throw new Error("返回格式错误：缺少必选字段" + missingFields.join(","));\n    }\n\n    if (typeof apiResult.isSamePerson !== "boolean") {\n      throw new Error("返回格式错误：isSamePerson必须是布尔值");\n    }\n    if (apiResult.mainName !== null && typeof apiResult.mainName !== "string") {\n      throw new Error("返回格式错误：mainName必须是字符串或null");\n    }\n    if (!Array.isArray(apiResult.confirmedAliases)) {\n      throw new Error("返回格式错误：confirmedAliases必须是数组");\n    }\n    if (!Array.isArray(apiResult.removedAliases)) {\n      throw new Error("返回格式错误：removedAliases必须是数组");\n    }\n\n    return apiResult;\n  }\n\n  // 并发请求循环\n  while (currentRound < maxRetryRound && !finalResult) {\n    currentRound++;\n    var concurrentResult = concurrentApiRequest(\n      "aliasAnalyze",\n      buildAliasRefineRequest,\n      parseAliasRefineResponse,\n      null,\n      requestTimeout\n    );\n\n    if (concurrentResult.success) {\n      if (concurrentResult.isMultiResult) {\n        finalResult = voteAliasRefineResult(concurrentResult.data);\n      } else {\n        finalResult = concurrentResult.data;\n      }\n    } else {\n      if (currentRound < maxRetryRound) {\n        sleep(250);\n      }\n    }\n  }\n\n  if (!finalResult) {\n    console.error("【别名清洗】所有重试均失败");\n    return null;\n  }\n\n  if (finalResult && finalResult.isSamePerson) {\n    var refineBlockReason = graphAliasMergeBlockReason(newName, finalResult.mainName || mainName);\n    if (refineBlockReason) {\n      aliasShortLog("\u6e05\u6d17\u62e6\u622a " + graphNormalizeName(newName) + "\u2192" + graphNormalizeName(finalResult.mainName || mainName));\n      graphRemoteLog("alias_merge_blocked", { stage: "alias_refine", newName: graphNormalizeName(newName), mainName: graphNormalizeName(finalResult.mainName || mainName), reason: refineBlockReason });\n      finalResult.isSamePerson = false;\n      finalResult.reason = refineBlockReason;\n    }\n  }\n  if (this.logAliasRefineFlow) this.logAliasRefineFlow(mainName, newName, finalResult);\n  return finalResult;\n};\n// ===================== 新增：规范化别名清洗结果（本地最终兜底整理）=====================\nCharacterManager.prototype.normalizeAliasRefineResult = function(mainRecord, refineResult, newName) {\n  if (!mainRecord || !mainRecord.name || !refineResult) return null;\n\n  var mainName = (refineResult.mainName || mainRecord.name || "").trim();\n  if (!mainName) return null;\n\n  var confirmedAliases = [];\n  var seenMap = {};\n\n  function pushAlias(alias) {\n    alias = (alias || "").trim();\n    if (!alias) return;\n    if (alias === mainName) return; // 主名不重复进别名列表\n    if (graphAliasMergeBlockReason(alias, mainName)) return;\n    if (!seenMap[alias]) {\n      seenMap[alias] = true;\n      confirmedAliases.push(alias);\n    }\n  }\n\n  // 先放AI确认的别名\n  if (Array.isArray(refineResult.confirmedAliases)) {\n    for (var i = 0; i < refineResult.confirmedAliases.length; i++) {\n      pushAlias(refineResult.confirmedAliases[i]);\n    }\n  }\n\n  // 建 removedMap，避免被AI明确剔除的名字又被补回去\n  var removedMap = {};\n  if (Array.isArray(refineResult.removedAliases)) {\n    for (var j = 0; j < refineResult.removedAliases.length; j++) {\n      var removedAlias = (refineResult.removedAliases[j] || "").trim();\n      if (removedAlias) removedMap[removedAlias] = true;\n    }\n  }\n\n  // 若AI判定“仍是同一人”，则允许补充新名字（前提：AI没明确把它剔除）\n  newName = (newName || "").trim();\n  if (refineResult.isSamePerson && newName && !removedMap[newName]) {\n    pushAlias(newName);\n  }\n\n  return {\n    mainName: mainName,\n    aliases: confirmedAliases,\n    removedAliases: Array.isArray(refineResult.removedAliases) ? refineResult.removedAliases : []\n  };\n};\n\n\n\n\n\nCharacterManager.prototype.processCharacter = function (fullText, characterId, allDialogues, chapterFullContent) {\n  // 新增参数：chapterFullContent（当前章节完整内容，用于别名校验）\n  var analysis = this.analyzeCharacter(fullText, characterId, allDialogues);\n  if (!analysis) {\n      return null;\n  }\n  var currentDialogueText = "";\n  for (var i = 0; i < allDialogues.length; i++) {\n      if (allDialogues[i].id === characterId) {\n          currentDialogueText = allDialogues[i].text;\n          break;\n      }\n  }\n  var cleanText = currentDialogueText.replace(/^(“?)【\d+】/, "$1");\n  var newCharacterName = analysis.name.trim(); // 从API解析的新角色名\n  \n  // -------------------------- 别名校验核心逻辑（已升级为二阶段清洗） --------------------------\n  var targetMainRecord = null; // 匹配到的主角色记录\n\n  // 根据bieming变量控制是否执行别名校验\n  if (bieming !== 0 && newCharacterName !== "未知") {\n      // 1. 先检查新名字是否已在本地（主名字/别名）\n      var existingRecord = this.findCharacterRecord(newCharacterName);\n      if (!existingRecord) {\n          // 2. 调用API校验是否为已有角色的别名（第一阶段）\n          var aliasCheckResult = this.checkAliasByApi(\n              newCharacterName,\n              chapterFullContent,\n              analysis.gender,\n              currentDialogueText,\n              bieming\n          );\n\n          if (aliasCheckResult && !aliasCheckResult.isAlias && aliasCheckResult.mainName && this.recordNegativeAliasEdge) {\n              this.recordNegativeAliasEdge(newCharacterName, aliasCheckResult.mainName, 3, "alias_api_rejected", aliasCheckResult.reason || "别名API拒绝");\n          }\n\n          if (aliasCheckResult && aliasCheckResult.isAlias && aliasCheckResult.mainName) {\n              var processAliasBlockReason = graphAliasMergeBlockReason(newCharacterName, aliasCheckResult.mainName);\n              if (processAliasBlockReason) {\n                  aliasShortLog("\u5408\u5e76\u62e6\u622a " + graphNormalizeName(newCharacterName) + "\u2192" + graphNormalizeName(aliasCheckResult.mainName));\n                  graphRemoteLog("alias_merge_blocked", { stage: "process", newName: graphNormalizeName(newCharacterName), mainName: graphNormalizeName(aliasCheckResult.mainName), reason: processAliasBlockReason });\n                  aliasCheckResult = { isAlias: false, mainName: null, reason: processAliasBlockReason };\n              }\n          }\n\n          if (aliasCheckResult && aliasCheckResult.isAlias && aliasCheckResult.mainName) {\n              // 3. 第一阶段校验通过：查找对应的主角色记录\n              targetMainRecord = this.findCharacterRecord(aliasCheckResult.mainName);\n              if (targetMainRecord) {\n\n                  // ===================== 第二阶段：别名清洗 =====================\n                  var refineResult = this.refineAliasGroupByApi(\n                      targetMainRecord,\n                      newCharacterName,\n                      chapterFullContent,\n                      currentDialogueText\n                  );\n\n                  // 第二阶段成功：清洗旧别名 + 新增有效别名\n                  if (refineResult && refineResult.isSamePerson && refineResult.mainName) {\n                      var normalizedRefine = this.normalizeAliasRefineResult(\n                          targetMainRecord,\n                          refineResult,\n                          newCharacterName\n                      );\n\n                      if (normalizedRefine) {\n                          // 如果AI认为应该切换主名，且本地存在该主记录，则切换到新主记录\n                          if (normalizedRefine.mainName !== targetMainRecord.name) {\n                              var switchedMainRecord = this.findCharacterRecord(normalizedRefine.mainName);\n                              if (switchedMainRecord) {\n                                  targetMainRecord = switchedMainRecord;\n                              }\n                          }\n\n                          // 主名固定放第一位，后面跟确认过的别名\n                          var finalAliasList = [targetMainRecord.name];\n                          for (var a = 0; a < normalizedRefine.aliases.length; a++) {\n                              var aliasItem = normalizedRefine.aliases[a];\n                              if (aliasItem &&\n                                  aliasItem !== targetMainRecord.name &&\n                                  finalAliasList.indexOf(aliasItem) === -1) {\n                                  finalAliasList.push(aliasItem);\n                              }\n                          }\n\n                          targetMainRecord.aliases = finalAliasList.join("|");\n\n                          // 同步刷新内存映射表，避免后续投票/匹配仍使用旧别名\n                          if (this.nameToMainNameMap) {\n                              this.nameToMainNameMap = {};\n                          }\n                          for (var r = 0; r < this.characterRecords.length; r++) {\n                              var rec = this.characterRecords[r];\n                              if (!rec || !rec.name) continue;\n                              var recMainName = rec.name.trim();\n                              this.nameToMainNameMap[recMainName] = recMainName;\n                              if (rec.aliases && rec.aliases.trim()) {\n                                  var aliasArr = rec.aliases.split("|");\n                                  for (var rr = 0; rr < aliasArr.length; rr++) {\n                                      var aliasName = aliasArr[rr].trim();\n                                      if (aliasName) {\n                                          this.nameToMainNameMap[aliasName] = recMainName;\n                                      }\n                                  }\n                              }\n                          }\n\n                          this.saveRecords();\n                          if (this.recordPositiveAliasEdge) this.recordPositiveAliasEdge(newCharacterName, targetMainRecord.name, 3.5, "alias_refine_confirmed", aliasCheckResult.reason || "别名清洗确认");\n                          if (typeof graphRemoteLog === "function") graphRemoteLog("alias_merge_confirmed", { newName: newCharacterName, mainName: targetMainRecord.name, aliases: finalAliasList });\n                      }\n                  }\n\n                  // 方案A兜底：\n                  // 若第二阶段失败 / 返回不是同一人，则当前句仍复用第一阶段锁定的主角色，\n                  // 但不修改aliases，避免污染别名库。\n                  return {\n                      text: cleanText,\n                      tag: targetMainRecord.voice || "default",\n                      characterInfo: targetMainRecord\n                  };\n              }\n          }\n      } else {\n          targetMainRecord = existingRecord; // 新名字已存在，直接使用现有记录\n      }\n  } else if (bieming === 0) {\n      // 别名分析关闭时，仅检查本地是否已存在\n      var existingRecord2 = this.findCharacterRecord(newCharacterName);\n      if (existingRecord2) {\n          targetMainRecord = existingRecord2;\n      }\n  }\n  // -------------------------- 别名校验逻辑结束 --------------------------\n  \n  // 原有新建/更新角色逻辑（适配targetMainRecord）\n  if (newCharacterName === "未知") {\n      var tag = "duihua";  // 未知不辨性别的角色使用duihua标签\n      return { text: cleanText, tag: tag };\n  }\n  \n  // 若未匹配到主角色记录，执行原有新建角色逻辑\n  if (!targetMainRecord) {\n      var voice = this.assignVoice(analysis.gender, analysis.age);\n      if (!voice) {\n          var tag2 = analysis.gender === "男" ? "duihuaA" : \n                    analysis.gender === "女" ? "duihuaB" : \n                    "duihua";\n          return { text: cleanText, tag: tag2 };\n      }\n      targetMainRecord = {\n          name: newCharacterName,\n          aliases: newCharacterName, // 初始别名=主名字\n          gender: analysis.gender,\n          age: analysis.age,\n          voice: voice,\n          usageCount: CONFIG.resetUsageCount,\n          genderAgeHistory: [{ gender: analysis.gender, age: analysis.age }]\n      };\n      this.characterRecords.unshift(targetMainRecord);\n  } else {\n      // 新增：已有角色发音人校验（2个条件满足其一则重新分配）\n      // 条件1：发音人字段为空/空字符串；条件2：发音人未在系统data（availableVoices）中加载\n      var isVoiceInvalid = !targetMainRecord.voice ||\n          targetMainRecord.voice === "" ||\n          !this.availableVoices[targetMainRecord.voice];\n      if (isVoiceInvalid) {\n          // 新增：区分无效原因，方便调试\n          var invalidReason = !targetMainRecord.voice || targetMainRecord.voice === ""\n              ? "发音人字段为空"\n              : "发音人[" + targetMainRecord.voice + "]未在系统data中加载";\n          // 复用原有分配方法，按API返回的性别年龄分配新发音人\n          var newVoice = this.assignVoice(analysis.gender, analysis.age);\n          if (newVoice) {\n              targetMainRecord.voice = newVoice; // 更新为新发音人\n              targetMainRecord.gender = analysis.gender; // 同步API性别\n              targetMainRecord.age = analysis.age; // 同步API年龄\n              this.saveRecords(); // 持久化更新结果\n          } else {\n              // 新增：极端情况（无可用发音人），降级为默认对话标签\n              targetMainRecord.voice = analysis.gender === "男" ? "duihuaA" : \n                                       analysis.gender === "女" ? "duihuaB" : \n                                       "duihua";\n          }\n      }\n      // 原有角色更新逻辑（完全保留，无任何修改）\n      if (targetMainRecord.usageCount === 100) {\n          this.moveRecordToTop(targetMainRecord.name);\n          this.saveRecords();\n          return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };\n      }\n      if (targetMainRecord.usageCount === 50) {\n          if (!targetMainRecord.voice || targetMainRecord.voice === "") {\n              targetMainRecord.voice = this.assignVoice(targetMainRecord.gender, targetMainRecord.age);\n          } else {\n              var voiceInfo = null;\n              for (var key in GENSHIN_CHARACTERS) {\n                  if (GENSHIN_CHARACTERS[key].voice === targetMainRecord.voice) {\n                      voiceInfo = GENSHIN_CHARACTERS[key];\n                      break;\n                  }\n              }\n              if (voiceInfo && (voiceInfo.gender !== targetMainRecord.gender || voiceInfo.age !== targetMainRecord.age)) {\n                  targetMainRecord.voice = this.assignVoice(targetMainRecord.gender, targetMainRecord.age);\n              }\n          }\n          this.moveRecordToTop(targetMainRecord.name);\n          return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };\n      }\n      if (!targetMainRecord.voice || targetMainRecord.voice === "") {\n          targetMainRecord.voice = this.assignVoice(analysis.gender, analysis.age);\n          if (!voice) {\n              var tag3 = analysis.gender === "男" ? "duihuaA" : \n                        analysis.gender === "女" ? "duihuaB" : \n                        "duihua";\n              return { text: cleanText, tag: tag3 };\n          }\n          targetMainRecord.gender = analysis.gender;\n          targetMainRecord.age = analysis.age;\n      }\n      if (targetMainRecord.gender === null || targetMainRecord.age === null) {\n          targetMainRecord.gender = analysis.gender;\n          targetMainRecord.age = analysis.age;\n      }\n      if (!targetMainRecord.genderAgeHistory) targetMainRecord.genderAgeHistory = [];\n      targetMainRecord.usageCount--;\n      targetMainRecord.genderAgeHistory.unshift({ gender: analysis.gender, age: analysis.age });\n      if (targetMainRecord.genderAgeHistory.length >= CONFIG.reEvaluateThreshold) this.reEvaluateCharacter(targetMainRecord);\n      if (targetMainRecord.usageCount < 0) this.reEvaluateCharacter(targetMainRecord);\n  }\n  this.moveRecordToTop(targetMainRecord.name);\n  if (this.characterRecords.length > this.activeRecordLimit) {\n      var removed = this.characterRecords.pop();\n      var voiceStillUsed = false;\n      for (var i = 0; i < this.characterRecords.length; i++) {\n          if (this.characterRecords[i].voice === removed.voice) {\n              voiceStillUsed = true;\n              break;\n          }\n      }\n      if (!voiceStillUsed) {\n          delete this.usedVoices[removed.voice];\n          delete this.voiceUsageMap[removed.voice];\n      }\n  }\n  this.saveRecords();\n  return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };\n};\n\n\n\n\n// 新增：读取缓存中旁白条目的辅助函数（ES5兼容，复用原有缓存逻辑）\nfunction getCacheNarrationList() {\n  try {\n    var cache = readDialogCache();\n    var dialogList = cache.dialogList || [];\n    var narrationList = [];\n    // 筛选name为旁白的有效条目\n    for (var i = 0; i < dialogList.length; i++) {\n      var item = dialogList[i];\n      if (item && item.name && item.name.trim() === "旁白" && item.dialogContent) {\n        narrationList.push(item);\n      }\n    }\n    return narrationList;\n  } catch (e) {\n    // 异常返回空数组，完全不影响原有流程\n    return [];\n  }\n}\n\n\n\n\n\n\n  \n  // ===================== 新增：批量对话缓存辅助函数（ES5兼容，无侵入）=====================\n  // ===================== 终极兼容版：根源读取函数（直接替换原函数即可）=====================\nfunction readDialogCache() {\n  try {\n      var content = ttsrv.readTxtFile("dialog_cache.json");\n      // 兼容空文件、空字符串：直接走兜底\n      if (!content || content.trim() === "") {\n          return { currentIndex: 1, dialogList: [], relationEvidence: [] };\n      }\n      var rawCache = JSON.parse(content);\n      // 兼容空对象：强制兜底核心字段\n      if (!rawCache || typeof rawCache !== "object") {\n          return { currentIndex: 1, dialogList: [], relationEvidence: [] };\n      }\n\n      // 根源1：强制过滤dialogList，只保留带dialogContent的有效对象，剔除null/undefined/脏数据\n      var safeDialogList = Array.isArray(rawCache.dialogList) \n          ? rawCache.dialogList.filter(function(item) {\n              return item && typeof item === "object" && item.dialogContent !== undefined;\n          }) \n          : [];\n\n      // 根源2：强制修正currentIndex，永远不超出数组合法范围，彻底杜绝越界\n      var safeCurrentIndex = typeof rawCache.currentIndex === "number" && rawCache.currentIndex >= 1\n          ? rawCache.currentIndex\n          : 1;\n      // 核心修正：索引最大不能超过「数组长度+1」，哪怕你写100，也会被拉回合法值\n      var maxLegalIndex = safeDialogList.length + 1;\n      if (safeCurrentIndex > maxLegalIndex) {\n          safeCurrentIndex = Math.max(1, safeDialogList.length);\n      }\n\n      // 返回绝对安全的结构，没有任何undefined风险\n      return {\n          currentIndex: safeCurrentIndex,\n          dialogList: safeDialogList,\n          relationEvidence: Array.isArray(rawCache.relationEvidence) ? rawCache.relationEvidence : []\n      };\n  } catch (e) {\n      // 任何异常（文件不存在、JSON解析失败），都返回安全兜底结构\n      return { currentIndex: 1, dialogList: [], relationEvidence: [] };\n  }\n}\n\n  // 写入对话缓存文件\n  function writeDialogCache(cacheData) {\n    try {\n        ttsrv.writeTxtFile("dialog_cache.json", JSON.stringify(cacheData, null, 2));\n        return true;\n    } catch (e) {\n        return false;\n    }\n  }\n  \n// 修复后：全局统一的文本清理规则，彻底清除所有不可见空白符\nfunction cleanDialogText(text) {\n  return text\n\n      .replace(/(.[\u4e00-\u9fa5]+音效.)/g, "") // 清除音效\n      .replace(/[\s\u3000\u2000-\u200F\u2028-\u202F\uFEFF]/g, "") // 清除所有半角/全角/零宽/换行不可见空白符\n      .replace(/【\d+】/g, "") // 移除序号标记\n      .replace(/[“”"''"]/g, "") // 移除所有引号\n      .replace(/[^\u4e00-\u9fa5\u3002\uff1f\uff01\uff0c\uff1b\uff1a\u3001\u201c\u201d\u2018\u2019\uff08\uff09\u3010\u3011\u300a\u300b\u2026\u2014\u00b7a-zA-Z0-9.,!?;:"'()\[\]{}<>-]/g, "")
+      var mainNameMatch = finalResult.reason.match(/主名[：:]?\s*["']?([^"'\s,，]+)/);
+      if (mainNameMatch) {
+        finalResult.mainName = mainNameMatch[1];
+      }
+    }
+    if (!finalResult.mainName) {
+      for (var i = 0; i < nameListForApi.length; i++) {
+        var listName = nameListForApi[i].name;
+        if (finalResult.reason.indexOf(listName) !== -1) {
+          finalResult.mainName = listName;
+          break;
+        }
+      }
+    }
+  }
+  if (finalResult && finalResult.isAlias && finalResult.mainName) {
+    var aliasBlockReason = graphAliasMergeBlockReason(newName, finalResult.mainName);
+    if (aliasBlockReason) {
+      aliasShortLog("\u5408\u5e76\u62e6\u622a " + graphNormalizeName(newName) + "\u2192" + graphNormalizeName(finalResult.mainName));
+      graphRemoteLog("alias_merge_blocked", { stage: "alias_check", newName: graphNormalizeName(newName), mainName: graphNormalizeName(finalResult.mainName), reason: aliasBlockReason });
+      finalResult = { isAlias: false, mainName: null, reason: aliasBlockReason };
+    }
+  }
+  if (this.logAliasCheckFlow) this.logAliasCheckFlow(newName, finalResult, graphEvidenceHint, mode);
+  return finalResult;
+};
+
+// ===================== 新增：别名清洗API（主名+现有别名+新别名，清洗无关别名）=====================
+CharacterManager.prototype.refineAliasGroupByApi = function(mainRecord, newName, chapterFullContent, currentDialogueText) {
+  // 同步延时函数（和现有别名分析逻辑保持一致）
+  function sleep(ms) {
+    var start = Date.now();
+    while (Date.now() - start < ms) {}
+  }
+
+  if (!mainRecord || !mainRecord.name) return null;
+
+  newName = (newName || "").trim();
+  chapterFullContent = chapterFullContent || "";
+  currentDialogueText = currentDialogueText || "";
+
+  if (!newName) return null;
+
+  var mainName = mainRecord.name.trim();
+  var currentAliases = [];
+
+  if (mainRecord.aliases && mainRecord.aliases.trim()) {
+    currentAliases = mainRecord.aliases.split("|")
+      .map(function(alias) { return alias.trim(); })
+      .filter(function(alias) { return alias !== ""; });
+  }
+
+  // 保证主名一定在候选列表里
+  if (currentAliases.indexOf(mainName) === -1) {
+    currentAliases.unshift(mainName);
+  }
+
+  // 构建去重后的“主名+旧别名+新名字”
+  var aliasCandidates = [];
+  var seenAliasMap = {};
+  for (var i = 0; i < currentAliases.length; i++) {
+    var oldAlias = currentAliases[i];
+    if (oldAlias && !seenAliasMap[oldAlias]) {
+      seenAliasMap[oldAlias] = true;
+      aliasCandidates.push(oldAlias);
+    }
+  }
+  if (newName && !seenAliasMap[newName]) {
+    seenAliasMap[newName] = true;
+    aliasCandidates.push(newName);
+  }
+
+  var prompt =
+    "你是专业的小说人物别名清洗AI。你的任务是：已知【新名字】已经初步判断可能归属于【主名】，现在请继续判断【主名+现有别名列表+新名字】中，哪些名字真正属于同一个人物，哪些是历史误判留下的无关别名。\n\n" +
+    "【任务目标】\n" +
+    "1. 确认【新名字】是否确实属于【主名】对应的人物；\n" +
+    "2. 清洗【现有别名列表】中与【主名】无关的错误别名；\n" +
+    "3. 输出最终应该保留的别名列表，以及应剔除的无关别名；\n" +
+    "4. 主名必须是同一个人物的真正核心名称，若上下文明确显示主名本身选错了，也可以重新指定更合适的主名。\n\n" +
+    "【判断标准】\n" +
+    "1. 只有在上下文中明确或高度确定指向同一具体人物的名字，才能保留为 confirmedAliases；\n" +
+    "2. 如果某个别名明显属于其他人物、身份称呼不稳定、仅偶然被误判关联、或上下文无法支撑其属于主名，则加入 removedAliases；\n" +
+    "3. 不要因为名字相似、姓氏相同、身份相近就随意保留；\n" +
+    "4. 若【新名字】实际上并不属于该主名人物，则 isSamePerson=false；\n" +
+    "5. 如果主名本身应更换，请返回新的 mainName，并让 confirmedAliases 围绕新的 mainName 组织。\n\n" +
+    "【输入信息】\n" +
+    "【当前主名】\n" + mainName + "\n\n" +
+    "【当前主名及别名列表】\n" + aliasCandidates.join("|") + "\n\n" +
+    "【新名字】\n" + newName + "\n\n" +
+    "【当前对话】\n" + currentDialogueText + "\n\n" +
+    "【小说上下文】\n" + String(this.contextHistory2 || '').slice(-1000) + text2 + String(next100Chars || '').slice(0, 500) + "\n\n" +
+    "【输出要求】\n" +
+    "1. 仅输出JSON，不要输出解释文字；\n" +
+    "2. 必须包含以下字段：\n" +
+    "   - isSamePerson: 布尔值，true=新名字属于该主名人物，false=不属于\n" +
+    "   - mainName: 字符串或null，最终确认的主名\n" +
+    "   - confirmedAliases: 数组，最终确认属于该主名人物的别名列表（不必重复放主名）\n" +
+    "   - removedAliases: 数组，应从旧别名中剔除的无关别名\n" +
+    "   - reason: 字符串或null，简要说明依据\n\n" +
+    "【输出格式】\n" +
+    "{\n" +
+    '  "isSamePerson": true/false,\n' +
+    '  "mainName": "最终主名" 或 null,\n' +
+    '  "confirmedAliases": ["别名1","别名2"],\n' +
+    '  "removedAliases": ["错误别名1","错误别名2"],\n' +
+    '  "reason": "简要说明" 或 null\n' +
+    "}";
+
+  var finalResult = null;
+  var maxRetryRound = Math.ceil(CHARACTER_ANALYZE_RETRY_MAX / bingfa);
+  var currentRound = 0;
+  var requestTimeout = ALIAS_ANALYZE_TIMEOUT;
+
+  // 构建请求
+  function buildAliasRefineRequest(apiConfig) {
+    var requestData = {
+      model: apiConfig.model,
+      messages: [
+        { role: "system", content: "严格遵守格式要求，仅输出JSON，格式错误则任务失败" },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.1,
+      thinking: { type: "disabled" },
+      disable_think: true,
+      no_chain_of_thought: true,
+      do_sample: false
+    };
+    var headers = {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + apiConfig.key,
+      "Connection": "keep-alive",
+      "Timeout": requestTimeout.toString()
+    };
+    return {
+      endpoint: apiConfig.endpoint,
+      data: requestData,
+      headers: headers
+    };
+  }
+
+  // 解析响应
+  function parseAliasRefineResponse(response) {
+    var responseBody = String(response.body().string() || "{}");
+    var apiOuterResponse = JSON.parse(responseBody);
+
+    if (!apiOuterResponse.choices || !apiOuterResponse.choices[0] || !apiOuterResponse.choices[0].message) {
+      throw new Error("API响应格式错误：缺少choices[0].message");
+    }
+
+    var actualResultContent = apiOuterResponse.choices[0].message.content.trim();
+    var cleanJson = actualResultContent.replace(/```json|```/g, "").trim();
+    var apiResult = JSON.parse(cleanJson);
+
+    var requiredFields = ["isSamePerson", "mainName", "confirmedAliases", "removedAliases", "reason"];
+    var missingFields = [];
+    for (var i = 0; i < requiredFields.length; i++) {
+      if (!apiResult.hasOwnProperty(requiredFields[i])) {
+        missingFields.push(requiredFields[i]);
+      }
+    }
+    if (missingFields.length > 0) {
+      throw new Error("返回格式错误：缺少必选字段" + missingFields.join(","));
+    }
+
+    if (typeof apiResult.isSamePerson !== "boolean") {
+      throw new Error("返回格式错误：isSamePerson必须是布尔值");
+    }
+    if (apiResult.mainName !== null && typeof apiResult.mainName !== "string") {
+      throw new Error("返回格式错误：mainName必须是字符串或null");
+    }
+    if (!Array.isArray(apiResult.confirmedAliases)) {
+      throw new Error("返回格式错误：confirmedAliases必须是数组");
+    }
+    if (!Array.isArray(apiResult.removedAliases)) {
+      throw new Error("返回格式错误：removedAliases必须是数组");
+    }
+
+    return apiResult;
+  }
+
+  // 并发请求循环
+  while (currentRound < maxRetryRound && !finalResult) {
+    currentRound++;
+    var concurrentResult = concurrentApiRequest(
+      "aliasAnalyze",
+      buildAliasRefineRequest,
+      parseAliasRefineResponse,
+      null,
+      requestTimeout
+    );
+
+    if (concurrentResult.success) {
+      if (concurrentResult.isMultiResult) {
+        finalResult = voteAliasRefineResult(concurrentResult.data);
+      } else {
+        finalResult = concurrentResult.data;
+      }
+    } else {
+      if (currentRound < maxRetryRound) {
+        sleep(250);
+      }
+    }
+  }
+
+  if (!finalResult) {
+    console.error("【别名清洗】所有重试均失败");
+    return null;
+  }
+
+  if (finalResult && finalResult.isSamePerson) {
+    var refineBlockReason = graphAliasMergeBlockReason(newName, finalResult.mainName || mainName);
+    if (refineBlockReason) {
+      aliasShortLog("\u6e05\u6d17\u62e6\u622a " + graphNormalizeName(newName) + "\u2192" + graphNormalizeName(finalResult.mainName || mainName));
+      graphRemoteLog("alias_merge_blocked", { stage: "alias_refine", newName: graphNormalizeName(newName), mainName: graphNormalizeName(finalResult.mainName || mainName), reason: refineBlockReason });
+      finalResult.isSamePerson = false;
+      finalResult.reason = refineBlockReason;
+    }
+  }
+  if (this.logAliasRefineFlow) this.logAliasRefineFlow(mainName, newName, finalResult);
+  return finalResult;
+};
+// ===================== 新增：规范化别名清洗结果（本地最终兜底整理）=====================
+CharacterManager.prototype.normalizeAliasRefineResult = function(mainRecord, refineResult, newName) {
+  if (!mainRecord || !mainRecord.name || !refineResult) return null;
+
+  var mainName = (refineResult.mainName || mainRecord.name || "").trim();
+  if (!mainName) return null;
+
+  var confirmedAliases = [];
+  var seenMap = {};
+
+  function pushAlias(alias) {
+    alias = (alias || "").trim();
+    if (!alias) return;
+    if (alias === mainName) return; // 主名不重复进别名列表
+    if (graphAliasMergeBlockReason(alias, mainName)) return;
+    if (!seenMap[alias]) {
+      seenMap[alias] = true;
+      confirmedAliases.push(alias);
+    }
+  }
+
+  // 先放AI确认的别名
+  if (Array.isArray(refineResult.confirmedAliases)) {
+    for (var i = 0; i < refineResult.confirmedAliases.length; i++) {
+      pushAlias(refineResult.confirmedAliases[i]);
+    }
+  }
+
+  // 建 removedMap，避免被AI明确剔除的名字又被补回去
+  var removedMap = {};
+  if (Array.isArray(refineResult.removedAliases)) {
+    for (var j = 0; j < refineResult.removedAliases.length; j++) {
+      var removedAlias = (refineResult.removedAliases[j] || "").trim();
+      if (removedAlias) removedMap[removedAlias] = true;
+    }
+  }
+
+  // 若AI判定“仍是同一人”，则允许补充新名字（前提：AI没明确把它剔除）
+  newName = (newName || "").trim();
+  if (refineResult.isSamePerson && newName && !removedMap[newName]) {
+    pushAlias(newName);
+  }
+
+  return {
+    mainName: mainName,
+    aliases: confirmedAliases,
+    removedAliases: Array.isArray(refineResult.removedAliases) ? refineResult.removedAliases : []
+  };
+};
+
+
+
+
+
+CharacterManager.prototype.processCharacter = function (fullText, characterId, allDialogues, chapterFullContent) {
+  // 新增参数：chapterFullContent（当前章节完整内容，用于别名校验）
+  var analysis = this.analyzeCharacter(fullText, characterId, allDialogues);
+  if (!analysis) {
+      return null;
+  }
+  var currentDialogueText = "";
+  for (var i = 0; i < allDialogues.length; i++) {
+      if (allDialogues[i].id === characterId) {
+          currentDialogueText = allDialogues[i].text;
+          break;
+      }
+  }
+  var cleanText = currentDialogueText.replace(/^(“?)【\d+】/, "$1");
+  var newCharacterName = analysis.name.trim(); // 从API解析的新角色名
+  
+  // -------------------------- 别名校验核心逻辑（已升级为二阶段清洗） --------------------------
+  var targetMainRecord = null; // 匹配到的主角色记录
+
+  // 根据bieming变量控制是否执行别名校验
+  if (bieming !== 0 && newCharacterName !== "未知") {
+      // 1. 先检查新名字是否已在本地（主名字/别名）
+      var existingRecord = this.findCharacterRecord(newCharacterName);
+      if (!existingRecord) {
+          // 2. 调用API校验是否为已有角色的别名（第一阶段）
+          var aliasCheckResult = this.checkAliasByApi(
+              newCharacterName,
+              chapterFullContent,
+              analysis.gender,
+              currentDialogueText,
+              bieming
+          );
+
+          if (aliasCheckResult && !aliasCheckResult.isAlias && aliasCheckResult.mainName && this.recordNegativeAliasEdge) {
+              this.recordNegativeAliasEdge(newCharacterName, aliasCheckResult.mainName, 3, "alias_api_rejected", aliasCheckResult.reason || "别名API拒绝");
+          }
+
+          if (aliasCheckResult && aliasCheckResult.isAlias && aliasCheckResult.mainName) {
+              var processAliasBlockReason = graphAliasMergeBlockReason(newCharacterName, aliasCheckResult.mainName);
+              if (processAliasBlockReason) {
+                  aliasShortLog("\u5408\u5e76\u62e6\u622a " + graphNormalizeName(newCharacterName) + "\u2192" + graphNormalizeName(aliasCheckResult.mainName));
+                  graphRemoteLog("alias_merge_blocked", { stage: "process", newName: graphNormalizeName(newCharacterName), mainName: graphNormalizeName(aliasCheckResult.mainName), reason: processAliasBlockReason });
+                  aliasCheckResult = { isAlias: false, mainName: null, reason: processAliasBlockReason };
+              }
+          }
+
+          if (aliasCheckResult && aliasCheckResult.isAlias && aliasCheckResult.mainName) {
+              // 3. 第一阶段校验通过：查找对应的主角色记录
+              targetMainRecord = this.findCharacterRecord(aliasCheckResult.mainName);
+              if (targetMainRecord) {
+
+                  // ===================== 第二阶段：别名清洗 =====================
+                  var refineResult = this.refineAliasGroupByApi(
+                      targetMainRecord,
+                      newCharacterName,
+                      chapterFullContent,
+                      currentDialogueText
+                  );
+
+                  // 第二阶段成功：清洗旧别名 + 新增有效别名
+                  if (refineResult && refineResult.isSamePerson && refineResult.mainName) {
+                      var normalizedRefine = this.normalizeAliasRefineResult(
+                          targetMainRecord,
+                          refineResult,
+                          newCharacterName
+                      );
+
+                      if (normalizedRefine) {
+                          // 如果AI认为应该切换主名，且本地存在该主记录，则切换到新主记录
+                          if (normalizedRefine.mainName !== targetMainRecord.name) {
+                              var switchedMainRecord = this.findCharacterRecord(normalizedRefine.mainName);
+                              if (switchedMainRecord) {
+                                  targetMainRecord = switchedMainRecord;
+                              }
+                          }
+
+                          // 主名固定放第一位，后面跟确认过的别名
+                          var finalAliasList = [targetMainRecord.name];
+                          for (var a = 0; a < normalizedRefine.aliases.length; a++) {
+                              var aliasItem = normalizedRefine.aliases[a];
+                              if (aliasItem &&
+                                  aliasItem !== targetMainRecord.name &&
+                                  finalAliasList.indexOf(aliasItem) === -1) {
+                                  finalAliasList.push(aliasItem);
+                              }
+                          }
+
+                          targetMainRecord.aliases = finalAliasList.join("|");
+
+                          // 同步刷新内存映射表，避免后续投票/匹配仍使用旧别名
+                          if (this.nameToMainNameMap) {
+                              this.nameToMainNameMap = {};
+                          }
+                          for (var r = 0; r < this.characterRecords.length; r++) {
+                              var rec = this.characterRecords[r];
+                              if (!rec || !rec.name) continue;
+                              var recMainName = rec.name.trim();
+                              this.nameToMainNameMap[recMainName] = recMainName;
+                              if (rec.aliases && rec.aliases.trim()) {
+                                  var aliasArr = rec.aliases.split("|");
+                                  for (var rr = 0; rr < aliasArr.length; rr++) {
+                                      var aliasName = aliasArr[rr].trim();
+                                      if (aliasName) {
+                                          this.nameToMainNameMap[aliasName] = recMainName;
+                                      }
+                                  }
+                              }
+                          }
+
+                          this.saveRecords();
+                          if (this.recordPositiveAliasEdge) this.recordPositiveAliasEdge(newCharacterName, targetMainRecord.name, 3.5, "alias_refine_confirmed", aliasCheckResult.reason || "别名清洗确认");
+                          if (typeof graphRemoteLog === "function") graphRemoteLog("alias_merge_confirmed", { newName: newCharacterName, mainName: targetMainRecord.name, aliases: finalAliasList });
+                      }
+                  }
+
+                  // 方案A兜底：
+                  // 若第二阶段失败 / 返回不是同一人，则当前句仍复用第一阶段锁定的主角色，
+                  // 但不修改aliases，避免污染别名库。
+                  return {
+                      text: cleanText,
+                      tag: targetMainRecord.voice || "default",
+                      characterInfo: targetMainRecord
+                  };
+              }
+          }
+      } else {
+          targetMainRecord = existingRecord; // 新名字已存在，直接使用现有记录
+      }
+  } else if (bieming === 0) {
+      // 别名分析关闭时，仅检查本地是否已存在
+      var existingRecord2 = this.findCharacterRecord(newCharacterName);
+      if (existingRecord2) {
+          targetMainRecord = existingRecord2;
+      }
+  }
+  // -------------------------- 别名校验逻辑结束 --------------------------
+  
+  // 原有新建/更新角色逻辑（适配targetMainRecord）
+  if (newCharacterName === "未知") {
+      var tag = "duihua";  // 未知不辨性别的角色使用duihua标签
+      return { text: cleanText, tag: tag };
+  }
+  
+  // 若未匹配到主角色记录，执行原有新建角色逻辑
+  if (!targetMainRecord) {
+      var voice = this.assignVoice(analysis.gender, analysis.age);
+      if (!voice) {
+          var tag2 = analysis.gender === "男" ? "duihuaA" : 
+                    analysis.gender === "女" ? "duihuaB" : 
+                    "duihua";
+          return { text: cleanText, tag: tag2 };
+      }
+      targetMainRecord = {
+          name: newCharacterName,
+          aliases: newCharacterName, // 初始别名=主名字
+          gender: analysis.gender,
+          age: analysis.age,
+          voice: voice,
+          usageCount: CONFIG.resetUsageCount,
+          genderAgeHistory: [{ gender: analysis.gender, age: analysis.age }]
+      };
+      this.characterRecords.unshift(targetMainRecord);
+  } else {
+      // 新增：已有角色发音人校验（2个条件满足其一则重新分配）
+      // 条件1：发音人字段为空/空字符串；条件2：发音人未在系统data（availableVoices）中加载
+      var isVoiceInvalid = !targetMainRecord.voice ||
+          targetMainRecord.voice === "" ||
+          !this.availableVoices[targetMainRecord.voice];
+      if (isVoiceInvalid) {
+          // 新增：区分无效原因，方便调试
+          var invalidReason = !targetMainRecord.voice || targetMainRecord.voice === ""
+              ? "发音人字段为空"
+              : "发音人[" + targetMainRecord.voice + "]未在系统data中加载";
+          // 复用原有分配方法，按API返回的性别年龄分配新发音人
+          var newVoice = this.assignVoice(analysis.gender, analysis.age);
+          if (newVoice) {
+              targetMainRecord.voice = newVoice; // 更新为新发音人
+              targetMainRecord.gender = analysis.gender; // 同步API性别
+              targetMainRecord.age = analysis.age; // 同步API年龄
+              this.saveRecords(); // 持久化更新结果
+          } else {
+              // 新增：极端情况（无可用发音人），降级为默认对话标签
+              targetMainRecord.voice = analysis.gender === "男" ? "duihuaA" : 
+                                       analysis.gender === "女" ? "duihuaB" : 
+                                       "duihua";
+          }
+      }
+      // 原有角色更新逻辑（完全保留，无任何修改）
+      if (targetMainRecord.usageCount === 100) {
+          this.moveRecordToTop(targetMainRecord.name);
+          this.saveRecords();
+          return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };
+      }
+      if (targetMainRecord.usageCount === 50) {
+          if (!targetMainRecord.voice || targetMainRecord.voice === "") {
+              targetMainRecord.voice = this.assignVoice(targetMainRecord.gender, targetMainRecord.age);
+          } else {
+              var voiceInfo = null;
+              for (var key in GENSHIN_CHARACTERS) {
+                  if (GENSHIN_CHARACTERS[key].voice === targetMainRecord.voice) {
+                      voiceInfo = GENSHIN_CHARACTERS[key];
+                      break;
+                  }
+              }
+              if (voiceInfo && (voiceInfo.gender !== targetMainRecord.gender || voiceInfo.age !== targetMainRecord.age)) {
+                  targetMainRecord.voice = this.assignVoice(targetMainRecord.gender, targetMainRecord.age);
+              }
+          }
+          this.moveRecordToTop(targetMainRecord.name);
+          return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };
+      }
+      if (!targetMainRecord.voice || targetMainRecord.voice === "") {
+          targetMainRecord.voice = this.assignVoice(analysis.gender, analysis.age);
+          if (!voice) {
+              var tag3 = analysis.gender === "男" ? "duihuaA" : 
+                        analysis.gender === "女" ? "duihuaB" : 
+                        "duihua";
+              return { text: cleanText, tag: tag3 };
+          }
+          targetMainRecord.gender = analysis.gender;
+          targetMainRecord.age = analysis.age;
+      }
+      if (targetMainRecord.gender === null || targetMainRecord.age === null) {
+          targetMainRecord.gender = analysis.gender;
+          targetMainRecord.age = analysis.age;
+      }
+      if (!targetMainRecord.genderAgeHistory) targetMainRecord.genderAgeHistory = [];
+      targetMainRecord.usageCount--;
+      targetMainRecord.genderAgeHistory.unshift({ gender: analysis.gender, age: analysis.age });
+      if (targetMainRecord.genderAgeHistory.length >= CONFIG.reEvaluateThreshold) this.reEvaluateCharacter(targetMainRecord);
+      if (targetMainRecord.usageCount < 0) this.reEvaluateCharacter(targetMainRecord);
+  }
+  this.moveRecordToTop(targetMainRecord.name);
+  if (this.characterRecords.length > this.activeRecordLimit) {
+      var removed = this.characterRecords.pop();
+      var voiceStillUsed = false;
+      for (var i = 0; i < this.characterRecords.length; i++) {
+          if (this.characterRecords[i].voice === removed.voice) {
+              voiceStillUsed = true;
+              break;
+          }
+      }
+      if (!voiceStillUsed) {
+          delete this.usedVoices[removed.voice];
+          delete this.voiceUsageMap[removed.voice];
+      }
+  }
+  this.saveRecords();
+  return { text: cleanText, tag: targetMainRecord.voice || "default", characterInfo: targetMainRecord };
+};
+
+
+
+
+// 新增：读取缓存中旁白条目的辅助函数（ES5兼容，复用原有缓存逻辑）
+function getCacheNarrationList() {
+  try {
+    var cache = readDialogCache();
+    var dialogList = cache.dialogList || [];
+    var narrationList = [];
+    // 筛选name为旁白的有效条目
+    for (var i = 0; i < dialogList.length; i++) {
+      var item = dialogList[i];
+      if (item && item.name && item.name.trim() === "旁白" && item.dialogContent) {
+        narrationList.push(item);
+      }
+    }
+    return narrationList;
+  } catch (e) {
+    // 异常返回空数组，完全不影响原有流程
+    return [];
+  }
+}
+
+
+
+
+
+
+  
+  // ===================== 新增：批量对话缓存辅助函数（ES5兼容，无侵入）=====================
+  // ===================== 终极兼容版：根源读取函数（直接替换原函数即可）=====================
+function readDialogCache() {
+  try {
+      var content = ttsrv.readTxtFile("dialog_cache.json");
+      // 兼容空文件、空字符串：直接走兜底
+      if (!content || content.trim() === "") {
+          return { currentIndex: 1, dialogList: [], relationEvidence: [] };
+      }
+      var rawCache = JSON.parse(content);
+      // 兼容空对象：强制兜底核心字段
+      if (!rawCache || typeof rawCache !== "object") {
+          return { currentIndex: 1, dialogList: [], relationEvidence: [] };
+      }
+
+      // 根源1：强制过滤dialogList，只保留带dialogContent的有效对象，剔除null/undefined/脏数据
+      var safeDialogList = Array.isArray(rawCache.dialogList) 
+          ? rawCache.dialogList.filter(function(item) {
+              return item && typeof item === "object" && item.dialogContent !== undefined;
+          }) 
+          : [];
+
+      // 根源2：强制修正currentIndex，永远不超出数组合法范围，彻底杜绝越界
+      var safeCurrentIndex = typeof rawCache.currentIndex === "number" && rawCache.currentIndex >= 1
+          ? rawCache.currentIndex
+          : 1;
+      // 核心修正：索引最大不能超过「数组长度+1」，哪怕你写100，也会被拉回合法值
+      var maxLegalIndex = safeDialogList.length + 1;
+      if (safeCurrentIndex > maxLegalIndex) {
+          safeCurrentIndex = Math.max(1, safeDialogList.length);
+      }
+
+      // 返回绝对安全的结构，没有任何undefined风险
+      return {
+          currentIndex: safeCurrentIndex,
+          dialogList: safeDialogList,
+          relationEvidence: Array.isArray(rawCache.relationEvidence) ? rawCache.relationEvidence : []
+      };
+  } catch (e) {
+      // 任何异常（文件不存在、JSON解析失败），都返回安全兜底结构
+      return { currentIndex: 1, dialogList: [], relationEvidence: [] };
+  }
+}
+
+  // 写入对话缓存文件
+  function writeDialogCache(cacheData) {
+    try {
+        ttsrv.writeTxtFile("dialog_cache.json", JSON.stringify(cacheData, null, 2));
+        return true;
+    } catch (e) {
+        return false;
+    }
+  }
+  
+// 修复后：全局统一的文本清理规则，彻底清除所有不可见空白符
+function cleanDialogText(text) {
+  return text
+
+      .replace(/(.[\u4e00-\u9fa5]+音效.)/g, "") // 清除音效
+      .replace(/[\s\u3000\u2000-\u200F\u2028-\u202F\uFEFF]/g, "") // 清除所有半角/全角/零宽/换行不可见空白符
+      .replace(/【\d+】/g, "") // 移除序号标记
+      .replace(/[“”"''"]/g, "") // 移除所有引号
+      .replace(/[^\u4e00-\u9fa5\u3002\uff1f\uff01\uff0c\uff1b\uff1a\u3001\u201c\u201d\u2018\u2019\uff08\uff09\u3010\u3011\u300a\u300b\u2026\u2014\u00b7a-zA-Z0-9.,!?;:"'()\[\]{}<>-]/g, "")
       .trim();
 }
 
@@ -3336,7 +4433,947 @@ function matchDialogFromCache(currentDialogText) {
           .replace(/【\d+】/g, "")
           .replace(/[“”"''"]/g, "")
           .replace(/\s+/g, "")
-          .replace(/[^\u4e00-\u9fa5\u3002\uff1f\uff01\uff0c\uff1b\uff1a\u3001\u201c\u201d\u2018\u2019\uff08\uff09\u3010\u3011\u300a\u300b\u2026\u2014\u00b7a-zA-Z0-9.,!?;:"'()\[\]{}<>-]/g, "")\n          .trim();\n  }\n\n  var cleanCurrent = cleanDialogText(currentDialogText);\n  var matchedResult = null;\n  var finalMatchedIndex = -1;\n\n  // ===================== 匹配优先级1：当前目标位置（最高优先级，原逻辑不变，仅改匹配规则）=====================\n  var currentArrayIndex = currentIndex - 1;\n  if (currentArrayIndex >= 0 && currentArrayIndex < dialogList.length) {\n      var currentTargetItem = dialogList[currentArrayIndex];\n      // 核心修改：缓存内容按换行拆分，逐行匹配，无任何整体匹配\n      var cacheLines = currentTargetItem.dialogContent.split("\n").filter(function(line) {\n          return line.trim() !== ""; // 过滤空行，避免无效匹配\n      });\n      var isMatch = false;\n      // 遍历拆分后的每一行，分别清理匹配，匹配上任意一行就算成功\n      for (var i = 0; i < cacheLines.length; i++) {\n          var cleanCacheLine = cleanDialogText(cacheLines[i]);\n          //console.log("【优先匹配】当前序号" + (currentArrayIndex + 1) + " | 当前清理后：" + cleanCurrent + " | 缓存拆分行" + (i+1) + "清理后：" + cleanCacheLine);\n          if (cleanCacheLine === cleanCurrent && cleanCurrent !== "") {\n              isMatch = true;\n              break;\n          }\n      }\n\n      if (isMatch) {\n          matchedResult = {\n              name: currentTargetItem.name,\n              gender: currentTargetItem.gender,\n              age: currentTargetItem.age\n          };\n          finalMatchedIndex = currentArrayIndex + 1;\n          //console.log("【匹配成功】命中当前序号" + finalMatchedIndex + "，角色：" + currentTargetItem.name);\n      }\n  }\n\n  // ===================== 匹配优先级2：向前偏移（原逻辑不变，仅改匹配规则）=====================\n  if (!matchedResult) {\n      for (var offset = 1; offset <= MAX_FORWARD_OFFSET; offset++) {\n          var targetArrayIndex = currentIndex - 1 - offset;\n          if (targetArrayIndex < 0) break;\n\n          var targetItem = dialogList[targetArrayIndex];\n          // 同样按换行拆分逐行匹配，和主逻辑完全一致\n          var cacheLines = targetItem.dialogContent.split("\n").filter(function(line) {\n              return line.trim() !== "";\n          });\n          var isMatch = false;\n          for (var i = 0; i < cacheLines.length; i++) {\n              var cleanCacheLine = cleanDialogText(cacheLines[i]);\n              //console.log("【向前匹配】尝试序号" + (targetArrayIndex + 1) + " | 当前清理后：" + cleanCurrent + " | 缓存拆分行" + (i+1) + "清理后：" + cleanCacheLine);\n              if (cleanCacheLine === cleanCurrent && cleanCurrent !== "") {\n                  isMatch = true;\n                  break;\n              }\n          }\n\n          if (isMatch) {\n              matchedResult = {\n                  name: targetItem.name,\n                  gender: targetItem.gender,\n                  age: targetItem.age\n              };\n              finalMatchedIndex = targetArrayIndex + 1;\n              //console.log("【匹配成功】命中向前序号" + finalMatchedIndex + "，角色：" + targetItem.name);\n              break;\n          }\n      }\n  }\n\n  // ===================== 匹配优先级3：向后偏移（原逻辑不变，仅改匹配规则）=====================\n  if (!matchedResult) {\n      for (var offset = 1; offset <= MAX_BACKWARD_OFFSET; offset++) {\n          var targetArrayIndex = currentIndex - 1 + offset;\n          if (targetArrayIndex >= dialogList.length) break;\n\n          var targetItem = dialogList[targetArrayIndex];\n          // 同样按换行拆分逐行匹配，和主逻辑完全一致\n          var cacheLines = targetItem.dialogContent.split("\n").filter(function(line) {\n              return line.trim() !== "";\n          });\n          var isMatch = false;\n          for (var i = 0; i < cacheLines.length; i++) {\n              var cleanCacheLine = cleanDialogText(cacheLines[i]);\n              //console.log("【向后匹配】尝试序号" + (targetArrayIndex + 1) + " | 当前清理后：" + cleanCurrent + " | 缓存拆分行" + (i+1) + "清理后：" + cleanCacheLine);\n              if (cleanCacheLine === cleanCurrent && cleanCurrent !== "") {\n                  isMatch = true;\n                  break;\n              }\n          }\n\n          if (isMatch) {\n              matchedResult = {\n                  name: targetItem.name,\n                  gender: targetItem.gender,\n                  age: targetItem.age\n              };\n              finalMatchedIndex = targetArrayIndex + 1;\n              //console.log("【匹配成功】命中向后序号" + finalMatchedIndex + "，角色：" + targetItem.name);\n              break;\n          }\n      }\n  }\n\n  // ===================== 匹配成功：更新序号+写入缓存（完全保留原逻辑，无任何改动）=====================\n  if (matchedResult && finalMatchedIndex > 0) {\n      cache.currentIndex = finalMatchedIndex + 1;\n      writeDialogCache(cache);\n      //console.log("【序号更新】下一个匹配序号已设置为：" + cache.currentIndex);\n      return matchedResult;\n  }\n\n  // ===================== 全部匹配失败：返回null（完全保留原逻辑，无任何改动）=====================\n  //console.log("【匹配失败】双向容错匹配全部失败，触发重新分析");\n  return null;\n}\n\n\n\n\nCharacterManager.prototype.analyzeCharacterFallback = function(fullText, characterId) {\n  return { name: "未知", gender: Math.random() > 0.5 ? "男" : "女", age: Math.random() > 0.5 ? "青年" : "中年" };\n};\n\n\n\n\n\n\n\n\nCharacterManager.prototype.reEvaluateCharacter = function(record) {\n  if (record.usageCount === 100 || record.usageCount === 50) return;\n  if (record.gender === null || record.age === null) {\n      if (record.genderAgeHistory && record.genderAgeHistory.length > 0) {\n          for (var i = 0; i < record.genderAgeHistory.length; i++) {\n              var entry = record.genderAgeHistory[i];\n              if (entry && entry.gender !== null && entry.age !== null) {\n                  record.gender = entry.gender;\n                  record.age = entry.age;\n                  break;\n              }\n          }\n      }\n      if (record.gender === null || record.age === null) {\n          record.gender = "男";\n          record.age = "青年";\n      }\n  }\n  if (!record.genderAgeHistory || record.genderAgeHistory.length === 0) {\n      record.genderAgeHistory = [{ gender: record.gender, age: record.age }];\n      return;\n  }\n  var genderCount = {};\n  var ageCount = {};\n  for (var i = 0; i < record.genderAgeHistory.length; i++) {\n      var entry = record.genderAgeHistory[i];\n      if (!entry) continue;\n      if (entry.gender === null || entry.age === null) continue;\n      genderCount[entry.gender] = (genderCount[entry.gender] || 0) + 1;\n      ageCount[entry.age] = (ageCount[entry.age] || 0) + 1;\n  }\n  if (Object.keys(genderCount).length === 0) genderCount[record.gender] = 1;\n  if (Object.keys(ageCount).length === 0) ageCount[record.age] = 1;\n  var mostCommonGender = "";\n  var maxGenderCount = 0;\n  for (var gender in genderCount) {\n      if (genderCount.hasOwnProperty(gender)) {\n          if (mostCommonGender === "") {\n              mostCommonGender = gender;\n              maxGenderCount = genderCount[gender];\n          }\n          if (genderCount[gender] > maxGenderCount) {\n              mostCommonGender = gender;\n              maxGenderCount = genderCount[gender];\n          }\n      }\n  }\n  var mostCommonAge = "";\n  var maxAgeCount = 0;\n  for (var age in ageCount) {\n      if (ageCount.hasOwnProperty(age)) {\n          if (mostCommonAge === "") {\n              mostCommonAge = age;\n              maxAgeCount = ageCount[age];\n          }\n          if (ageCount[age] > maxAgeCount) {\n              mostCommonAge = age;\n              maxAgeCount = ageCount[age];\n          }\n      }\n  }\n  var needReassign = false;\n  if (record.gender !== mostCommonGender || record.age !== mostCommonAge || !record.voice) {\n      needReassign = true;\n  }\n  var topRecords = [];\n  for (var j = 0; j < record.genderAgeHistory.length; j++) {\n      var entry = record.genderAgeHistory[j];\n      if (!entry) continue;\n      if (entry.gender === null || entry.age === null) continue;\n      if (entry.gender === mostCommonGender && entry.age === mostCommonAge) {\n          topRecords.push(entry);\n          if (topRecords.length >= CONFIG.topHistoryRecords) break;\n      }\n  }\n  record.gender = mostCommonGender;\n  record.age = mostCommonAge;\n  record.genderAgeHistory = topRecords;\n  if (needReassign) {\n      var newVoice = this.assignVoice(mostCommonGender, mostCommonAge);\n      if (newVoice) record.voice = newVoice;\n  }\n  record.usageCount = CONFIG.resetUsageCount;\n};\n\n// 初始化CharacterManager\nvar characterManager = new CharacterManager();\ncharacterManager.loadRecords();\n\n// -------------------------- SpeechRuleJS核心对象（整合＜＞本地音效） --------------------------\nvar SpeechRuleJS = {\n  name: "多角色朗读2.101【按书名隔离上下文+别名合并发音人轮询+增强别名校验版v77+备用模型接力】",\n  id: "mingwuyan",\n  author: "命無言、萌新改",\n  version: 101,\n  zdfp: 1,\n  \n  tags: (function() {\n      var tags = {\n          narration: "旁白",\n          duihua: "对话",\n          duihuaA: "男",\n          duihuaB: "女",\n          "括号2": "在线音效",\n          "括号1": "【】括号发音人",\n          "括号3": "「」括号发音人",\n          "括号4": "『』括号发音人",\n          localSound1: "本地音效1",\n          localSound2: "本地音效2",\n          localSound3: "本地音效3"\n      };\n      \n              // 加入GENSHIN_CHARACTERS发音人标签\n      for (var name in GENSHIN_CHARACTERS) {\n          if (GENSHIN_CHARACTERS.hasOwnProperty(name)) {\n              var info = GENSHIN_CHARACTERS[name];\n              tags[info.voice.toString()] = name.toString(); // 规避：属性转原始String\n          }\n      }\n      \n      \n      // 新增：循环添加localSound4~localSound100（与前3个一致）\n      for (var i = 4; i <= 990; i++) {\n          var tagKey = ("localSound" + i).toString(); // 规避：tagKey转原始String\n          var tagName = ("本地音效" + i).toString(); // 规避：tagName转原始String\n          tags[tagKey] = tagName;\n      }\n      return tags;\n  })(),\n\n\n  tagsData: (function() {\n      var 统一Hint = "\n       “轰隆”  “轰隆！” “轰隆。。”\n         输入 轰隆  就可匹配，\n       支持用|分隔多个拟声词，@/＜/＞开头为正则（＜前插/＞后插/@替换）";\n      \n      var tagsData = {\n          dialogue: {\n              role: {\n                  label: "匹配角色名",\n                  hint: "可用|分隔多个角色关键词"\n              }\n          },\n          // 对话标签：完全模仿原代码格式（无多余逗号、字段名简化）\n          duihua: {\n              role: { // 字段名用 role（和 dialogue 标签一致，避免冲突）\n                  label: "角色名",\n                  hint: "输入角色关键词（如“张三”“主角”）"\n              },\n                // 整合性别+年龄为单选择框，格式：男/青年\n              genderAge: {\n                  label: "性别/年龄",\n                  hint: "选择角色的性别和年龄阶段",\n                  items: '{男/少年: "男/少年",男/男青年: "男/男青年",男/男中年: "男/男中年",男/男老年: "男/男老年",男/男孩: "男/男孩",女/女童: "女/女童",女/少女: "女/少女",女/女青年: "女/女青年",女/女中年: "女/女中年",女/女老年: "女/女老年",男/主角: "男/主角",女/主角: "女/主角"}',\n                  default: '男/青年'\n               },\n               // 整合性别+年龄为单选择框，格式：男/青年\n              personality: {\n                  label: "角色性格", // 独立标签名\n                  hint: "选择角色的性格特质（独立配置，不影响其他选项）", // 独立提示语\n          //        items: personalityItemsConfig, \n          //        default: moren // 独立默认值\n               }\n\n          },\n          // 本地音效1~3：完全保留原代码（一字未改）\n          localSound1: {\n              audioName: {\n                  label: "音频名称（本地音效1）",\n                  hint: 统一Hint\n              }\n          },\n          localSound2: {\n              audioName: {\n                  label: "音频名称（本地音效2）",\n                  hint: 统一Hint\n              }\n          },\n          localSound3: {\n              audioName: {\n                  label: "音频名称（本地音效3）",\n                  hint: 统一Hint\n              }\n          }\n      };\n\n      // 循环添加localSound4~localSound990：完全保留原代码\n      for (var i = 4; i <= 990; i++) {\n          var tagKey = ("localSound" + i).toString();\n          var label = ("音频名称（本地音效" + i + "）").toString();\n          tagsData[tagKey] = {\n              audioName: {\n                  label: label,\n                  hint: 统一Hint\n              }\n          };\n      }\n      \n      // 新增：为 GENSHIN_CHARACTERS 所有标签添加【独立性格选择框】（无冲突+无未定义错误）\n      for (var name in GENSHIN_CHARACTERS) {\n          if (GENSHIN_CHARACTERS.hasOwnProperty(name)) {\n              var voiceTag = GENSHIN_CHARACTERS[name].voice.toString();\n              // 直接内嵌性格配置（无需外部变量，彻底避免ReferenceError）\n              var personalityConfig = {\n                  label: "角色性格", // 独立标签名\n                  hint: "选择角色的性格特质（独立配置，不影响其他选项）", // 独立提示语\n          //        items: personalityItemsConfig, \n         //         default: moren // 独立默认值\n              };\n              \n              // 1. 若标签已存在（如括号1、男主1），在原有配置上新增性格选项\n              if (tagsData[voiceTag]) {\n                  tagsData[voiceTag].personality = personalityConfig; // 字段名：personality（与genderAge无冲突）\n              } \n              // 2. 若标签不存在，新建配置（仅含性格选择框）\n              else {\n                  tagsData[voiceTag] = {\n                      personality: personalityConfig\n                  };\n              }\n          }\n      }\n      \n      return tagsData;\n      \n  })(),\n\n\n  getTagName: function(tag, tagData) {\n      // 工具函数：数组扁平化（移到内部，避免作用域问题，括号完全匹配）\n      var forceFlattenArray = function(arr) {\n          var result = [];\n          for (var i = 0; i < arr.length; i++) {\n              var item = arr[i];\n              if (Object.prototype.toString.call(item) === '[object Array]') {\n                  result = result.concat(forceFlattenArray(item));\n              } else {\n                  result.push(item);\n              }\n          }\n          return result;\n      };\n  \n      // 1. GENSHIN标签处理（括号完全匹配）\n      var genshinTagKey = "";\n      if (GENSHIN_CHARACTERS) {\n          for (var tagKey in GENSHIN_CHARACTERS) {\n              if (Object.prototype.hasOwnProperty.call(GENSHIN_CHARACTERS, tagKey)) {\n                  var genshinConfig = GENSHIN_CHARACTERS[tagKey];\n                  if (genshinConfig.voice === tag) {\n                      genshinTagKey = tagKey;\n                      break;\n                  }\n              }\n          }\n      }\n  \n      if (genshinTagKey !== "") {\n          var basePart = genshinTagKey;\n          var genshinPersonality = "";\n          if (tagData && tagData.personality) {\n              if (Object.prototype.toString.call(tagData.personality) === '[object Array]') {\n                  var flatGenshinP = forceFlattenArray(tagData.personality);\n                  for (var g = 0; g < flatGenshinP.length; g++) {\n                      var pItem = flatGenshinP[g];\n                      genshinPersonality = typeof pItem === 'object' && pItem !== null \n                          ? (pItem.value || "").trim() \n                          : (pItem + "").trim();\n                      if (genshinPersonality) {\n                          break;\n                      }\n                  }\n              } else {\n                  genshinPersonality = (tagData.personality + "").trim();\n              }\n          }\n          var personality = genshinPersonality !== "" && genshinPersonality !== "无" ? genshinPersonality : "";\n          var personalityWhole = personality ? ("" + personality) : "";\n  \n          var rsTag = basePart + personalityWhole;\n          //console.log("GENSHIN生效！tag=", tag, "性格=", genshinPersonality, "生成tagName=", rsTag);\n          return rsTag;\n      }\n  \n      // 2. duihua标签处理（括号完全匹配，复用GENSHIN逻辑）\n      else if ("duihua" == tag) {\n          // 角色名部分（括号不变）\n          var roleContent = tagData && tagData.role && tagData.role.trim() !== "" \n              ? tagData.role.trim() \n              : "";\n          var rolePrefix = "";\n          var roleSuffix = "";\n          var rolePart = roleContent.length > 15 \n              ? (rolePrefix + roleContent.substring(0, 15) + ".." + roleSuffix) \n              : (rolePrefix + roleContent + roleSuffix);\n  \n          // 性别年龄部分（括号不变）\n          var genderAgeContent = tagData && tagData.genderAge ? tagData.genderAge : "";\n          var genderAgePrefix = "（";\n          var genderAgeSuffix = "）";\n          var genderAgeWhole = genderAgeContent ? (genderAgePrefix + genderAgeContent + genderAgeSuffix) : "";\n  \n          // 性格部分（括号完全匹配）\n          var duihuaPersonality = "";\n          if (tagData && tagData.personality) {\n              if (Object.prototype.toString.call(tagData.personality) === '[object Array]') {\n                  var flatDuihuaP = forceFlattenArray(tagData.personality);\n                  for (var d = 0; d < flatDuihuaP.length; d++) {\n                      var pItem = flatDuihuaP[d];\n                      duihuaPersonality = typeof pItem === 'object' && pItem !== null \n                          ? (pItem.value || "").trim() \n                          : (pItem + "").trim();\n                      if (duihuaPersonality) {\n                          break;\n                      }\n                  }\n              } else {\n                  duihuaPersonality = (tagData.personality + "").trim();\n              }\n          }\n          var personality = duihuaPersonality !== "" && duihuaPersonality !== "无" ? duihuaPersonality : "";\n          var separator = "";\n          var personalityPrefix = "|";\n          var personalitySuffix = "";\n          var personalityWhole = personality ? (separator + personalityPrefix + personality + personalitySuffix) : "";\n  \n          // 最终拼接（括号不变）\n          var rsTag = rolePart + personalityWhole + genderAgeWhole;\n  \n          //console.log("duihua生效！性格=", duihuaPersonality, "生成tagName=", rsTag);\n          return rsTag;\n      }\n  \n      // 3. 其他标签（括号不变）\n      else {\n          return this.tags[tag] || "旁白";\n      }\n  }, // 结尾逗号保留（对象方法格式）\n  \n      \n  characterManager: characterManager,\n  LOCAL_REGEX_PREFIX: "@_local_", // 本地正则专属前缀（隔离在线）\n\n  // -------------------------- 核心工具：仅替换「目标内容」中的符号（不碰外层标签/系统符号） --------------------------\n  replaceTargetContentSymbols: function(targetStr) {\n      return targetStr\n          .replace(/“/g, "###LEFT_QUOTE###")\n          .replace(/”/g, "###RIGHT_QUOTE###")\n          .replace(/〖/g, "###LEFT_DOUBLE_ANGLE###")\n          .replace(/〗/g, "###RIGHT_DOUBLE_ANGLE###")\n          .replace(/【/g, "###LEFT_SQUARE###")\n          .replace(/】/g, "###RIGHT_SQUARE###")\n          .replace(/『/g, "###LEFT_DOUBLE_CURLY###")\n          .replace(/』/g, "###RIGHT_DOUBLE_CURLY###")\n          .replace(/「/g, "###LEFT_SINGLE_ANGLE###")\n          .replace(/」/g, "###RIGHT_SINGLE_ANGLE###");\n  },\n  restoreTargetContentSymbols: function(text) {\n      return text\n          .replace(/###LEFT_QUOTE###/g, "“")\n          .replace(/###RIGHT_QUOTE###/g, "”")\n          .replace(/###LEFT_DOUBLE_ANGLE###/g, "〖")\n          .replace(/###RIGHT_DOUBLE_ANGLE###/g, "〗")\n          .replace(/###LEFT_SQUARE###/g, "【")\n          .replace(/###RIGHT_SQUARE###/g, "】")\n          .replace(/###LEFT_DOUBLE_CURLY###/g, "『")\n          .replace(/###RIGHT_DOUBLE_CURLY###/g, "』")\n          .replace(/###LEFT_SINGLE_ANGLE###/g, "「")\n          .replace(/###RIGHT_SINGLE_ANGLE###/g, "」");\n  },\n\n  // -------------------------- 解析在线音效关键词（保留完整原始关键词，新增originFullKW；支持全角/半角＜＞） --------------------------\n  \n  \n  \n  \n  \n  parseSoundKeywords: function(yinXiaoList) {\n      var regexKWs = [];    \n      var normalKWs = [];   \n      var specialKWs = [];  \n      // 新增1：定义母关键词组（和你原有变量顺序一致，不打乱结构）\n      var normalKWGroups = [];  \n      var keywordReg = /^(\d{1,2})?(\D+?)(\d{1,2})?$/;\n      var soundRegexSymbols = ['<', '>', '＜', '＞']; \n  \n      for (var i = 0; i < yinXiaoList.length; i++) {\n          var item = yinXiaoList[i];\n          if (!item || !item.name) continue;\n          var fullName = item.name.trim();\n          // 新增2：记录当前项的母关键词（未分割的完整name）\n          var motherKW = fullName;\n  \n          var firstChar = fullName.charAt(0);\n          var isRegexSymbol = (soundRegexSymbols.indexOf(firstChar) !== -1);\n          if (isRegexSymbol || (fullName.startsWith("@") && !fullName.startsWith(this.LOCAL_REGEX_PREFIX))) {\n              try {\n                  var regexStr = fullName.slice(1);\n                  var regex = new RegExp(regexStr, 'g');\n                  regexKWs.push({\n                      regex: regex,\n                      originKW: fullName,\n                      flag: firstChar\n                  });\n              } catch (e) {\n                  // 保留你原有空catch，不改动\n              }\n              continue;\n          }\n  \n          // 保留你原有代码的普通关键词拆分逻辑（一行都不删）\n          var names = fullName.split("|");\n          // 新增3：临时存当前母关键词的子关键词（避免打乱原有循环）\n          var currentChildren = [];\n          for (var j = 0; j < names.length; j++) {\n              var subName = names[j].trim();\n              if (!subName) continue;\n              // 新增4：存入当前母关键词的子关键词列表\n              currentChildren.push(subName);\n              // 以下是你原有代码，完全保留\n              var match = subName.match(keywordReg);\n              if (match) {\n                  var prefixNum = match[1] ? parseInt(match[1], 10) : 0;\n                  var coreKW = match[2].trim();\n                  var suffixNum = match[3] ? parseInt(match[3], 10) : 0;\n                  if ((prefixNum >=1 && prefixNum <=9) || (suffixNum >=1 && suffixNum <=9)) {\n                      specialKWs.push({\n                          prefixLen: prefixNum,\n                          coreKW: coreKW,\n                          suffixLen: suffixNum,\n                          originFullKW: subName,\n                          originKW: subName\n                      });\n                  } else {\n                      normalKWs.push(subName);\n                  }\n              } else {\n                  normalKWs.push(subName);\n              }\n          }\n          // 新增5：将当前母关键词+子关键词列表存入组（仅当有子关键词时）\n          if (currentChildren.length > 0) {\n              normalKWGroups.push({\n                  motherKW: motherKW,\n                  children: currentChildren\n              });\n          }\n      }\n      \n      // 新增6：返回对象中加入normalKWGroups（无尾逗号，和你原有格式一致）\n      return { regexKWs: regexKWs, normalKWs: normalKWs, specialKWs: specialKWs, normalKWGroups: normalKWGroups };\n  }, // 关键：保留对象属性的逗号（分隔后面的函数）\n  \n  handleText: function(text, tagsData) {\n  \n  \n       // 新增：ES5 兼容的数组扁平化函数（解决 forceFlattenArray 未定义问题）\n      var forceFlattenArray = function(arr) {\n          var result = [];\n          for (var i = 0; i < arr.length; i++) {\n              var item = arr[i];\n              // 判断是否为数组（ES5 兼容写法）\n              if (Object.prototype.toString.call(item) === '[object Array]') {\n                  // 递归扁平化嵌套数组\n                  result = result.concat(forceFlattenArray(item));\n              } else {\n                  result.push(item);\n              }\n          }\n          return result;\n      };\n\n      // 新增：判断数组的辅助函数（适配原有代码）\n      var isArray = function(arr) {\n          return Object.prototype.toString.call(arr) === '[object Array]';\n      };\n      \n      \n  \n      \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n  \n      \n      \n      text2 = text.replace(/[(]([\u4E00-\u9Fa5]{1,5})音效[)]/g, "");\n      \n      text = text.replace(/“([\u4E00-\u9FFF]{1,15})”/g, "$1");\n      text = text.replace(/[〖〗‘’〈〔〕〉]/g, "");\n      \n      text = text.replace(/(“[^“”]+)$/g, "$1”");\n      text = text.replace(/(^|音效[)])([^“”)]+”)/g, "$1“$2");\n      \n      text = text.replace(/[【「『]([\u4E00-\u9Fa5]+)[】』」]/g, "$1");\n      \n      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");\n      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");\n      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");\n      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");\n //     text = text.replace(/(^|”)([^a-zA-Z0-9\u4e00-\u9fa5\n]+)($)/g, "$1（时间转场音效）$3");\n      var soundKeywords = [];\n      var yinXiaoList = [];\n      \n      \n      \n      \n      \n      try {\n          var yinXiaoContent = ttsrv.readTxtFile("yinxiao.json");\n          if (yinXiaoContent && yinXiaoContent.trim() !== "") {\n              yinXiaoList = JSON.parse(yinXiaoContent);\n              for (var i = 0; i < yinXiaoList.length; i++) {\n                  var item = yinXiaoList[i];\n                  if (item && item.name) {\n                      var names = item.name.split("|"); // 按“|”分割多关键词\n                      for (var j = 0; j < names.length; j++) {\n                          var name = names[j].trim();\n                          // 新增过滤：跳过开头是“#”的name，仅保留非#开头且非空的name\n                          if (name !== "" && !name.startsWith("#")) { \n                              soundKeywords.push(name);\n                          }\n                      }\n                  }\n              }\n          }\n      } catch (e) {\n      }\n      \n\n\n\n\n\n\n\n      var commonPunctuation = "。，！？：；、·…—-";\n      var parsedKWs = this.parseSoundKeywords(yinXiaoList);\n\n      // ========== 本地音效双匹配逻辑（只换匹配内容，不碰标签壳） ==========\n      var localSoundOnoMap = {}; \n      var localSoundRegexMap = {}; \n      // 新增：生成1~100完整本地音效标签数组（含97个新增标签）\n      var allLocalSoundTags = [];\n      for (var i = 1; i <= 990; i++) {\n          allLocalSoundTags.push("localSound" + i);\n      }\n\n      // 1. 读取本地音效配置（修复反斜杠转义问题）- 覆盖1~100\n      for (var i = 0; i < allLocalSoundTags.length; i++) {\n      var tagKey = allLocalSoundTags[i];\n      if (tagsData && tagsData[tagKey] && tagsData[tagKey].audioName) {\n        var audioNameConfig = tagsData[tagKey].audioName;\n        // 强制扁平化数组，兼容嵌套结构\n        var flatConfig = forceFlattenArray(audioNameConfig);\n        var allOnoList = [];\n        var allRegexList = [];\n        \n        // 直接遍历配置项读取value，彻底避免JSON.stringify导致的二次转义\n        for (var j = 0; j < flatConfig.length; j++) {\n            var configItem = flatConfig[j];\n            var inputValue = "";\n            \n            // 安全读取value，兼容JS对象和Java原生对象\n            if (typeof configItem === 'object' && configItem !== null) {\n                inputValue = configItem.value !== undefined ? (configItem.value + "").trim() : "";\n                // 兜底兼容Java对象的get方法\n                if (inputValue === "" && typeof configItem.get === 'function') {\n                    var tempVal = configItem.get("value");\n                    inputValue = tempVal ? (tempVal + "").trim() : "";\n                }\n            }\n            if (inputValue === "") continue;\n\n            // 正则关键词处理\n            if (inputValue.startsWith("@") || inputValue.startsWith("＜") || inputValue.startsWith("＞") || inputValue.startsWith("<")) {\n                allRegexList.push({\n                    originKW: inputValue,\n                    type: inputValue.charAt(0),\n                    regex: new RegExp(inputValue.slice(1), 'g')\n                });\n            } else {\n                // 普通关键词分割\n                var allParts = inputValue.split('|');\n                for (var m = 0; m < allParts.length; m++) {\n                    var part = allParts[m].trim();\n                    if (part) allOnoList.push(part);\n                }\n            }\n        }\n        var tagName = this.tags[tagKey];\n        \n        localSoundOnoMap[tagKey] = {};\n        for (var k = 0; k < allOnoList.length; k++) {\n            localSoundOnoMap[tagKey][allOnoList[k]] = tagKey;\n        }\n\n        localSoundRegexMap[tagKey] = allRegexList;\n      }\n      }\n\n      // 2. 本地普通音效：替换「匹配到的内容」- 覆盖1~100（修改版：保留匹配内容，仅留中文汉字）\n      var onoMarkedText = text;\n      for (var i = 0; i < allLocalSoundTags.length; i++) {\n          var tagKey = allLocalSoundTags[i];\n          var tagAudioMap = localSoundOnoMap[tagKey];\n          if (!tagAudioMap) continue;\n          var tagName = this.tags[tagKey];\n          \n          for (var targetOno in tagAudioMap) {\n              var escapedOno = targetOno.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');\n              var onoReg = new RegExp('“(' + escapedOno + ')([。，！？：；、…—-]{0,2})”', 'g');\n              \n              onoMarkedText = onoMarkedText.replace(onoReg, function(match, onoContent) {\n                  // 核心修改：过滤匹配内容，仅保留中文汉字\n                  var onlyChineseContent = onoContent.replace(/[^\u4e00-\u9fa5]/g, "");\n                  // 兜底兼容：过滤后为空时，保留原始匹配内容\n                  var finalContent = onlyChineseContent || onoContent;\n                  // 原符号转义逻辑保留\n                  var replacedContent = SpeechRuleJS.replaceTargetContentSymbols(finalContent);\n                  var startMark = "{{" + tagName + "_" + replacedContent + "}}";\n                  var endMark = "{{" + tagName + "结束}}";\n                  return "\n" + startMark + finalContent + endMark + "\n";\n              });\n          }\n      }\n\n      // 3. 本地＞＜正则音效：替换「匹配到的内容」- 覆盖1~100（修改版：保留匹配内容，仅留中文汉字）\n      var regexMarkedText = onoMarkedText;\n      for (var i = 0; i < allLocalSoundTags.length; i++) {\n          var tagKey = allLocalSoundTags[i];\n          var regexList = localSoundRegexMap[tagKey];\n          if (!regexList || regexList.length === 0) continue;\n          var tagName = this.tags[tagKey];\n\n          for (var r = 0; r < regexList.length; r++) {\n              var rkw = regexList[r];\n              \n              regexMarkedText = regexMarkedText.replace(rkw.regex, function(match) {\n                  // 核心修改：过滤匹配内容，仅保留中文汉字\n                  var onlyChineseContent = match.replace(/[^\u4e00-\u9fa5]/g, "");\n                  // 兜底兼容：过滤后为空时，保留原始匹配内容\n                  var finalContent = onlyChineseContent || match;\n                  // 原符号转义逻辑保留\n                  var replacedContent = SpeechRuleJS.replaceTargetContentSymbols(finalContent);\n                  var newContentWithTag = "{{" + tagName + "_" + replacedContent + "}}" + finalContent + "{{" + tagName + "结束}}";\n\n                  // 原全角/半角符号前后插逻辑完全保留\n                  if (rkw.type === "＜" || rkw.type === "<") {\n                      return "\n" + newContentWithTag + "\n" + match;\n                  } else if (rkw.type === "＞" || rkw.type === ">") {\n                      return match + "\n" + newContentWithTag + "\n";\n                  } else {\n                      return "\n" + newContentWithTag + "\n";\n                  }\n              });\n              rkw.regex.lastIndex = 0;\n          }\n      }\n\n\n      text = regexMarkedText;\n      // ========== 本地音效双匹配结束 ==========\n\n      // -------------------------- 在线音效处理（双引号内：用originFullKW替换，保留完整关键词；支持全角/半角＜＞） --------------------------\n      if (soundKeywords.length > 0 && text.includes("“")) {\n          var quotedReg = new RegExp('“.*?”', 'g'); // 最兼容正则写法\n          text = text.replace(quotedReg, function(match) {\n              var result = match;\n\n              // 1. 在线正则关键词：替换「关键词本身」（保留全/半角符号）\n              for (var r = 0; r < parsedKWs.regexKWs.length; r++) {\n                  var rkw = parsedKWs.regexKWs[r];\n              \n              \n                                  \n                                      // -------------------------- 新增：跳过<>开头的正则关键词（双引号内不匹配） --------------------------\n                  if (rkw.flag === "<" || rkw.flag === "＜" || rkw.flag === "＞" || rkw.flag === ">" || rkw.flag === "@") { // 半角<、全角＜开头的正则，直接跳过\n                      continue; \n                  }\n                  // --------------------------------------------------------------------------------------------------\n                  \n                  \n              \n              \n              \n              \n                  var tempResult = "";\n                  var lastIndex = 0;\n                  var regexMatch;\n                  var matchCount = 0;\n\n                  while ((regexMatch = rkw.regex.exec(result)) !== null) {\n                      matchCount++;\n                      var matchedContent = regexMatch[0];\n                      // 只替换关键词本身（rkw.originKW，含全/半角符号）\n                      var replacedKeyword = SpeechRuleJS.replaceTargetContentSymbols(rkw.originKW);\n                      var tag = "";\n\n                      // 兼容判断：全角＜、半角<归为左符号（前插）；全角＞、半角>归为右符号（后插）\n                      if (rkw.flag === "＜" || rkw.flag === "<") {\n                          tag = "\n〖" + replacedKeyword + "〗\n" + matchedContent;\n                      } else if (rkw.flag === "＞" || rkw.flag === ">") {\n                          tag = matchedContent + "\n〖" + replacedKeyword + "〗\n";\n                      } else {\n                          tag = '〖' + replacedKeyword + '〗';\n                      }\n\n                      tempResult += result.substring(lastIndex, regexMatch.index) + tag;\n                      lastIndex = rkw.regex.lastIndex;\n                  }\n                  \n                  if (matchCount > 0) {\n                      tempResult += result.substring(lastIndex);\n                      result = tempResult;\n                  }\n                  rkw.regex.lastIndex = 0;\n              }\n\n              // 2. 在线特殊关键词：用originFullKW（完整原始关键词）替换\n              for (var s = 0; s < parsedKWs.specialKWs.length; s++) {\n                  var skw = parsedKWs.specialKWs[s];\n                  var prefixLen = Math.floor(skw.prefixLen) || 1;\n                  var suffixLen = Math.floor(skw.suffixLen) || 1;\n                  var specialReg = new RegExp(\n                      '(.{0,' + prefixLen + '})' + \n                      escapeRegExp(skw.coreKW) + \n                      '(.{0,' + suffixLen + '})' + \n                      '(?=[' + commonPunctuation + ']|$|' + escapeRegExp(skw.coreKW) + ')', \n                      'g'\n                  );\n\n                  var tempResult = "";\n                  var lastIndex = 0;\n                  var matchResult;\n                  var matchCount = 0;\n                  while ((matchResult = specialReg.exec(result)) !== null) {\n                      matchCount++;\n                      var matchedContent = matchResult[0];\n                      // 关键修改：用完整原始关键词（skw.originFullKW）替换，而非核心KW\n                      var replacedKeyword = SpeechRuleJS.replaceTargetContentSymbols(skw.originFullKW);\n                      tempResult += result.substring(lastIndex, matchResult.index) + '〖' + replacedKeyword + '〗';\n                      lastIndex = matchResult.index + matchResult[0].length;\n                  }\n                  \n                  if (matchCount > 0) {\n                      tempResult += result.substring(lastIndex);\n                      result = tempResult;\n                  }\n              }\n\n\n\n\n\n\n\n\n\n\n\n\n         \n              \n              // 3. 在线普通关键词：替换「关键词本身」\n              var repeatCheck = isSingleKeywordRepeat(result.replace(/〖.*?〗/g, ''), parsedKWs.normalKWs);\n              if (repeatCheck.isRepeat) {\n                  // 新增1：ES5循环找子关键词对应的母关键词组（不破坏原有重复检测逻辑）\n                  var matchedGroup = null;\n                  for (var g = 0; g < parsedKWs.normalKWGroups.length; g++) {\n                      var group = parsedKWs.normalKWGroups[g];\n                      for (var c = 0; c < group.children.length; c++) {\n                          if (group.children[c] === repeatCheck.keyword) {\n                              matchedGroup = group;\n                              break;\n                          }\n                      }\n                      if (matchedGroup) break;\n                  }\n                  // 新增2：优先用母关键词，无匹配则保留原有子关键词\n                  var replaceKW = matchedGroup ? matchedGroup.motherKW : repeatCheck.keyword;\n              \n                  // 以下是你原有代码，完全保留（仅把repeatCheck.keyword改成replaceKW）\n                  var kw = repeatCheck.keyword; // 保留原有kw变量（用于匹配定位）\n                  var kwLen = kw.length;\n                  var normalResult = "";\n                  var currentPos = 0;\n                  var matchCount = 0;\n              \n                  while (currentPos <= result.length - kwLen) {\n                      var kwIndex = result.indexOf(kw, currentPos);\n                      if (kwIndex === -1) break;\n                      \n                      if (result.slice(currentPos, kwIndex).includes("〖")) {\n                          currentPos = kwIndex + kwLen;\n                          continue;\n                      }\n              \n                      var nextKwPos = kwIndex + kwLen;\n                      var isContinuous = result.substr(nextKwPos, kwLen) === kw;\n                      var nextChar = result[nextKwPos] || "";\n                      var isAllowed = isContinuous || nextKwPos >= result.length || \n                                     commonPunctuation.includes(nextChar) || nextChar === "\"" || nextChar === "”";
+          .replace(/[^\u4e00-\u9fa5\u3002\uff1f\uff01\uff0c\uff1b\uff1a\u3001\u201c\u201d\u2018\u2019\uff08\uff09\u3010\u3011\u300a\u300b\u2026\u2014\u00b7a-zA-Z0-9.,!?;:"'()\[\]{}<>-]/g, "")
+          .trim();
+  }
+
+  var cleanCurrent = cleanDialogText(currentDialogText);
+  var matchedResult = null;
+  var finalMatchedIndex = -1;
+
+  // ===================== 匹配优先级1：当前目标位置（最高优先级，原逻辑不变，仅改匹配规则）=====================
+  var currentArrayIndex = currentIndex - 1;
+  if (currentArrayIndex >= 0 && currentArrayIndex < dialogList.length) {
+      var currentTargetItem = dialogList[currentArrayIndex];
+      // 核心修改：缓存内容按换行拆分，逐行匹配，无任何整体匹配
+      var cacheLines = currentTargetItem.dialogContent.split("\n").filter(function(line) {
+          return line.trim() !== ""; // 过滤空行，避免无效匹配
+      });
+      var isMatch = false;
+      // 遍历拆分后的每一行，分别清理匹配，匹配上任意一行就算成功
+      for (var i = 0; i < cacheLines.length; i++) {
+          var cleanCacheLine = cleanDialogText(cacheLines[i]);
+          //console.log("【优先匹配】当前序号" + (currentArrayIndex + 1) + " | 当前清理后：" + cleanCurrent + " | 缓存拆分行" + (i+1) + "清理后：" + cleanCacheLine);
+          if (cleanCacheLine === cleanCurrent && cleanCurrent !== "") {
+              isMatch = true;
+              break;
+          }
+      }
+
+      if (isMatch) {
+          matchedResult = {
+              name: currentTargetItem.name,
+              gender: currentTargetItem.gender,
+              age: currentTargetItem.age
+          };
+          finalMatchedIndex = currentArrayIndex + 1;
+          //console.log("【匹配成功】命中当前序号" + finalMatchedIndex + "，角色：" + currentTargetItem.name);
+      }
+  }
+
+  // ===================== 匹配优先级2：向前偏移（原逻辑不变，仅改匹配规则）=====================
+  if (!matchedResult) {
+      for (var offset = 1; offset <= MAX_FORWARD_OFFSET; offset++) {
+          var targetArrayIndex = currentIndex - 1 - offset;
+          if (targetArrayIndex < 0) break;
+
+          var targetItem = dialogList[targetArrayIndex];
+          // 同样按换行拆分逐行匹配，和主逻辑完全一致
+          var cacheLines = targetItem.dialogContent.split("\n").filter(function(line) {
+              return line.trim() !== "";
+          });
+          var isMatch = false;
+          for (var i = 0; i < cacheLines.length; i++) {
+              var cleanCacheLine = cleanDialogText(cacheLines[i]);
+              //console.log("【向前匹配】尝试序号" + (targetArrayIndex + 1) + " | 当前清理后：" + cleanCurrent + " | 缓存拆分行" + (i+1) + "清理后：" + cleanCacheLine);
+              if (cleanCacheLine === cleanCurrent && cleanCurrent !== "") {
+                  isMatch = true;
+                  break;
+              }
+          }
+
+          if (isMatch) {
+              matchedResult = {
+                  name: targetItem.name,
+                  gender: targetItem.gender,
+                  age: targetItem.age
+              };
+              finalMatchedIndex = targetArrayIndex + 1;
+              //console.log("【匹配成功】命中向前序号" + finalMatchedIndex + "，角色：" + targetItem.name);
+              break;
+          }
+      }
+  }
+
+  // ===================== 匹配优先级3：向后偏移（原逻辑不变，仅改匹配规则）=====================
+  if (!matchedResult) {
+      for (var offset = 1; offset <= MAX_BACKWARD_OFFSET; offset++) {
+          var targetArrayIndex = currentIndex - 1 + offset;
+          if (targetArrayIndex >= dialogList.length) break;
+
+          var targetItem = dialogList[targetArrayIndex];
+          // 同样按换行拆分逐行匹配，和主逻辑完全一致
+          var cacheLines = targetItem.dialogContent.split("\n").filter(function(line) {
+              return line.trim() !== "";
+          });
+          var isMatch = false;
+          for (var i = 0; i < cacheLines.length; i++) {
+              var cleanCacheLine = cleanDialogText(cacheLines[i]);
+              //console.log("【向后匹配】尝试序号" + (targetArrayIndex + 1) + " | 当前清理后：" + cleanCurrent + " | 缓存拆分行" + (i+1) + "清理后：" + cleanCacheLine);
+              if (cleanCacheLine === cleanCurrent && cleanCurrent !== "") {
+                  isMatch = true;
+                  break;
+              }
+          }
+
+          if (isMatch) {
+              matchedResult = {
+                  name: targetItem.name,
+                  gender: targetItem.gender,
+                  age: targetItem.age
+              };
+              finalMatchedIndex = targetArrayIndex + 1;
+              //console.log("【匹配成功】命中向后序号" + finalMatchedIndex + "，角色：" + targetItem.name);
+              break;
+          }
+      }
+  }
+
+  // ===================== 匹配成功：更新序号+写入缓存（完全保留原逻辑，无任何改动）=====================
+  if (matchedResult && finalMatchedIndex > 0) {
+      cache.currentIndex = finalMatchedIndex + 1;
+      writeDialogCache(cache);
+      //console.log("【序号更新】下一个匹配序号已设置为：" + cache.currentIndex);
+      return matchedResult;
+  }
+
+  // ===================== 全部匹配失败：返回null（完全保留原逻辑，无任何改动）=====================
+  //console.log("【匹配失败】双向容错匹配全部失败，触发重新分析");
+  return null;
+}
+
+
+
+
+CharacterManager.prototype.analyzeCharacterFallback = function(fullText, characterId) {
+  return { name: "未知", gender: Math.random() > 0.5 ? "男" : "女", age: Math.random() > 0.5 ? "青年" : "中年" };
+};
+
+
+
+
+
+
+
+
+CharacterManager.prototype.reEvaluateCharacter = function(record) {
+  if (record.usageCount === 100 || record.usageCount === 50) return;
+  if (record.gender === null || record.age === null) {
+      if (record.genderAgeHistory && record.genderAgeHistory.length > 0) {
+          for (var i = 0; i < record.genderAgeHistory.length; i++) {
+              var entry = record.genderAgeHistory[i];
+              if (entry && entry.gender !== null && entry.age !== null) {
+                  record.gender = entry.gender;
+                  record.age = entry.age;
+                  break;
+              }
+          }
+      }
+      if (record.gender === null || record.age === null) {
+          record.gender = "男";
+          record.age = "青年";
+      }
+  }
+  if (!record.genderAgeHistory || record.genderAgeHistory.length === 0) {
+      record.genderAgeHistory = [{ gender: record.gender, age: record.age }];
+      return;
+  }
+  var genderCount = {};
+  var ageCount = {};
+  for (var i = 0; i < record.genderAgeHistory.length; i++) {
+      var entry = record.genderAgeHistory[i];
+      if (!entry) continue;
+      if (entry.gender === null || entry.age === null) continue;
+      genderCount[entry.gender] = (genderCount[entry.gender] || 0) + 1;
+      ageCount[entry.age] = (ageCount[entry.age] || 0) + 1;
+  }
+  if (Object.keys(genderCount).length === 0) genderCount[record.gender] = 1;
+  if (Object.keys(ageCount).length === 0) ageCount[record.age] = 1;
+  var mostCommonGender = "";
+  var maxGenderCount = 0;
+  for (var gender in genderCount) {
+      if (genderCount.hasOwnProperty(gender)) {
+          if (mostCommonGender === "") {
+              mostCommonGender = gender;
+              maxGenderCount = genderCount[gender];
+          }
+          if (genderCount[gender] > maxGenderCount) {
+              mostCommonGender = gender;
+              maxGenderCount = genderCount[gender];
+          }
+      }
+  }
+  var mostCommonAge = "";
+  var maxAgeCount = 0;
+  for (var age in ageCount) {
+      if (ageCount.hasOwnProperty(age)) {
+          if (mostCommonAge === "") {
+              mostCommonAge = age;
+              maxAgeCount = ageCount[age];
+          }
+          if (ageCount[age] > maxAgeCount) {
+              mostCommonAge = age;
+              maxAgeCount = ageCount[age];
+          }
+      }
+  }
+  var needReassign = false;
+  if (record.gender !== mostCommonGender || record.age !== mostCommonAge || !record.voice) {
+      needReassign = true;
+  }
+  var topRecords = [];
+  for (var j = 0; j < record.genderAgeHistory.length; j++) {
+      var entry = record.genderAgeHistory[j];
+      if (!entry) continue;
+      if (entry.gender === null || entry.age === null) continue;
+      if (entry.gender === mostCommonGender && entry.age === mostCommonAge) {
+          topRecords.push(entry);
+          if (topRecords.length >= CONFIG.topHistoryRecords) break;
+      }
+  }
+  record.gender = mostCommonGender;
+  record.age = mostCommonAge;
+  record.genderAgeHistory = topRecords;
+  if (needReassign) {
+      var newVoice = this.assignVoice(mostCommonGender, mostCommonAge);
+      if (newVoice) record.voice = newVoice;
+  }
+  record.usageCount = CONFIG.resetUsageCount;
+};
+
+// 初始化CharacterManager
+var characterManager = new CharacterManager();
+characterManager.loadRecords();
+
+// -------------------------- SpeechRuleJS核心对象（整合＜＞本地音效） --------------------------
+var SpeechRuleJS = {
+  name: "多角色朗读2.100【按书名隔离上下文+别名合并发音人轮询+增强别名校验版v77+备用模型接力】",
+  id: "mingwuyan",
+  author: "命無言、萌新改",
+  version: 101,
+  zdfp: 1,
+  
+  tags: (function() {
+      var tags = {
+          narration: "旁白",
+          duihua: "对话",
+          duihuaA: "男",
+          duihuaB: "女",
+          "括号2": "在线音效",
+          "括号1": "【】括号发音人",
+          "括号3": "「」括号发音人",
+          "括号4": "『』括号发音人",
+          localSound1: "本地音效1",
+          localSound2: "本地音效2",
+          localSound3: "本地音效3"
+      };
+      
+              // 加入GENSHIN_CHARACTERS发音人标签
+      for (var name in GENSHIN_CHARACTERS) {
+          if (GENSHIN_CHARACTERS.hasOwnProperty(name)) {
+              var info = GENSHIN_CHARACTERS[name];
+              tags[info.voice.toString()] = name.toString(); // 规避：属性转原始String
+          }
+      }
+      
+      
+      // 新增：循环添加localSound4~localSound100（与前3个一致）
+      for (var i = 4; i <= 990; i++) {
+          var tagKey = ("localSound" + i).toString(); // 规避：tagKey转原始String
+          var tagName = ("本地音效" + i).toString(); // 规避：tagName转原始String
+          tags[tagKey] = tagName;
+      }
+      return tags;
+  })(),
+
+
+  tagsData: (function() {
+      var 统一Hint = "\n       “轰隆”  “轰隆！” “轰隆。。”\n         输入 轰隆  就可匹配，\n       支持用|分隔多个拟声词，@/＜/＞开头为正则（＜前插/＞后插/@替换）";
+      
+      var tagsData = {
+          dialogue: {
+              role: {
+                  label: "匹配角色名",
+                  hint: "可用|分隔多个角色关键词"
+              }
+          },
+          // 对话标签：完全模仿原代码格式（无多余逗号、字段名简化）
+          duihua: {
+              role: { // 字段名用 role（和 dialogue 标签一致，避免冲突）
+                  label: "角色名",
+                  hint: "输入角色关键词（如“张三”“主角”）"
+              },
+                // 整合性别+年龄为单选择框，格式：男/青年
+              genderAge: {
+                  label: "性别/年龄",
+                  hint: "选择角色的性别和年龄阶段",
+                  items: '{男/少年: "男/少年",男/男青年: "男/男青年",男/男中年: "男/男中年",男/男老年: "男/男老年",男/男孩: "男/男孩",女/女童: "女/女童",女/少女: "女/少女",女/女青年: "女/女青年",女/女中年: "女/女中年",女/女老年: "女/女老年",男/主角: "男/主角",女/主角: "女/主角"}',
+                  default: '男/青年'
+               },
+               // 整合性别+年龄为单选择框，格式：男/青年
+              personality: {
+                  label: "角色性格", // 独立标签名
+                  hint: "选择角色的性格特质（独立配置，不影响其他选项）", // 独立提示语
+          //        items: personalityItemsConfig, 
+          //        default: moren // 独立默认值
+               }
+
+          },
+          // 本地音效1~3：完全保留原代码（一字未改）
+          localSound1: {
+              audioName: {
+                  label: "音频名称（本地音效1）",
+                  hint: 统一Hint
+              }
+          },
+          localSound2: {
+              audioName: {
+                  label: "音频名称（本地音效2）",
+                  hint: 统一Hint
+              }
+          },
+          localSound3: {
+              audioName: {
+                  label: "音频名称（本地音效3）",
+                  hint: 统一Hint
+              }
+          }
+      };
+
+      // 循环添加localSound4~localSound990：完全保留原代码
+      for (var i = 4; i <= 990; i++) {
+          var tagKey = ("localSound" + i).toString();
+          var label = ("音频名称（本地音效" + i + "）").toString();
+          tagsData[tagKey] = {
+              audioName: {
+                  label: label,
+                  hint: 统一Hint
+              }
+          };
+      }
+      
+      // 新增：为 GENSHIN_CHARACTERS 所有标签添加【独立性格选择框】（无冲突+无未定义错误）
+      for (var name in GENSHIN_CHARACTERS) {
+          if (GENSHIN_CHARACTERS.hasOwnProperty(name)) {
+              var voiceTag = GENSHIN_CHARACTERS[name].voice.toString();
+              // 直接内嵌性格配置（无需外部变量，彻底避免ReferenceError）
+              var personalityConfig = {
+                  label: "角色性格", // 独立标签名
+                  hint: "选择角色的性格特质（独立配置，不影响其他选项）", // 独立提示语
+          //        items: personalityItemsConfig, 
+         //         default: moren // 独立默认值
+              };
+              
+              // 1. 若标签已存在（如括号1、男主1），在原有配置上新增性格选项
+              if (tagsData[voiceTag]) {
+                  tagsData[voiceTag].personality = personalityConfig; // 字段名：personality（与genderAge无冲突）
+              } 
+              // 2. 若标签不存在，新建配置（仅含性格选择框）
+              else {
+                  tagsData[voiceTag] = {
+                      personality: personalityConfig
+                  };
+              }
+          }
+      }
+      
+      return tagsData;
+      
+  })(),
+
+
+  getTagName: function(tag, tagData) {
+      // 工具函数：数组扁平化（移到内部，避免作用域问题，括号完全匹配）
+      var forceFlattenArray = function(arr) {
+          var result = [];
+          for (var i = 0; i < arr.length; i++) {
+              var item = arr[i];
+              if (Object.prototype.toString.call(item) === '[object Array]') {
+                  result = result.concat(forceFlattenArray(item));
+              } else {
+                  result.push(item);
+              }
+          }
+          return result;
+      };
+  
+      // 1. GENSHIN标签处理（括号完全匹配）
+      var genshinTagKey = "";
+      if (GENSHIN_CHARACTERS) {
+          for (var tagKey in GENSHIN_CHARACTERS) {
+              if (Object.prototype.hasOwnProperty.call(GENSHIN_CHARACTERS, tagKey)) {
+                  var genshinConfig = GENSHIN_CHARACTERS[tagKey];
+                  if (genshinConfig.voice === tag) {
+                      genshinTagKey = tagKey;
+                      break;
+                  }
+              }
+          }
+      }
+  
+      if (genshinTagKey !== "") {
+          var basePart = genshinTagKey;
+          var genshinPersonality = "";
+          if (tagData && tagData.personality) {
+              if (Object.prototype.toString.call(tagData.personality) === '[object Array]') {
+                  var flatGenshinP = forceFlattenArray(tagData.personality);
+                  for (var g = 0; g < flatGenshinP.length; g++) {
+                      var pItem = flatGenshinP[g];
+                      genshinPersonality = typeof pItem === 'object' && pItem !== null 
+                          ? (pItem.value || "").trim() 
+                          : (pItem + "").trim();
+                      if (genshinPersonality) {
+                          break;
+                      }
+                  }
+              } else {
+                  genshinPersonality = (tagData.personality + "").trim();
+              }
+          }
+          var personality = genshinPersonality !== "" && genshinPersonality !== "无" ? genshinPersonality : "";
+          var personalityWhole = personality ? ("" + personality) : "";
+  
+          var rsTag = basePart + personalityWhole;
+          //console.log("GENSHIN生效！tag=", tag, "性格=", genshinPersonality, "生成tagName=", rsTag);
+          return rsTag;
+      }
+  
+      // 2. duihua标签处理（括号完全匹配，复用GENSHIN逻辑）
+      else if ("duihua" == tag) {
+          // 角色名部分（括号不变）
+          var roleContent = tagData && tagData.role && tagData.role.trim() !== "" 
+              ? tagData.role.trim() 
+              : "";
+          var rolePrefix = "";
+          var roleSuffix = "";
+          var rolePart = roleContent.length > 15 
+              ? (rolePrefix + roleContent.substring(0, 15) + ".." + roleSuffix) 
+              : (rolePrefix + roleContent + roleSuffix);
+  
+          // 性别年龄部分（括号不变）
+          var genderAgeContent = tagData && tagData.genderAge ? tagData.genderAge : "";
+          var genderAgePrefix = "（";
+          var genderAgeSuffix = "）";
+          var genderAgeWhole = genderAgeContent ? (genderAgePrefix + genderAgeContent + genderAgeSuffix) : "";
+  
+          // 性格部分（括号完全匹配）
+          var duihuaPersonality = "";
+          if (tagData && tagData.personality) {
+              if (Object.prototype.toString.call(tagData.personality) === '[object Array]') {
+                  var flatDuihuaP = forceFlattenArray(tagData.personality);
+                  for (var d = 0; d < flatDuihuaP.length; d++) {
+                      var pItem = flatDuihuaP[d];
+                      duihuaPersonality = typeof pItem === 'object' && pItem !== null 
+                          ? (pItem.value || "").trim() 
+                          : (pItem + "").trim();
+                      if (duihuaPersonality) {
+                          break;
+                      }
+                  }
+              } else {
+                  duihuaPersonality = (tagData.personality + "").trim();
+              }
+          }
+          var personality = duihuaPersonality !== "" && duihuaPersonality !== "无" ? duihuaPersonality : "";
+          var separator = "";
+          var personalityPrefix = "|";
+          var personalitySuffix = "";
+          var personalityWhole = personality ? (separator + personalityPrefix + personality + personalitySuffix) : "";
+  
+          // 最终拼接（括号不变）
+          var rsTag = rolePart + personalityWhole + genderAgeWhole;
+  
+          //console.log("duihua生效！性格=", duihuaPersonality, "生成tagName=", rsTag);
+          return rsTag;
+      }
+  
+      // 3. 其他标签（括号不变）
+      else {
+          return this.tags[tag] || "旁白";
+      }
+  }, // 结尾逗号保留（对象方法格式）
+  
+      
+  characterManager: characterManager,
+  LOCAL_REGEX_PREFIX: "@_local_", // 本地正则专属前缀（隔离在线）
+
+  // -------------------------- 核心工具：仅替换「目标内容」中的符号（不碰外层标签/系统符号） --------------------------
+  replaceTargetContentSymbols: function(targetStr) {
+      return targetStr
+          .replace(/“/g, "###LEFT_QUOTE###")
+          .replace(/”/g, "###RIGHT_QUOTE###")
+          .replace(/〖/g, "###LEFT_DOUBLE_ANGLE###")
+          .replace(/〗/g, "###RIGHT_DOUBLE_ANGLE###")
+          .replace(/【/g, "###LEFT_SQUARE###")
+          .replace(/】/g, "###RIGHT_SQUARE###")
+          .replace(/『/g, "###LEFT_DOUBLE_CURLY###")
+          .replace(/』/g, "###RIGHT_DOUBLE_CURLY###")
+          .replace(/「/g, "###LEFT_SINGLE_ANGLE###")
+          .replace(/」/g, "###RIGHT_SINGLE_ANGLE###");
+  },
+  restoreTargetContentSymbols: function(text) {
+      return text
+          .replace(/###LEFT_QUOTE###/g, "“")
+          .replace(/###RIGHT_QUOTE###/g, "”")
+          .replace(/###LEFT_DOUBLE_ANGLE###/g, "〖")
+          .replace(/###RIGHT_DOUBLE_ANGLE###/g, "〗")
+          .replace(/###LEFT_SQUARE###/g, "【")
+          .replace(/###RIGHT_SQUARE###/g, "】")
+          .replace(/###LEFT_DOUBLE_CURLY###/g, "『")
+          .replace(/###RIGHT_DOUBLE_CURLY###/g, "』")
+          .replace(/###LEFT_SINGLE_ANGLE###/g, "「")
+          .replace(/###RIGHT_SINGLE_ANGLE###/g, "」");
+  },
+
+  // -------------------------- 解析在线音效关键词（保留完整原始关键词，新增originFullKW；支持全角/半角＜＞） --------------------------
+  
+  
+  
+  
+  
+  parseSoundKeywords: function(yinXiaoList) {
+      var regexKWs = [];    
+      var normalKWs = [];   
+      var specialKWs = [];  
+      // 新增1：定义母关键词组（和你原有变量顺序一致，不打乱结构）
+      var normalKWGroups = [];  
+      var keywordReg = /^(\d{1,2})?(\D+?)(\d{1,2})?$/;
+      var soundRegexSymbols = ['<', '>', '＜', '＞']; 
+  
+      for (var i = 0; i < yinXiaoList.length; i++) {
+          var item = yinXiaoList[i];
+          if (!item || !item.name) continue;
+          var fullName = item.name.trim();
+          // 新增2：记录当前项的母关键词（未分割的完整name）
+          var motherKW = fullName;
+  
+          var firstChar = fullName.charAt(0);
+          var isRegexSymbol = (soundRegexSymbols.indexOf(firstChar) !== -1);
+          if (isRegexSymbol || (fullName.startsWith("@") && !fullName.startsWith(this.LOCAL_REGEX_PREFIX))) {
+              try {
+                  var regexStr = fullName.slice(1);
+                  var regex = new RegExp(regexStr, 'g');
+                  regexKWs.push({
+                      regex: regex,
+                      originKW: fullName,
+                      flag: firstChar
+                  });
+              } catch (e) {
+                  // 保留你原有空catch，不改动
+              }
+              continue;
+          }
+  
+          // 保留你原有代码的普通关键词拆分逻辑（一行都不删）
+          var names = fullName.split("|");
+          // 新增3：临时存当前母关键词的子关键词（避免打乱原有循环）
+          var currentChildren = [];
+          for (var j = 0; j < names.length; j++) {
+              var subName = names[j].trim();
+              if (!subName) continue;
+              // 新增4：存入当前母关键词的子关键词列表
+              currentChildren.push(subName);
+              // 以下是你原有代码，完全保留
+              var match = subName.match(keywordReg);
+              if (match) {
+                  var prefixNum = match[1] ? parseInt(match[1], 10) : 0;
+                  var coreKW = match[2].trim();
+                  var suffixNum = match[3] ? parseInt(match[3], 10) : 0;
+                  if ((prefixNum >=1 && prefixNum <=9) || (suffixNum >=1 && suffixNum <=9)) {
+                      specialKWs.push({
+                          prefixLen: prefixNum,
+                          coreKW: coreKW,
+                          suffixLen: suffixNum,
+                          originFullKW: subName,
+                          originKW: subName
+                      });
+                  } else {
+                      normalKWs.push(subName);
+                  }
+              } else {
+                  normalKWs.push(subName);
+              }
+          }
+          // 新增5：将当前母关键词+子关键词列表存入组（仅当有子关键词时）
+          if (currentChildren.length > 0) {
+              normalKWGroups.push({
+                  motherKW: motherKW,
+                  children: currentChildren
+              });
+          }
+      }
+      
+      // 新增6：返回对象中加入normalKWGroups（无尾逗号，和你原有格式一致）
+      return { regexKWs: regexKWs, normalKWs: normalKWs, specialKWs: specialKWs, normalKWGroups: normalKWGroups };
+  }, // 关键：保留对象属性的逗号（分隔后面的函数）
+  
+  handleText: function(text, tagsData) {
+  
+  
+       // 新增：ES5 兼容的数组扁平化函数（解决 forceFlattenArray 未定义问题）
+      var forceFlattenArray = function(arr) {
+          var result = [];
+          for (var i = 0; i < arr.length; i++) {
+              var item = arr[i];
+              // 判断是否为数组（ES5 兼容写法）
+              if (Object.prototype.toString.call(item) === '[object Array]') {
+                  // 递归扁平化嵌套数组
+                  result = result.concat(forceFlattenArray(item));
+              } else {
+                  result.push(item);
+              }
+          }
+          return result;
+      };
+
+      // 新增：判断数组的辅助函数（适配原有代码）
+      var isArray = function(arr) {
+          return Object.prototype.toString.call(arr) === '[object Array]';
+      };
+      
+      
+  
+      
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+      
+      
+      text2 = text.replace(/[(]([\u4E00-\u9Fa5]{1,5})音效[)]/g, "");
+      
+      text = text.replace(/“([\u4E00-\u9FFF]{1,15})”/g, "$1");
+      text = text.replace(/[〖〗‘’〈〔〕〉]/g, "");
+      
+      text = text.replace(/(“[^“”]+)$/g, "$1”");
+      text = text.replace(/(^|音效[)])([^“”)]+”)/g, "$1“$2");
+      
+      text = text.replace(/[【「『]([\u4E00-\u9Fa5]+)[】』」]/g, "$1");
+      
+      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");
+      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");
+      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");
+      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");
+ //     text = text.replace(/(^|”)([^a-zA-Z0-9\u4e00-\u9fa5\n]+)($)/g, "$1（时间转场音效）$3");
+      var soundKeywords = [];
+      var yinXiaoList = [];
+      
+      
+      
+      
+      
+      try {
+          var yinXiaoContent = ttsrv.readTxtFile("yinxiao.json");
+          if (yinXiaoContent && yinXiaoContent.trim() !== "") {
+              yinXiaoList = JSON.parse(yinXiaoContent);
+              for (var i = 0; i < yinXiaoList.length; i++) {
+                  var item = yinXiaoList[i];
+                  if (item && item.name) {
+                      var names = item.name.split("|"); // 按“|”分割多关键词
+                      for (var j = 0; j < names.length; j++) {
+                          var name = names[j].trim();
+                          // 新增过滤：跳过开头是“#”的name，仅保留非#开头且非空的name
+                          if (name !== "" && !name.startsWith("#")) { 
+                              soundKeywords.push(name);
+                          }
+                      }
+                  }
+              }
+          }
+      } catch (e) {
+      }
+      
+
+
+
+
+
+
+
+      var commonPunctuation = "。，！？：；、·…—-";
+      var parsedKWs = this.parseSoundKeywords(yinXiaoList);
+
+      // ========== 本地音效双匹配逻辑（只换匹配内容，不碰标签壳） ==========
+      var localSoundOnoMap = {}; 
+      var localSoundRegexMap = {}; 
+      // 新增：生成1~100完整本地音效标签数组（含97个新增标签）
+      var allLocalSoundTags = [];
+      for (var i = 1; i <= 990; i++) {
+          allLocalSoundTags.push("localSound" + i);
+      }
+
+      // 1. 读取本地音效配置（修复反斜杠转义问题）- 覆盖1~100
+      for (var i = 0; i < allLocalSoundTags.length; i++) {
+      var tagKey = allLocalSoundTags[i];
+      if (tagsData && tagsData[tagKey] && tagsData[tagKey].audioName) {
+        var audioNameConfig = tagsData[tagKey].audioName;
+        // 强制扁平化数组，兼容嵌套结构
+        var flatConfig = forceFlattenArray(audioNameConfig);
+        var allOnoList = [];
+        var allRegexList = [];
+        
+        // 直接遍历配置项读取value，彻底避免JSON.stringify导致的二次转义
+        for (var j = 0; j < flatConfig.length; j++) {
+            var configItem = flatConfig[j];
+            var inputValue = "";
+            
+            // 安全读取value，兼容JS对象和Java原生对象
+            if (typeof configItem === 'object' && configItem !== null) {
+                inputValue = configItem.value !== undefined ? (configItem.value + "").trim() : "";
+                // 兜底兼容Java对象的get方法
+                if (inputValue === "" && typeof configItem.get === 'function') {
+                    var tempVal = configItem.get("value");
+                    inputValue = tempVal ? (tempVal + "").trim() : "";
+                }
+            }
+            if (inputValue === "") continue;
+
+            // 正则关键词处理
+            if (inputValue.startsWith("@") || inputValue.startsWith("＜") || inputValue.startsWith("＞") || inputValue.startsWith("<")) {
+                allRegexList.push({
+                    originKW: inputValue,
+                    type: inputValue.charAt(0),
+                    regex: new RegExp(inputValue.slice(1), 'g')
+                });
+            } else {
+                // 普通关键词分割
+                var allParts = inputValue.split('|');
+                for (var m = 0; m < allParts.length; m++) {
+                    var part = allParts[m].trim();
+                    if (part) allOnoList.push(part);
+                }
+            }
+        }
+        var tagName = this.tags[tagKey];
+        
+        localSoundOnoMap[tagKey] = {};
+        for (var k = 0; k < allOnoList.length; k++) {
+            localSoundOnoMap[tagKey][allOnoList[k]] = tagKey;
+        }
+
+        localSoundRegexMap[tagKey] = allRegexList;
+      }
+      }
+
+      // 2. 本地普通音效：替换「匹配到的内容」- 覆盖1~100（修改版：保留匹配内容，仅留中文汉字）
+      var onoMarkedText = text;
+      for (var i = 0; i < allLocalSoundTags.length; i++) {
+          var tagKey = allLocalSoundTags[i];
+          var tagAudioMap = localSoundOnoMap[tagKey];
+          if (!tagAudioMap) continue;
+          var tagName = this.tags[tagKey];
+          
+          for (var targetOno in tagAudioMap) {
+              var escapedOno = targetOno.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              var onoReg = new RegExp('“(' + escapedOno + ')([。，！？：；、…—-]{0,2})”', 'g');
+              
+              onoMarkedText = onoMarkedText.replace(onoReg, function(match, onoContent) {
+                  // 核心修改：过滤匹配内容，仅保留中文汉字
+                  var onlyChineseContent = onoContent.replace(/[^\u4e00-\u9fa5]/g, "");
+                  // 兜底兼容：过滤后为空时，保留原始匹配内容
+                  var finalContent = onlyChineseContent || onoContent;
+                  // 原符号转义逻辑保留
+                  var replacedContent = SpeechRuleJS.replaceTargetContentSymbols(finalContent);
+                  var startMark = "{{" + tagName + "_" + replacedContent + "}}";
+                  var endMark = "{{" + tagName + "结束}}";
+                  return "\n" + startMark + finalContent + endMark + "\n";
+              });
+          }
+      }
+
+      // 3. 本地＞＜正则音效：替换「匹配到的内容」- 覆盖1~100（修改版：保留匹配内容，仅留中文汉字）
+      var regexMarkedText = onoMarkedText;
+      for (var i = 0; i < allLocalSoundTags.length; i++) {
+          var tagKey = allLocalSoundTags[i];
+          var regexList = localSoundRegexMap[tagKey];
+          if (!regexList || regexList.length === 0) continue;
+          var tagName = this.tags[tagKey];
+
+          for (var r = 0; r < regexList.length; r++) {
+              var rkw = regexList[r];
+              
+              regexMarkedText = regexMarkedText.replace(rkw.regex, function(match) {
+                  // 核心修改：过滤匹配内容，仅保留中文汉字
+                  var onlyChineseContent = match.replace(/[^\u4e00-\u9fa5]/g, "");
+                  // 兜底兼容：过滤后为空时，保留原始匹配内容
+                  var finalContent = onlyChineseContent || match;
+                  // 原符号转义逻辑保留
+                  var replacedContent = SpeechRuleJS.replaceTargetContentSymbols(finalContent);
+                  var newContentWithTag = "{{" + tagName + "_" + replacedContent + "}}" + finalContent + "{{" + tagName + "结束}}";
+
+                  // 原全角/半角符号前后插逻辑完全保留
+                  if (rkw.type === "＜" || rkw.type === "<") {
+                      return "\n" + newContentWithTag + "\n" + match;
+                  } else if (rkw.type === "＞" || rkw.type === ">") {
+                      return match + "\n" + newContentWithTag + "\n";
+                  } else {
+                      return "\n" + newContentWithTag + "\n";
+                  }
+              });
+              rkw.regex.lastIndex = 0;
+          }
+      }
+
+
+      text = regexMarkedText;
+      // ========== 本地音效双匹配结束 ==========
+
+      // -------------------------- 在线音效处理（双引号内：用originFullKW替换，保留完整关键词；支持全角/半角＜＞） --------------------------
+      if (soundKeywords.length > 0 && text.includes("“")) {
+          var quotedReg = new RegExp('“.*?”', 'g'); // 最兼容正则写法
+          text = text.replace(quotedReg, function(match) {
+              var result = match;
+
+              // 1. 在线正则关键词：替换「关键词本身」（保留全/半角符号）
+              for (var r = 0; r < parsedKWs.regexKWs.length; r++) {
+                  var rkw = parsedKWs.regexKWs[r];
+              
+              
+                                  
+                                      // -------------------------- 新增：跳过<>开头的正则关键词（双引号内不匹配） --------------------------
+                  if (rkw.flag === "<" || rkw.flag === "＜" || rkw.flag === "＞" || rkw.flag === ">" || rkw.flag === "@") { // 半角<、全角＜开头的正则，直接跳过
+                      continue; 
+                  }
+                  // --------------------------------------------------------------------------------------------------
+                  
+                  
+              
+              
+              
+              
+                  var tempResult = "";
+                  var lastIndex = 0;
+                  var regexMatch;
+                  var matchCount = 0;
+
+                  while ((regexMatch = rkw.regex.exec(result)) !== null) {
+                      matchCount++;
+                      var matchedContent = regexMatch[0];
+                      // 只替换关键词本身（rkw.originKW，含全/半角符号）
+                      var replacedKeyword = SpeechRuleJS.replaceTargetContentSymbols(rkw.originKW);
+                      var tag = "";
+
+                      // 兼容判断：全角＜、半角<归为左符号（前插）；全角＞、半角>归为右符号（后插）
+                      if (rkw.flag === "＜" || rkw.flag === "<") {
+                          tag = "\n〖" + replacedKeyword + "〗\n" + matchedContent;
+                      } else if (rkw.flag === "＞" || rkw.flag === ">") {
+                          tag = matchedContent + "\n〖" + replacedKeyword + "〗\n";
+                      } else {
+                          tag = '〖' + replacedKeyword + '〗';
+                      }
+
+                      tempResult += result.substring(lastIndex, regexMatch.index) + tag;
+                      lastIndex = rkw.regex.lastIndex;
+                  }
+                  
+                  if (matchCount > 0) {
+                      tempResult += result.substring(lastIndex);
+                      result = tempResult;
+                  }
+                  rkw.regex.lastIndex = 0;
+              }
+
+              // 2. 在线特殊关键词：用originFullKW（完整原始关键词）替换
+              for (var s = 0; s < parsedKWs.specialKWs.length; s++) {
+                  var skw = parsedKWs.specialKWs[s];
+                  var prefixLen = Math.floor(skw.prefixLen) || 1;
+                  var suffixLen = Math.floor(skw.suffixLen) || 1;
+                  var specialReg = new RegExp(
+                      '(.{0,' + prefixLen + '})' + 
+                      escapeRegExp(skw.coreKW) + 
+                      '(.{0,' + suffixLen + '})' + 
+                      '(?=[' + commonPunctuation + ']|$|' + escapeRegExp(skw.coreKW) + ')', 
+                      'g'
+                  );
+
+                  var tempResult = "";
+                  var lastIndex = 0;
+                  var matchResult;
+                  var matchCount = 0;
+                  while ((matchResult = specialReg.exec(result)) !== null) {
+                      matchCount++;
+                      var matchedContent = matchResult[0];
+                      // 关键修改：用完整原始关键词（skw.originFullKW）替换，而非核心KW
+                      var replacedKeyword = SpeechRuleJS.replaceTargetContentSymbols(skw.originFullKW);
+                      tempResult += result.substring(lastIndex, matchResult.index) + '〖' + replacedKeyword + '〗';
+                      lastIndex = matchResult.index + matchResult[0].length;
+                  }
+                  
+                  if (matchCount > 0) {
+                      tempResult += result.substring(lastIndex);
+                      result = tempResult;
+                  }
+              }
+
+
+
+
+
+
+
+
+
+
+
+
+         
+              
+              // 3. 在线普通关键词：替换「关键词本身」
+              var repeatCheck = isSingleKeywordRepeat(result.replace(/〖.*?〗/g, ''), parsedKWs.normalKWs);
+              if (repeatCheck.isRepeat) {
+                  // 新增1：ES5循环找子关键词对应的母关键词组（不破坏原有重复检测逻辑）
+                  var matchedGroup = null;
+                  for (var g = 0; g < parsedKWs.normalKWGroups.length; g++) {
+                      var group = parsedKWs.normalKWGroups[g];
+                      for (var c = 0; c < group.children.length; c++) {
+                          if (group.children[c] === repeatCheck.keyword) {
+                              matchedGroup = group;
+                              break;
+                          }
+                      }
+                      if (matchedGroup) break;
+                  }
+                  // 新增2：优先用母关键词，无匹配则保留原有子关键词
+                  var replaceKW = matchedGroup ? matchedGroup.motherKW : repeatCheck.keyword;
+              
+                  // 以下是你原有代码，完全保留（仅把repeatCheck.keyword改成replaceKW）
+                  var kw = repeatCheck.keyword; // 保留原有kw变量（用于匹配定位）
+                  var kwLen = kw.length;
+                  var normalResult = "";
+                  var currentPos = 0;
+                  var matchCount = 0;
+              
+                  while (currentPos <= result.length - kwLen) {
+                      var kwIndex = result.indexOf(kw, currentPos);
+                      if (kwIndex === -1) break;
+                      
+                      if (result.slice(currentPos, kwIndex).includes("〖")) {
+                          currentPos = kwIndex + kwLen;
+                          continue;
+                      }
+              
+                      var nextKwPos = kwIndex + kwLen;
+                      var isContinuous = result.substr(nextKwPos, kwLen) === kw;
+                      var nextChar = result[nextKwPos] || "";
+                      var isAllowed = isContinuous || nextKwPos >= result.length || 
+                                     commonPunctuation.includes(nextChar) || nextChar === "\"" || nextChar === "”";
               
                       if (isAllowed) {
                           matchCount++;
