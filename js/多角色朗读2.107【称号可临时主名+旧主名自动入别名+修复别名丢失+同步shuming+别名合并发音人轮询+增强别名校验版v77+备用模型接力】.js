@@ -3649,9 +3649,9 @@ CharacterManager.prototype.refineAliasGroupByApi = function(mainRecord, newName,
     "2. 清洗【现有别名列表】中与【主名】无关的错误别名；\n" +
     "3. 输出最终应该保留的别名列表，以及应剔除的无关别名；\n" +
     "4. **主名应为该人物的正式姓名（常用名）**，称呼、称号、身份、昵称等只能作为别名。只有当新名字是正式姓名且明显比当前主名更合适时，才可建议更换主名。\n\n" +
-    ""5. 如果主名本身应更换，请返回新的 mainName，并让 confirmedAliases 围绕新的 mainName 组织。\n\n" +
+    "5. 如果主名本身应更换，请返回新的 mainName，并让 confirmedAliases 围绕新的 mainName 组织。\n\n" +
     "5. **confirmedAliases 中的别名应围绕最终确认的主名组织**。如果新名字是正式人名，可以将其设为主名并把原主名移入别名；如果新名字是称呼/称号，只能作为别名。\n\n" +
-    ""【输入信息】\n" +
+    "【输入信息】\n" +
     "【当前主名】\n" + mainName + "\n\n" +
     "【当前主名及别名列表】\n" + aliasCandidates.join("|") + "\n\n" +
     "【新名字】\n" + newName + "\n\n" +
