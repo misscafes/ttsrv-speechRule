@@ -84,10 +84,11 @@ function generateJs(config) {
     lines.push("// ---------- 本地关键词修正规则 ----------");
     lines.push(generateLocalRules(config.localRules));
     lines.push("");
-    lines.push("// ---------- 开关 ----------");
-    lines.push("var ENABLE_EMOTION_BRIDGE = 1;");
-    lines.push("var ENABLE_EMOTION_DEBUG_LOG = 0;");
-    lines.push("var ENABLE_LOCAL_EMOTION_CORRECTION = 1;");
+    lines.push("// ---------- 开关（可从 emotion-config.json 的 settings 读取） ----------");
+    var settings = config.settings || {};
+    lines.push("var ENABLE_EMOTION_BRIDGE = " + (settings.enableBridgeOutput !== undefined ? settings.enableBridgeOutput : 1) + "; // 1=输出前缀，0=只分析不输出");
+    lines.push("var ENABLE_EMOTION_DEBUG_LOG = " + (settings.enableDebugLog !== undefined ? settings.enableDebugLog : 0) + "; // 1=输出日志，0=关闭");
+    lines.push("var ENABLE_LOCAL_EMOTION_CORRECTION = " + (settings.enableLocalCorrection !== undefined ? settings.enableLocalCorrection : 1) + "; // 1=启用本地修正，0=关闭");
     lines.push("");
 
     return lines.join("\n");

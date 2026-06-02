@@ -108,6 +108,11 @@
     "depressed": "depressed",
     "tender": "tender"
   },
+  "settings": {
+    "enableBridgeOutput": 1,
+    "enableDebugLog": 0,
+    "enableLocalCorrection": 1
+  },
   "localRules": [
     {
       "emotion": "惊讶",

@@ -71,6 +71,17 @@ function attachEmotionBridge(text, bridgeToken) {
     var config = readEmotionConfig();
     if (!config) return originalText;
 
+    var settings = config.settings || {};
+    var ENABLE_EMOTION_BRIDGE = settings.enableBridgeOutput !== undefined ? settings.enableBridgeOutput : 1;
+    var ENABLE_EMOTION_DEBUG_LOG = settings.enableDebugLog !== undefined ? settings.enableDebugLog : 0;
+
+    if (ENABLE_EMOTION_BRIDGE !== 1) {
+        if (ENABLE_EMOTION_DEBUG_LOG === 1) {
+            log("[情绪桥接] 开关关闭，跳过输出");
+        }
+        return originalText;
+    }
+
     var localRules = config.localRules;
     var bridgeMap = config.bridgeMap;
 
@@ -85,7 +96,9 @@ function attachEmotionBridge(text, bridgeToken) {
     if (!bridgeToken) return originalText;
 
     var result = attachEmotionBridge(originalText, bridgeToken);
-    log("[情绪桥接] " + emotion + " -> " + bridgeToken);
+    if (ENABLE_EMOTION_DEBUG_LOG === 1) {
+        log("[情绪桥接] " + emotion + " -> " + bridgeToken);
+    }
 
     return result;
 })()

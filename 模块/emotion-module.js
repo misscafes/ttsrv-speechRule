@@ -9,9 +9,10 @@
 var EMOTION_ITEMS_CONFIG = '{无: "无",平静: "平静",开心: "开心",兴奋: "兴奋",撒娇: "撒娇",害羞: "害羞",紧张: "紧张",疑惑: "疑惑",惊讶: "惊讶",委屈: "委屈",悲伤: "悲伤",愤怒: "愤怒",冷酷: "冷酷",慌张: "慌张",虚弱: "虚弱",坚定: "坚定"}';
 var DEFAULT_EMOTION = '无';
 
-var ENABLE_EMOTION_DEBUG_LOG = 0; // 1=输出情绪调试日志，0=关闭日志
-var ENABLE_EMOTION_BRIDGE = 1; // 1=启用情绪桥接；独立于日志开关
-var ENABLE_LOCAL_EMOTION_CORRECTION = 1; // 1=�����������־��������������0=�رգ�������AI����
+// 以下开关可从 emotion-config.json 的 settings 中读取，此处为硬编码默认值
+var ENABLE_EMOTION_DEBUG_LOG = 0;     // 1=输出情绪调试日志，0=关闭日志
+var ENABLE_EMOTION_BRIDGE = 1;        // 1=启用情绪桥接输出；0=只分析不输出前缀
+var ENABLE_LOCAL_EMOTION_CORRECTION = 1; // 1=启用本地关键词情绪修正；0=关闭
 // ===================== 情绪配置结束 =====================
 
 // ========== 投票选情绪（voteNameAnalyzeResult 片段） ==========
