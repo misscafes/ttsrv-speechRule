@@ -220,12 +220,12 @@
   - **同步情绪模块修改到完整 JSON**：移除 `attachEmotionBridgeToText` 内多余的 `replace`，更新开关注释 → 生成 v2.113
   - `ENABLE_EMOTION_BRIDGE` 默认 1（开启），`ENABLE_EMOTION_DEBUG_LOG` 默认 0（关闭），`ENABLE_LOCAL_EMOTION_CORRECTION` 默认 1（开启）
 - **主目录结构**：
-  - `多角色朗读2.113【情绪模块植入+情绪模块移除emo重复检测+修复version缺少逗号+修复version数字拼接错误+修复ENABLE_LOCAL_EMOTION_CORRECTION未定义+称号可临时主名+旧主名自动入别名+修复别名丢失+同步shuming+别名合并发音人轮询+增强别名校验版v77+备用模型接力】.json` — 本次新建（最新可用版本）
-  - `config/emotion-config.json` — 情绪模块结构化配置（items/bridgeMap/localRules/settings）
-  - `模块/emotion-module.js` — 情绪模块独立提取文件（仅供阅读/调阅）
-  - `模块/emotion-bridge-rule.js` — 符合 Rhino ES5.1 规范的独立情绪桥接朗读脚本
-  - `工具脚本/emotion-config-to-js.js` — 配置→JS 代码转换工具（Rhino 兼容）
-  - `ttsrv-plugin-角色管理6.70.json` — 插件修复版本
+  - `多角色朗读2.113【情绪模块植入+情绪模块移除emo重复检测+修复version缺少逗号+修复version数字拼接错误+修复ENABLE_LOCAL_EMOTION_CORRECTION未定义+称号可临时主名+旧主名自动入别名+修复别名丢失+同步shuming+别名合并发音人轮询+增强别名校验版v77+备用模型接力】.json` — 主目录仅保留最新版
+  - `ttsrv-plugin-角色管理6.70.json` — 插件
+  - `config/emotion-config.json` — 情绪模块结构化配置
+  - `模块/` — 情绪模块独立提取文件 + 独立桥接规则
+  - `工具脚本/` — extract-js.js + emotion-config-to-js.js
+  - `历史版本/` — v2.103 ~ v2.112 归档
   - `js/` — 各版本提取的调阅文件
 - **注意事项**：
   - v2.113 基于 v2.112/v2.111/v2.110/v2.109/v2.108/v2.107，保留全部已有特性
@@ -365,6 +365,7 @@
 - [x] 提取情绪模块为独立 JS 文件（`模块/emotion-module.js`）
 - [x] 新增情绪配置 JSON + 符合 Rhino 规范的独立桥接规则 + 配置转换工具
 - [x] 情绪模块修改同步到完整 JSON，生成 v2.113
+- [x] 整理目录结构：历史版本移入 `历史版本/` 文件夹，主目录仅保留最新版
 - [ ] 如需功能迭代，在 v2.113 / v2.94 基础上增量开发
 
 ## 长期规划
