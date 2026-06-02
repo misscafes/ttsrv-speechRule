@@ -281,9 +281,6 @@ function attachEmotionBridgeToText(text, rawEmotion) {
     var pureText = String(text || "");
     var prefix = buildEmotionBridgePrefix(rawEmotion);
 
-    // 避免重复叠加
-    pureText = pureText.replace(/^\[\[emo:[a-z\-]+\]\]/, "");
-
     return prefix ? (prefix + pureText) : pureText;
   } catch (e) {
     return String(text || "");

@@ -61,8 +61,6 @@ function attachEmotionBridge(text, bridgeToken) {
     var t = String(text || "");
     var token = String(bridgeToken || "").trim();
     if (!token) return t;
-    // 如果已有桥接前缀，先移除，避免重复
-    t = t.replace(/^\[\[emo:[a-z\-]+\]\]/i, "");
     return "[[emo:" + token + "]]" + t;
 }
 
