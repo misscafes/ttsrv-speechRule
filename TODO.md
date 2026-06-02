@@ -209,27 +209,28 @@
 
 ## 会话摘要
 
-### 2026-06-02 本次会话（新增 v2.112，修复version缺少逗号）
-- **当前最新版本**：v2.112（朗读规则）/ v6.70（角色管理插件）/ v2.94（主版本）
+### 2026-06-02 本次会话（新增 v2.113，同步情绪模块修改到完整JSON）
+- **当前最新版本**：v2.113（朗读规则）/ v6.70（角色管理插件）/ v2.94（主版本）
 - **本次工作**：
   - 从 v2.97 原始备份完整提取并植入情绪模块到 v2.107，生成 v2.108
   - **修复 v2.108 prompt 字符串拼接错误**：emotion 行末尾多出 `"`，报 `字符串文字没有限制` → 生成 v2.109
   - **修复 v2.109 变量缺失**：`ENABLE_LOCAL_EMOTION_CORRECTION` 定义被遗漏，报 `ReferenceError` → 生成 v2.110
   - **修复 v2.110 version 数字拼接**：v2.109-fix2 脚本误将 `version: 108` 改成 `version: 108109` → 生成 v2.111
-  - **修复 v2.111 version 缺少逗号**：替换 `108109` 时未恢复末尾逗号，导致 `version: 110` 与下一行 `zdfp: 1,` 之间缺少逗号分隔 → 生成 v2.112
+  - **修复 v2.111 version 缺少逗号**：替换 `108109` 时未恢复末尾逗号 → 生成 v2.112
+  - **同步情绪模块修改到完整 JSON**：移除 `attachEmotionBridgeToText` 内多余的 `replace`，更新开关注释 → 生成 v2.113
   - `ENABLE_EMOTION_BRIDGE` 默认 1（开启），`ENABLE_EMOTION_DEBUG_LOG` 默认 0（关闭），`ENABLE_LOCAL_EMOTION_CORRECTION` 默认 1（开启）
 - **主目录结构**：
-  - `多角色朗读2.112【情绪模块植入+修复version缺少逗号+修复version数字拼接错误+修复ENABLE_LOCAL_EMOTION_CORRECTION未定义+称号可临时主名+旧主名自动入别名+修复别名丢失+同步shuming+别名合并发音人轮询+增强别名校验版v77+备用模型接力】.json` — 本次新建（最新可用版本）
-  - `config/emotion-config.json` — 情绪模块结构化配置（items/bridgeMap/localRules）
+  - `多角色朗读2.113【情绪模块植入+情绪模块移除emo重复检测+修复version缺少逗号+修复version数字拼接错误+修复ENABLE_LOCAL_EMOTION_CORRECTION未定义+称号可临时主名+旧主名自动入别名+修复别名丢失+同步shuming+别名合并发音人轮询+增强别名校验版v77+备用模型接力】.json` — 本次新建（最新可用版本）
+  - `config/emotion-config.json` — 情绪模块结构化配置（items/bridgeMap/localRules/settings）
   - `模块/emotion-module.js` — 情绪模块独立提取文件（仅供阅读/调阅）
   - `模块/emotion-bridge-rule.js` — 符合 Rhino ES5.1 规范的独立情绪桥接朗读脚本
   - `工具脚本/emotion-config-to-js.js` — 配置→JS 代码转换工具（Rhino 兼容）
   - `ttsrv-plugin-角色管理6.70.json` — 插件修复版本
   - `js/` — 各版本提取的调阅文件
 - **注意事项**：
-  - v2.112 基于 v2.111/v2.110/v2.109/v2.108/v2.107，保留全部已有特性
+  - v2.113 基于 v2.112/v2.111/v2.110/v2.109/v2.108/v2.107，保留全部已有特性
   - 情绪模块为完整植入，包含 2.97 中全部情绪子系统
-  - 如需关闭本地情绪修正，将 `ENABLE_LOCAL_EMOTION_CORRECTION` 设为 0
+  - 如需关闭情绪桥接前缀输出，将 `ENABLE_EMOTION_BRIDGE` 设为 0
 
 ### 2026-05-30 本次会话（新增 v2.107，称号可临时主名 + 旧主名自动入别名 + v2.106 称号过滤优化）
 - **当前最新版本**：v2.107（朗读规则）/ v6.70（角色管理插件）/ v2.94（主版本）
@@ -363,7 +364,8 @@
 - [x] 修复 v2.111 version 缺少逗号，生成 v2.112
 - [x] 提取情绪模块为独立 JS 文件（`模块/emotion-module.js`）
 - [x] 新增情绪配置 JSON + 符合 Rhino 规范的独立桥接规则 + 配置转换工具
-- [ ] 如需功能迭代，在 v2.112 / v2.94 基础上增量开发
+- [x] 情绪模块修改同步到完整 JSON，生成 v2.113
+- [ ] 如需功能迭代，在 v2.113 / v2.94 基础上增量开发
 
 ## 长期规划
 - [ ] 在 v2.94 基础上逐步优化，避免大规模重构
