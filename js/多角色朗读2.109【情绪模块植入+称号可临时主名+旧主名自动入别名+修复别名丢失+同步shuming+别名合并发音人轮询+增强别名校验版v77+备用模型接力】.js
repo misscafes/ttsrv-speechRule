@@ -5346,7 +5346,7 @@ var SpeechRuleJS = {
   name: "多角色朗读2.109【情绪模块植入+称号可临时主名+旧主名自动入别名+修复别名丢失+同步shuming+别名合并发音人轮询+增强别名校验版v77+备用模型接力】",
   id: "mingwuyan",
   author: "命無言、萌新改",
-  version: 108,
+  version: 108109
   zdfp: 1,
   
   tags: (function() {
