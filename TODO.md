@@ -476,6 +476,7 @@
 - [x] 火山接口朗读引擎(优化版) 基于猫箱模板移植全部优化，支持多角色（speaker+bv）+ HTTP重试
 - [x] (脚本)猫箱-VV（火山适配版）基于 VV.1 适配火山角色映射 jiaoseliebiao1.json
 - [x] 火山全套配套文件名统一改为 `jiaoseliebiao-1.json`（原 `jiaoseliebiao1.json`）
+- [x] 生成 `ttsrv-speechRule-情绪模块.json`：将 `模块/emotion-module.js` 包装为 TTS Server 朗读规则格式
 - [ ] 如需功能迭代，在 v2.113 / v2.94 基础上增量开发
 
 ## 长期规划
