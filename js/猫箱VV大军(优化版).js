@@ -260,6 +260,16 @@ for (var s = 0; s < mixedSegments.length; s++) {
             };
         }
 
+        // 移除情绪桥接标记 [[emo:xxx]]，避免被猫箱API当作普通文本朗读
+        var emoMatch = dialogText.match(/\[\[emo:([^\]]+)\]\]/);
+        if (emoMatch) {
+            dialogText = dialogText.replace(/\[\[emo:[^\]]+\]\]/, '');
+            // 若发音人ID包含emo，保存情绪值供阶段4传入extra参数
+            if (roleCfg.voice && roleCfg.voice.indexOf('emo') !== -1) {
+                roleCfg.emotion = emoMatch[1];
+            }
+        }
+
         var pureText = dialogText.replace(/[“”]/g, '').trim();
         if (pureText.length > 0) {
             segments.push({txt: dialogText, config: roleCfg});
