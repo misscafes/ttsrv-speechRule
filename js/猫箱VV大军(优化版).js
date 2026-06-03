@@ -1,5 +1,9 @@
 
+
 try {
+
+if (!Array.isArray) { Array.isArray = function(arg) { return Object.prototype.toString.call(arg) === "[object Array]"; }; }
+
 
 // ===== 0. 文本预处理 =====
 var text = speakText;
