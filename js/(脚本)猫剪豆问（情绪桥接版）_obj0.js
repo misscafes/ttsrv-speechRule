@@ -1034,8 +1034,9 @@ function annotateText(paragraph, dialogs, charResults) {
         var info = charResults[seq];
         if (!info) continue;
         var mark = genMarkText(info.name, info.voiceDisplay);
+        var emotionPrefix = info.emotion ? "[[emo:" + info.emotion + "]]" : "";
         var d = dialogs[i];
-        result = result.substring(0, d.index) + "：" + result.substring(d.index, d.index + 1) + mark + result.substring(d.index + 1);
+        result = result.substring(0, d.index) + "：" + result.substring(d.index, d.index + 1) + mark + emotionPrefix + result.substring(d.index + 1);
     }
     return result;
 }
