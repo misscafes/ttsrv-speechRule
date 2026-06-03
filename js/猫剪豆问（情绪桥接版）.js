@@ -1,9 +1,6 @@
 
 try {
 
-if (!Array.isArray) { Array.isArray = function(arg) { return Object.prototype.toString.call(arg) === "[object Array]"; }; }
-
-
 // ===== 0. 文本预处理 =====
 var text = speakText;
 text = text.replace(/[【「『]([\u4E00-\u9Fa5]+)[】』」]/g, "$1");
@@ -169,6 +166,7 @@ var NARRATOR_DEFAULT = {
 };
 var narratorCfg = tagConfig["narration"] || NARRATOR_DEFAULT;
 
+loadVoiceEmotionMap();
 
 // ===== 2. 基础参数 =====
 var BASE_URL     = 'wss://audio5-normal-hl.myparallelstory.com/internal/api/v1/ws';
@@ -182,7 +180,6 @@ var SPEED_BOOST = speechRate / 20 * GLOBAL_SPEED_RATIO;
 
 // ===== 情绪联动引擎（来自猫剪豆问AI-规则联动版） =====
 var voiceEmotionMap = {};
-loadVoiceEmotionMap();
 
 var CN_RULE_EMOTION_MAP = {
     "中性": "neutral",
@@ -520,9 +517,8 @@ for (var i = 0; i < segments.length; i++) {
     
     var segSpeed = cfg.speed || 1.0;
     var segVolume = cfg.volume != null ? cfg.volume : 1;
-    var segRate = Math.max(0.5, Math.min(2.0, SPEED_BOOST * segSpeed));
-    var loudness = Math.max(-48, (segVolume - 1) * 50);
-    if (isNaN(loudness)) loudness = 0;   // 最小限制 -48
+    var segRate = SPEED_BOOST * segSpeed;
+    var loudness = Math.max(-48, (segVolume - 1) * 50);   // 最小限制 -48
 
     var extraObj = {};
     if (cfg.source && cfg.source.data) {
@@ -586,7 +582,6 @@ for (var i = 0; i < segments.length; i++) {
     var lastError = '';
     for (var attempt = 0; attempt <= maxRetries; attempt++) {
         try {
-            java.log("[合成] 请求参数 voice=" + cfg.voice + " rate=" + segRate + " loudness=" + loudness + " extra长度=" + extra.length);
             audio = ws.maoxiang(wsUrl, seg.txt, cfg.voice, AUDIO_FORMAT, SAMPLE_RATE, segRate, PITCH_VALUE, APP_KEY, TIMEOUT_MS, extra);
             if (audio && audio.length > 0) break;
         } catch (ex) {
