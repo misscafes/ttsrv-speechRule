@@ -975,8 +975,7 @@ function buildAnalyzePrompt() {
         "3. 如果无法确定说话人姓名，就用前后对这个人的描述作为名字，如果连描述也没有，就根据性别年龄填写“群众男青年”“群众男中年”“群众男老年”“群众男童”“群众少女”“群众女青年”“群众女中年”“群众女老年”“群众女童”“系统”其中的一个；\n" +
         "4. 必须包含文本中所有序号的对话结果，不能遗漏、不能多返回、不能少返回。\n" +
         "5. 输出前，请仔细核对每个序号对应的对话内容与上下文，确保说话人归属无误；如遇歧义，优先选择上下文中最合理的角色，并避免因序号相邻而误判。\n" +
-        "输出格式示例：\n{\n  \"01\": {\n    \"name\": \"分析出的说话人姓名\",\n    \"gender\": \"性别（男/女/特殊）\",\n    \"age\": \"年龄分类（女性：女童/少女/女青年/女中年/女老年）；（男性：男童/少年/男青年/男中年/男老年）；（特殊：系统/旁白）\",
-    "emotion": "情绪（无/平静/开心/兴奋/撒娇/害羞/紧张/疑惑/惊讶/委屈/悲伤/愤怒/冷酷/慌张/虚弱/坚定/温柔）"\n  },\n  \"02\": { ... }\n}\n";
+        "输出格式示例：\n{\n  \"01\": {\n    \"name\": \"分析出的说话人姓名\",\n    \"gender\": \"性别（男/女/特殊）\",\n    \"age\": \"年龄分类（女性：女童/少女/女青年/女中年/女老年）；（男性：男童/少年/男青年/男中年/男老年）；（特殊：系统/旁白）\"\n  },\n  \"02\": { ... }\n}\n";
 }
 
 function callAnalyzeApi(seqContent, aboveContext) {
@@ -1034,9 +1033,8 @@ function annotateText(paragraph, dialogs, charResults) {
         var info = charResults[seq];
         if (!info) continue;
         var mark = genMarkText(info.name, info.voiceDisplay);
-        var emotionPrefix = info.emotion ? "[[emo:" + info.emotion + "]]" : "";
         var d = dialogs[i];
-        result = result.substring(0, d.index) + "：" + result.substring(d.index, d.index + 1) + mark + emotionPrefix + result.substring(d.index + 1);
+        result = result.substring(0, d.index) + "：" + result.substring(d.index, d.index + 1) + mark + result.substring(d.index + 1);
     }
     return result;
 }
@@ -1248,7 +1246,7 @@ function handleSpecialQuoteCases(originalText) {
             } else {
                 vn = getTargetVoiceNum(genderAge, null, []);
             }
-            finalCharResults[seq] = { name: finalName, voiceDisplay: extractVoiceDisplay(vn), genderAge: genderAge, voiceNum: vn, emotion: "" };
+            finalCharResults[seq] = { name: finalName, voiceDisplay: extractVoiceDisplay(vn), genderAge: genderAge, voiceNum: vn };
             saveCharacter(finalName, genderAge, vn, "");
         }
     } else {
@@ -1268,13 +1266,13 @@ function handleSpecialQuoteCases(originalText) {
                     if (newlinePos !== -1) rawDialog = rawDialog.substring(0, newlinePos);
                 }
                 var itemResult = analyzeResult[seqN] || { name: "未知", gender: "男", age: "青年" };
-                dialogList.push({ seq: seqN, dialogContent: rawDialog, name: itemResult.name, gender: itemResult.gender, age: itemResult.age, emotion: itemResult.emotion || "" });
+                dialogList.push({ seq: seqN, dialogContent: rawDialog, name: itemResult.name, gender: itemResult.gender, age: itemResult.age });
             }
             if (dialogList.length === 0) {
                 for (var i = 0; i < dialogs.length; i++) {
                     var seqN = padZero(i + 1, 2);
                     var itemResult = analyzeResult[seqN] || { name: "未知", gender: "男", age: "青年" };
-                    dialogList.push({ seq: seqN, dialogContent: dialogs[i].content, name: itemResult.name, gender: itemResult.gender, age: itemResult.age, emotion: itemResult.emotion || "" });
+                    dialogList.push({ seq: seqN, dialogContent: dialogs[i].content, name: itemResult.name, gender: itemResult.gender, age: itemResult.age });
                 }
             }
             writeDialogCache({ currentIndex: 1, dialogList: dialogList });
@@ -1331,13 +1329,13 @@ function handleSpecialQuoteCases(originalText) {
                 } else if (saveMassCharacter === 1 && finalName.indexOf("群众") >= 0) {
                     saveCharacter(finalName, genderAge, voiceNum, "");
                 }
-                finalCharResults[d.seq] = { name: finalName, voiceDisplay: voiceDisplay, genderAge: genderAge, voiceNum: voiceNum, emotion: d.emotion || "" };
+                finalCharResults[d.seq] = { name: finalName, voiceDisplay: voiceDisplay, genderAge: genderAge, voiceNum: voiceNum };
             }
         } else {
             for (var i = 0; i < dialogs.length; i++) {
                 var seq = padZero(i + 1, 2);
                 var vn = getTargetVoiceNum("男男青年", null, []);
-                finalCharResults[seq] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn, emotion: "" };
+                finalCharResults[seq] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn };
             }
         }
     }
