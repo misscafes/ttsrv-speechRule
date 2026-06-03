@@ -173,7 +173,8 @@ var SAMPLE_RATE  = 24000;
 var APP_KEY      = 'WQuVLKMGRo';
 var TIMEOUT_MS   = 30000;
 var PITCH_VALUE  = 0;
-var SPEED_BOOST = speechRate / 20 * 1;
+var GLOBAL_SPEED_RATIO = 1.5;  // 全局语速倍率（用户自定义：1.0=原速，1.5=1.5倍速）
+var SPEED_BOOST = speechRate / 20 * GLOBAL_SPEED_RATIO;
 
 var NEEDS_CONTEXT_TEXTS = {
     'zh_female_vv_uranus_bigtts': true,
