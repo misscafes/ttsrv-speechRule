@@ -384,7 +384,7 @@ for (var i = 0; i < segments.length; i++) {
     var extra = JSON.stringify(extraObj);
 
     // 合成请求带自动重试（针对502/超时等临时错误）
-    var maxRetries = 2;
+    var maxRetries = 5;
     var audio = null;
     var retryCount = 0;
     var lastError = '';
