@@ -477,6 +477,7 @@
 - [x] (脚本)猫箱-VV（火山适配版）基于 VV.1 适配火山角色映射 jiaoseliebiao1.json
 - [x] 火山全套配套文件名统一改为 `jiaoseliebiao-1.json`（原 `jiaoseliebiao1.json`）
 - [x] 生成 `ttsrv-speechRule-情绪模块.json`：将 `模块/emotion-module.js` 包装为 TTS Server 朗读规则格式
+- [x] 生成 `ttsrv-speechRule-情绪桥接.json`：将 `脚本和模块/情绪桥接模块/emotion-bridge-rule.js` 包装为可独立运行的朗读规则
 - [ ] 如需功能迭代，在 v2.113 / v2.94 基础上增量开发
 
 ## 长期规划
