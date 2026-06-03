@@ -231,7 +231,7 @@
 ## 会话摘要
 
 ### 2026-06-03 本次会话（新增猫箱-VV大军优化版，Legado书源4项优化）
-- **当前最新版本**：v2.113（朗读规则）/ v6.70（角色管理插件）/ v2.94（主版本）/ VV.1（参考脚本）/ VV大军优化版（Legado书源）
+- **当前最新版本**：v2.113（朗读规则）/ v6.70（角色管理插件）/ v2.94（主版本）/ VV.1（参考脚本）/ VV大军情绪联动版（Legado书源）
 - **本次工作**：
   - 深入分析 `参考/猫箱VV大军(完全版)_.json` 的运行逻辑（Legado书源，WebSocket音频合成器）
   - **实施4项核心优化**，生成 `参考/猫箱VV大军(优化版).json`：
@@ -240,9 +240,21 @@
     3. **pendingVoice跨段继承**：新增 `CACHE_KEY_PENDING`，对话跨段时保存当前角色voice配置，下一段有孤儿右引号时零成本复用
     4. **拟声词正则性能优化**：将超长拟声词正则提取为预编译变量 `SFX_REGEX`，避免运行时重复解析；对话内括号清洗从硬编码4次改为动态循环
   - 文件名：`参考/猫箱VV大军(优化版).json`
+- **情绪联动版（本次新增）**：
+  - 基于 `参考/猫箱VV大军(优化版).json` 移植猫剪豆问AI的情绪联动引擎
+  - **新增情绪引擎常量/函数**：`CN_RULE_EMOTION_MAP`、`STANDARD_TO_VOICE_MAP`、`EMOTION_NAME_MAP`、`normalizeRuleEmotion()`、`mapRuleEmotionToVoice()`、`isStrongAngryText()`、`loadVoiceEmotionMap()`
+  - **下载音色情绪列表**：运行时自动下载/缓存 `maojiandouwentts.json`，建立 `voice_id → emotions` 映射表
+  - **规则端情绪标记解析**：段落拆分时提取 `[[emo:xxx]]` 标记，存入 `roleCfg.ruleEmotion`
+  - **情绪优先级**：`[[emo:xxx]]` 规则标记 > 角色默认情绪（`source.data.emotion`）
+  - **情绪映射与降级**：中文情绪 → API 英文情绪标准化 → 按 `STANDARD_TO_VOICE_MAP` 在音色支持列表中找最佳匹配 → 无匹配则降级到 `neutral` → 仍无匹配则放弃挂情绪
+  - **强愤怒检测**：文本含 `暴喝|怒吼|咆哮|杀了你|去死|滚开` 等关键词或 `！！` 时，`angry` 情绪的 `emotion_scale` 从 2 提升到 3
+  - **日志前缀统一**：`[情绪]` 便于用户识别来源
+  - 文件名：`参考/猫箱VV大军(情绪联动版).json`
 - **主目录结构**：
+  - `参考/猫箱VV大军(情绪联动版).json` — 本次新建（情绪联动版Legado书源）
   - `参考/猫箱VV大军(优化版).json` — 本次新建（优化后的Legado书源）
   - `参考/猫箱VV大军(完全版)_.json` — 原文件（未改动）
+  - `js/猫箱VV大军(情绪联动版).js` — 提取的调阅文件
   - `js/猫箱VV大军(优化版).js` — 提取的调阅文件
 - **注意事项**：
   - 猫箱VV大军优化版为 Legado 书源（`contentType: websocket/maoxiang`），与 TTS Server 的 VV.1 脚本上下游配套
