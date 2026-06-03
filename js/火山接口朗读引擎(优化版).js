@@ -65,8 +65,8 @@ for (var p = 0; p < parts.length; p++) {
 }
 
 // ===== 1. 读取/下载角色映射表 =====
-var MAP_FILE = '/storage/emulated/0/Download/chajian/mingwuyan/jiaoseliebiao-list.json';
-var REMOTE_URL = 'https://cnb.cool/mingwuyan/yinpin/-/git/raw/main/jiaoseliebiao-list.json?download=true';
+var MAP_FILE = '/storage/emulated/0/Download/chajian/mingwuyan/jiaoseliebiao1.json';
+var REMOTE_URL = 'https://cnb.cool/mingwuyan/yinpin/-/git/raw/main/jiaoseliebiao1.json?download=true';
 var DATA_DIR = '/storage/emulated/0/Download/chajian/mingwuyan/';
 var RULE_PRESETS_URL = "https://cnb.cool/xiatian.ktn/tts/-/git/raw/main/rule_presets.json";
 var RULE_PRESETS_CACHE_FILE = DATA_DIR + "rule_presets.json";
