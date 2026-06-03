@@ -284,6 +284,13 @@
   - `new/(脚本)猫剪豆问（优化版）.json` — 插件格式，由 `参考/(脚本)猫剪豆问（情绪桥接版）.json` 复制改名（对象0 name 改为"(脚本)猫剪豆问（优化版）"）
   - 同步提取 JS 调阅文件到 `new/` 目录
   - 已执行 `git add/commit/push`
+- **修复音效后文本被跳过（Rhino兼容性）**：
+  - 用户反馈：文本含 `(xxx音效)` 时，音效播放后后续段落被跳过
+  - **根因**：`loadAndRotateSfx` 函数使用 `Array.isArray(sfxJson.audios)`，但 Rhino 旧版本不支持 `Array.isArray`，调用时抛 `TypeError`，导致脚本异常中断，音效后所有 segment 丢失
+  - **修复**：在 `参考/猫箱VV大军(优化版).json` 和 `new/猫剪豆问（优化版）.json` 代码开头添加 `Array.isArray` polyfill
+  - 已备份：`参考/猫箱VV大军(优化版)_备份.json`、`new/猫剪豆问（优化版）_备份.json`
+  - 已同步更新 `js/猫箱VV大军(优化版).js`
+  - 已执行 `git add/commit/push`
 - **注意事项**：
   - 如修复后仍不发音，需用户提供 TTS Server 日志（`java.log` 输出）进一步排查，可能涉及 API 参数（`SPEED_BOOST` 语速倍率、情绪字段兼容性）或网络问题
   - 主目录下之前被误删的 `🪢猫剪豆问AI-规则联动版.json` 及其备份已恢复
