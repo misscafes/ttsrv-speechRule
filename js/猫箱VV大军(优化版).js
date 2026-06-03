@@ -352,13 +352,10 @@ function loadAndRotateSfx(fileName) {
     return null;
 }
 
+// 先合成所有文本segment，再统一追加音效（避免音效MP3破坏后续TTS音频的帧同步）
 for (var i = 0; i < segments.length; i++) {
     var seg = segments[i];
-    if (seg.type === 'sfx') {
-        var sfxBytes = loadAndRotateSfx(seg.fileName);
-        if (sfxBytes && sfxBytes.length > 0) out.write(sfxBytes);
-        continue;
-    }
+    if (seg.type === 'sfx') continue;
 
     var pure = seg.txt ? seg.txt.replace(/[“”]/g, '').trim() : '';
     if (!seg.txt || pure.length === 0) continue;
@@ -436,6 +433,15 @@ for (var i = 0; i < segments.length; i++) {
         java.log('[合成] 返回空音频: ' + seg.txt.substring(0, 20));
     }
 }
+
+// 统一追加所有音效segment（放在文本之后，避免破坏MP3帧同步）
+for (var i = 0; i < segments.length; i++) {
+    var seg = segments[i];
+    if (seg.type !== 'sfx') continue;
+    var sfxBytes = loadAndRotateSfx(seg.fileName);
+    if (sfxBytes && sfxBytes.length > 0) out.write(sfxBytes);
+}
+
 
 out.toByteArray();
 
