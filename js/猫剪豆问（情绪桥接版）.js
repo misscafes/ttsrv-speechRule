@@ -1,4 +1,5 @@
 
+
 try {
 
 // ===== 0. 文本预处理 =====
@@ -166,8 +167,6 @@ var NARRATOR_DEFAULT = {
 };
 var narratorCfg = tagConfig["narration"] || NARRATOR_DEFAULT;
 
-loadVoiceEmotionMap();
-
 // ===== 2. 基础参数 =====
 var BASE_URL     = 'wss://audio5-normal-hl.myparallelstory.com/internal/api/v1/ws';
 var AUDIO_FORMAT = 'mp3';
@@ -177,159 +176,6 @@ var TIMEOUT_MS   = 30000;
 var PITCH_VALUE  = 0;
 var GLOBAL_SPEED_RATIO = 2.0;  // 全局语速倍率（Legado语速10→API语速1.0）
 var SPEED_BOOST = speechRate / 20 * GLOBAL_SPEED_RATIO;
-
-// ===== 情绪联动引擎（来自猫剪豆问AI-规则联动版） =====
-var voiceEmotionMap = {};
-
-var CN_RULE_EMOTION_MAP = {
-    "中性": "neutral",
-    "平静": "neutral",
-    "开心": "happy",
-    "兴奋": "excited",
-    "悲伤": "sad",
-    "委屈": "sad",
-    "生气": "angry",
-    "愤怒": "angry",
-    "抱怨": "angry",
-    "埋怨": "angry",
-    "牢骚": "angry",
-    "发牢骚": "angry",
-    "不满": "angry",
-    "嘟囔": "angry",
-    "恐惧": "fear",
-    "紧张": "tension",
-    "惊讶": "surprised",
-    "厌恶": "hate",
-    "冷漠": "coldness",
-    "冷酷": "coldness",
-    "温柔": "tender",
-    "虚弱": "depressed",
-    "沮丧": "depressed",
-    "害羞": "shy",
-    "撒娇": "lovey-dovey",
-    "安慰": "comfort",
-    "广告": "advertising",
-    "娱乐": "entertainment",
-    "新闻": "news"
-};
-
-var STANDARD_TO_VOICE_MAP = {
-    neutral:    ["neutral", "tender", "comfort", "coldness"],
-    happy:      ["happy", "excited", "lovey-dovey", "shy", "tender", "neutral"],
-    sad:        ["sad", "depressed", "comfort", "tender", "coldness", "neutral"],
-    angry:      ["angry", "hate", "tension", "coldness", "fear", "neutral"],
-    fear:       ["fear", "tension", "coldness", "neutral"],
-    tension:    ["tension", "fear", "coldness", "angry", "neutral"],
-    surprised:  ["surprised", "tension", "excited", "fear", "neutral"],
-    hate:       ["hate", "angry", "coldness", "tension", "neutral"],
-    excited:    ["excited", "happy", "surprised", "neutral"],
-    tender:     ["tender", "comfort", "neutral"],
-    depressed:  ["depressed", "sad", "coldness", "neutral"],
-    coldness:   ["coldness", "neutral"],
-    comfort:    ["comfort", "tender", "neutral"],
-    shy:        ["shy", "tender", "neutral"],
-    "lovey-dovey": ["lovey-dovey", "tender", "happy", "neutral"]
-};
-
-var EMOTION_NAME_MAP = {
-    "advertising": "广告",
-    "angry": "生气",
-    "coldness": "冷漠",
-    "comfort": "安慰",
-    "depressed": "沮丧",
-    "entertainment": "娱乐",
-    "excited": "兴奋",
-    "fear": "恐惧",
-    "happy": "开心",
-    "hate": "厌恶",
-    "lovey-dovey": "撒娇",
-    "neutral": "中性",
-    "news": "新闻",
-    "sad": "悲伤",
-    "shy": "害羞",
-    "surprised": "惊讶",
-    "tender": "温柔",
-    "tension": "紧张"
-};
-
-function extractRuleEmotion(text) {
-    var raw = String(text || "");
-    var m = raw.match(/^\s*\[\[emo:([^\]]+)\]\]/i);
-    if (!m) return null;
-    return {
-        emotion: String(m[1] || "").trim(),
-        text: raw.replace(/^\s*\[\[emo:[^\]]+\]\]\s*/i, "")
-    };
-}
-
-function normalizeRuleEmotion(rawEmotion) {
-    var emo = String(rawEmotion || "").trim();
-    if (!emo) return "";
-    if (CN_RULE_EMOTION_MAP[emo]) return CN_RULE_EMOTION_MAP[emo];
-    emo = emo.toLowerCase();
-    if (STANDARD_TO_VOICE_MAP[emo]) return emo;
-    if (EMOTION_NAME_MAP[emo]) return emo;
-    return emo;
-}
-
-function containsEmotion(emotionList, target) {
-    if (!emotionList || !target) return false;
-    for (var i = 0; i < emotionList.length; i++) {
-        if (emotionList[i] === target) return true;
-    }
-    return false;
-}
-
-function isStrongAngryText(text) {
-    var s = String(text || "");
-    return /(暴喝|暴怒|怒喝|怒吼|咆哮|嘶吼|厉喝|狂吼|吼道|喝骂|破口大骂|勃然大怒|怒不可遏|气炸|杀了你|去死|滚开|闭嘴|住口|混账|混蛋|畜生|找死)/.test(s) || /！！|!!/.test(s);
-}
-
-function mapRuleEmotionToVoice(ruleEmotion, voiceEmotionList) {
-    if (!ruleEmotion || !voiceEmotionList || voiceEmotionList.length === 0) return "";
-
-    if (containsEmotion(voiceEmotionList, ruleEmotion)) {
-        return ruleEmotion;
-    }
-
-    var candidates = STANDARD_TO_VOICE_MAP[ruleEmotion] || [];
-    for (var j = 0; j < candidates.length; j++) {
-        if (containsEmotion(voiceEmotionList, candidates[j])) {
-            return candidates[j];
-        }
-    }
-
-    if (ruleEmotion === "neutral") {
-        java.log("[情绪] 规则情绪 neutral 无法匹配，已改为不挂情绪");
-        return "";
-    }
-
-    if (containsEmotion(voiceEmotionList, "neutral")) {
-        java.log("[情绪] 规则情绪 " + ruleEmotion + " 无法匹配，已降级到中性");
-        return "neutral";
-    }
-
-    java.log("[情绪] 规则情绪 " + ruleEmotion + " 无法匹配，且当前音色无中性可降级");
-    return "";
-}
-
-function loadVoiceEmotionMap() {
-    try {
-        var voiceListRaw = ensureJsonFile(VOICE_LIST_CACHE_FILE, VOICE_LIST_URL);
-        if (voiceListRaw && isJsonLike(voiceListRaw)) {
-            var voiceList = JSON.parse(voiceListRaw);
-            for (var vi = 0; vi < voiceList.length; vi++) {
-                var vitem = voiceList[vi];
-                if (vitem && vitem.voice_id && vitem.emotions) {
-                    voiceEmotionMap[vitem.voice_id] = vitem.emotions;
-                }
-            }
-            java.log("[情绪] 加载音色情绪列表，共" + Object.keys(voiceEmotionMap).length + "条");
-        }
-    } catch (e) {
-        java.log("[情绪] 加载音色情绪列表失败: " + e);
-    }
-}
 
 var NEEDS_CONTEXT_TEXTS = {
     'zh_female_vv_uranus_bigtts': true,
@@ -416,11 +262,14 @@ for (var s = 0; s < mixedSegments.length; s++) {
             };
         }
 
-// 移除情绪桥接标记 [[emo:xxx]]，避免被猫箱API当作普通文本朗读
+        // 移除情绪桥接标记 [[emo:xxx]]，避免被猫箱API当作普通文本朗读
         var emoMatch = dialogText.match(/\[\[emo:([^\]]+)\]\]/);
         if (emoMatch) {
             dialogText = dialogText.replace(/\[\[emo:[^\]]+\]\]/, '');
-            roleCfg.ruleEmotion = emoMatch[1];
+            // 若发音人ID包含emo，保存情绪值供阶段4传入extra参数
+            if (roleCfg.voice && roleCfg.voice.indexOf('emo') !== -1) {
+                roleCfg.emotion = emoMatch[1];
+            }
         }
 
         var pureText = dialogText.replace(/[“”]/g, '').trim();
@@ -539,38 +388,9 @@ for (var i = 0; i < segments.length; i++) {
         loudness_rate: loudness
     };
 
-// ===== 情绪联动决策 =====
-    var finalEmotion = "";
-    var emotionScale = 2;
-
-    // 1. 优先使用规则端情绪标记 [[emo:xxx]]
-    if (cfg.ruleEmotion) {
-        finalEmotion = normalizeRuleEmotion(cfg.ruleEmotion);
-        java.log("[情绪] 检测到规则标记: " + cfg.ruleEmotion + " -> 标准化: " + finalEmotion);
-    }
-    // 2. 其次使用角色默认情绪（来自角色配置 source.data.emotion）
-    else if (cfg.emotion) {
-        finalEmotion = normalizeRuleEmotion(cfg.emotion);
-        java.log("[情绪] 使用角色默认情绪: " + cfg.emotion + " -> 标准化: " + finalEmotion);
-    }
-
-    // 3. 映射到音色支持的情绪
-    if (finalEmotion) {
-        var voiceEmotions = voiceEmotionMap[cfg.voice] || [];
-        var mappedEmotion = mapRuleEmotionToVoice(finalEmotion, voiceEmotions);
-        if (mappedEmotion) {
-            finalEmotion = mappedEmotion;
-            if (finalEmotion === "angry" && isStrongAngryText(pure)) {
-                emotionScale = 3;
-                java.log("[情绪] 强愤怒文本，提升情感强度至" + emotionScale);
-            }
-            extraObj.audio_config.emotion = finalEmotion;
-            extraObj.audio_config.emotion_scale = emotionScale;
-            java.log("[情绪] 最终情绪=" + (EMOTION_NAME_MAP[finalEmotion] || finalEmotion) + ", 强度=" + emotionScale + ", 音色=" + cfg.voice);
-        } else {
-            java.log("[情绪] 情绪 " + finalEmotion + " 无法映射到当前音色，放弃挂情绪");
-            finalEmotion = "";
-        }
+    if (cfg.voice.indexOf('emo') !== -1 && cfg.emotion) {
+        extraObj.audio_config.emotion = cfg.emotion;
+        extraObj.audio_config.emotion_scale = 4;
     }
 
     var extra = JSON.stringify(extraObj);
