@@ -32,20 +32,20 @@ var PENDING_QUOTE_MAX_AGE = 300000;
 
 // ===================== 发音人角色配置 =====================
 var MAIN_ROLES_CONFIG = [
-  ['主角 男主', '主角', '男主', '男主', 20],
-  ['主角 女主', '主角', '女主', '女主', 20]
 ];
 var BATCH_ROLES = [
-  ['女/少女',   '女', '少女',   '少女',   26],
-  ['男/少年',   '男', '少年',   '少年',   24],
-  ['女/女青年', '女', '女青年', '女青年', 67],
-  ['男/男青年', '男', '男青年', '男青年', 20],
-  ['女/女中年', '女', '女中年', '女中年', 21],
-  ['男/男中年', '男', '男中年', '男中年', 17],
-  ['女/女老年', '女', '女老年', '女老年', 17],
-  ['男/男老年', '男', '男老年', '男老年', 17],
-  ['女/女童',   '女', '女童',   '女童',   20],
-  ['男/男童',   '男', '男童',   '男童',   22]
+  ['主角 男主', '主角', '男主', '男主', 20],
+  ['主角 女主', '主角', '女主', '女主', 20],
+  ['女/少女',   '女', '少女',   '少女',   100],
+  ['男/少年',   '男', '少年',   '少年',   100],
+  ['女/女青年', '女', '女青年', '女青年', 100],
+  ['男/男青年', '男', '男青年', '男青年', 100],
+  ['女/女中年', '女', '女中年', '女中年', 100],
+  ['男/男中年', '男', '男中年', '男中年', 100],
+  ['女/女老年', '女', '女老年', '女老年', 100],
+  ['男/男老年', '男', '男老年', '男老年', 100],
+  ['女/女童',   '女', '女童',   '女童',   100],
+  ['男/男童',   '男', '男童',   '男童',   100]
 ];
 var SPECIAL_ROLES = [
   ['【】括号发音人', '特殊', '系统', '括号1'],
@@ -416,6 +416,7 @@ function readBookCharacters() {
     } catch (e) { return []; }
 }
 
+// ★ 修复后的保存函数：直接使用已有的 aliases 字段，不再丢失别名
 function saveBookCharacters(charArr) {
     try {
         var managerArr = [];
@@ -425,22 +426,19 @@ function saveBookCharacters(charArr) {
             var g = "", a = "";
             if (ga.indexOf("男") === 0) { g = "男"; a = ga.substring(1); }
             else if (ga.indexOf("女") === 0) { g = "女"; a = ga.substring(1); }
-            var fullName = r.name || "";
-            var parts = fullName.split("|");
-            var pArr = [];
-            for (var pi = 0; pi < parts.length; pi++) {
-                var ps = String(parts[pi]).trim();
-                if (ps) pArr.push(ps);
-            }
-            var mainName = pArr[0] || "";
-            var aliasParts = [];
-            for (var pi = 1; pi < pArr.length; pi++) {
-                if (pArr[pi] !== mainName && aliasParts.indexOf(pArr[pi]) === -1) aliasParts.push(pArr[pi]);
-            }
-            var aliasStr = aliasParts.join("|") || mainName;
+
+            // 直接使用已有的 aliases，没有则用 name 兜底
+            var mainName = r.name || "";
+            var aliases = r.aliases || mainName;
+
             managerArr.push({
-                name: mainName, aliases: aliasStr, voice: r.voice || "",
-                gender: g, age: a, usageCount: 100, fixedVoice: !!(r.voice)
+                name: mainName,
+                aliases: aliases,
+                voice: r.voice || "",
+                gender: g,
+                age: a,
+                usageCount: 100,
+                fixedVoice: !!(r.voice)
             });
         }
         java.writeExternalFile(EXT_DIR + "characterRecords.json", JSON.stringify(managerArr, null, 2));
