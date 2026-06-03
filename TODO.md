@@ -286,9 +286,11 @@
   - 已执行 `git add/commit/push`
 - **修复音效后文本被跳过（Rhino兼容性）**：
   - 用户反馈：文本含 `(xxx音效)` 时，音效播放后后续段落被跳过
-  - **根因**：`loadAndRotateSfx` 函数使用 `Array.isArray(sfxJson.audios)`，但 Rhino 旧版本不支持 `Array.isArray`，调用时抛 `TypeError`，导致脚本异常中断，音效后所有 segment 丢失
-  - **修复**：在 `参考/猫箱VV大军(优化版).json` 和 `new/猫剪豆问（优化版）.json` 代码开头添加 `Array.isArray` polyfill
-  - 已备份：`参考/猫箱VV大军(优化版)_备份.json`、`new/猫剪豆问（优化版）_备份.json`
+  - **根因1**：`loadAndRotateSfx` 函数使用 `Array.isArray(sfxJson.audios)`，但 Rhino 旧版本不支持 `Array.isArray`
+  - **修复1**：在代码开头添加 `Array.isArray` polyfill
+  - **根因2（最终）**：即使 polyfill 生效，问题仍存在。深入分析后发现 **音频字节流层面的 MP3 帧同步问题** — 音效的原始 MP3 字节与 TTS 返回的 MP3 字节直接拼接，可能破坏解码器的帧同步，导致后续 TTS 音频无法播放
+  - **修复2（最终）**：重构合成循环，**先合成所有文本 segment**，再**统一追加所有音效 segment**。这样即使音效的 MP3 帧结构有问题，也不会影响文本朗读
+  - 已备份：`参考/猫箱VV大军(优化版)_备份.json`/`_v2.json`、`new/猫剪豆问（优化版）_备份.json`/`_v2.json`
   - 已同步更新 `js/猫箱VV大军(优化版).js`
   - 已执行 `git add/commit/push`
 - **注意事项**：
