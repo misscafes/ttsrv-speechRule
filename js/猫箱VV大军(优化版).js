@@ -173,7 +173,7 @@ var SAMPLE_RATE  = 24000;
 var APP_KEY      = 'WQuVLKMGRo';
 var TIMEOUT_MS   = 30000;
 var PITCH_VALUE  = 0;
-var GLOBAL_SPEED_RATIO = 1.5;  // 全局语速倍率（用户自定义：1.0=原速，1.5=1.5倍速）
+var GLOBAL_SPEED_RATIO = 2.0;  // 全局语速倍率（Legado语速10→API语速1.0）
 var SPEED_BOOST = speechRate / 20 * GLOBAL_SPEED_RATIO;
 
 var NEEDS_CONTEXT_TEXTS = {
