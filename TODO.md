@@ -2,6 +2,15 @@
 
 ## 版本变更记录
 
+### 猫剪豆问（情绪桥接版）修复（2026-06-03）
+- **文件**：`参考/猫剪豆问（情绪桥接版）.json`
+- **备份**：`参考/猫剪豆问（情绪桥接版）_备份.json`
+- **修复 Rhino 兼容性 bug（可能导致不发音）**：
+  1. **`Array.isArray` polyfill**：代码中使用 `Array.isArray(sfxJson.audios)` 判断音效数组，但 Rhino 旧版本不支持 `Array.isArray`，会抛出 `TypeError`。已在代码开头添加兼容垫片：`if (!Array.isArray) { Array.isArray = function(arg) { return Object.prototype.toString.call(arg) === "[object Array]"; }; }`
+  2. **`voiceEmotionMap` 初始化顺序**：`loadVoiceEmotionMap()` 在第 169 行被调用，但 `var voiceEmotionMap = {};` 在第 182 行才执行。Rhino 的 `var` 提升导致调用时 `voiceEmotionMap` 为 `undefined`，情绪列表永远无法加载（内部 catch 吞掉错误，但功能失效）。已将 `loadVoiceEmotionMap()` 移至变量初始化之后。
+- **JS 提取文件同步更新**：`js/猫剪豆问（情绪桥接版）.js`
+- **待确认**：用户反馈该文件"不发音"，上述修复解决了两个已知的 Rhino 运行时 bug。如问题仍未解决，需用户提供 TTS Server 日志进一步排查。
+
 ### 猫箱-VV.1（参考脚本优化版，本次新建）
 - 基于 **参考/(脚本)猫箱-VV(完全版).json** 进行全面优化
 - **修复 handleSpecialQuoteCases 截断旁白 Bug**：不再 `return "\"" + voiceMark + matchContent + "\""`，改为在原文基础上局部插入 `<<voiceTag>>`，保留引号外的所有旁白文本

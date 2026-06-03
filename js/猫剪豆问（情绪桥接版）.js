@@ -1,4 +1,8 @@
+
 try {
+
+if (!Array.isArray) { Array.isArray = function(arg) { return Object.prototype.toString.call(arg) === "[object Array]"; }; }
+
 
 // ===== 0. 文本预处理 =====
 var text = speakText;
@@ -165,7 +169,6 @@ var NARRATOR_DEFAULT = {
 };
 var narratorCfg = tagConfig["narration"] || NARRATOR_DEFAULT;
 
-loadVoiceEmotionMap();
 
 // ===== 2. 基础参数 =====
 var BASE_URL     = 'wss://audio5-normal-hl.myparallelstory.com/internal/api/v1/ws';
@@ -179,6 +182,7 @@ var SPEED_BOOST = speechRate / 20 * GLOBAL_SPEED_RATIO;
 
 // ===== 情绪联动引擎（来自猫剪豆问AI-规则联动版） =====
 var voiceEmotionMap = {};
+loadVoiceEmotionMap();
 
 var CN_RULE_EMOTION_MAP = {
     "中性": "neutral",
