@@ -239,6 +239,24 @@
 
 ## 会话摘要
 
+### 2026-06-03 修复会话（猫剪豆问情绪桥接版不发音）
+- **当前最新版本**：猫剪豆问（情绪桥接版）已修复 / v2.113（朗读规则）/ v6.70（角色管理插件）
+- **本次工作**：
+  - 用户反馈 `参考/猫剪豆问（情绪桥接版）.json` 不发音
+  - 通过 Node 模拟执行验证代码逻辑本身无语法错误，分段/合成流程正常
+  - **发现 2 个 Rhino 兼容性 bug**：
+    1. `Array.isArray` 在 Rhino 旧版本不存在，代码中 `loadAndRotateSfx` 函数使用了 `Array.isArray(sfxJson.audios)`，若文本含音效标记会直接抛 `TypeError` 导致脚本异常
+    2. `loadVoiceEmotionMap()` 在第 169 行被调用，但 `var voiceEmotionMap = {};` 在第 182 行才执行，Rhino `var` 提升导致调用时变量为 `undefined`，情绪列表加载被内部 catch 静默吞掉，功能失效
+  - **修复措施**：
+    1. 在代码开头添加 `Array.isArray` polyfill：`if (!Array.isArray) { Array.isArray = function(arg) { return Object.prototype.toString.call(arg) === "[object Array]"; }; }`
+    2. 将 `loadVoiceEmotionMap()` 调用移至 `var voiceEmotionMap = {};` 之后
+  - 已备份原文件：`参考/猫剪豆问（情绪桥接版）_备份.json`
+  - 已同步更新 `js/猫剪豆问（情绪桥接版）.js`
+  - 已执行 `git add/commit/push`
+- **注意事项**：
+  - 如修复后仍不发音，需用户提供 TTS Server 日志（`java.log` 输出）进一步排查，可能涉及 API 参数（`SPEED_BOOST` 语速倍率、情绪字段兼容性）或网络问题
+  - 主目录下之前被误删的 `🪢猫剪豆问AI-规则联动版.json` 及其备份已恢复
+
 ### 2026-06-03 本次会话（新增猫箱-VV大军优化版，Legado书源4项优化）
 - **当前最新版本**：v2.113（朗读规则）/ v6.70（角色管理插件）/ v2.94（主版本）/ VV.1（参考脚本）/ VV大军情绪联动版（Legado书源）
 - **本次工作**：
