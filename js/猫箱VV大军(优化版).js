@@ -205,16 +205,22 @@ for (var s = 0; s < mixedSegments.length; s++) {
     // 处理孤儿右引号（对话在上段开始，本段结束）
     if (hasOrphanRight && pendingVoice) {
         var rightPos = quoteAnalysis.orphanRight[0].pos;
-        var orphanDialog = segText.substring(0, rightPos) + '”';
-        if (orphanDialog.replace(/[“”]/g, '').trim().length > 0) {
-            segments.push({txt: orphanDialog, config: pendingVoice});
+        var textBeforeRight = segText.substring(0, rightPos);
+        // 关键修复：如果孤儿右引号前面存在左引号，说明文本包含正常对话结构
+        // 不能整体当作孤儿对话处理，否则会把旁白误吞进对话
+        var hasLeftQuoteBefore = textBeforeRight.indexOf('“') !== -1;
+        if (!hasLeftQuoteBefore) {
+            var orphanDialog = textBeforeRight + '”';
+            if (orphanDialog.replace(/[“”]/g, '').trim().length > 0) {
+                segments.push({txt: orphanDialog, config: pendingVoice});
+            }
+            // 右引号之后的内容继续按正常流程处理
+            segText = segText.substring(rightPos + 1);
+            pendingVoice = null;
+            try { cache.delete(CACHE_KEY_PENDING); } catch(e) {}
+            // 重新分析剩余文本
+            quoteAnalysis = analyzeOrphanQuotes(segText);
         }
-        // 右引号之后的内容继续按正常流程处理
-        segText = segText.substring(rightPos + 1);
-        pendingVoice = null;
-        try { cache.delete(CACHE_KEY_PENDING); } catch(e) {}
-        // 重新分析剩余文本
-        quoteAnalysis = analyzeOrphanQuotes(segText);
     }
 
     var idx = 0;
