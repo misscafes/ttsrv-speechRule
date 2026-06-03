@@ -383,12 +383,42 @@ for (var i = 0; i < segments.length; i++) {
 
     var extra = JSON.stringify(extraObj);
 
-    try {
-        var audio = ws.maoxiang(wsUrl, seg.txt, cfg.voice, AUDIO_FORMAT, SAMPLE_RATE, segRate, PITCH_VALUE, APP_KEY, TIMEOUT_MS, extra);
-        if (audio && audio.length > 0) out.write(audio);
-        else java.log('[合成] 返回空音频: ' + seg.txt.substring(0, 20));
-    } catch (ex) {
-        java.log('[合成] 请求失败: ' + ex + ' 文本: ' + seg.txt.substring(0, 30));
+    // 合成请求带自动重试（针对502/超时等临时错误）
+    var maxRetries = 2;
+    var audio = null;
+    var retryCount = 0;
+    var lastError = '';
+    for (var attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            audio = ws.maoxiang(wsUrl, seg.txt, cfg.voice, AUDIO_FORMAT, SAMPLE_RATE, segRate, PITCH_VALUE, APP_KEY, TIMEOUT_MS, extra);
+            if (audio && audio.length > 0) break;
+        } catch (ex) {
+            lastError = String(ex);
+            var isRetryable = lastError.indexOf('502') !== -1 ||
+                              lastError.indexOf('504') !== -1 ||
+                              lastError.indexOf('timeout') !== -1 ||
+                              lastError.indexOf('Timeout') !== -1 ||
+                              lastError.indexOf('connection') !== -1 ||
+                              lastError.indexOf('Connection') !== -1 ||
+                              lastError.indexOf('101') !== -1 ||
+                              lastError.indexOf('Socket') !== -1 ||
+                              lastError.indexOf('SocketTimeout') !== -1;
+            if (isRetryable && attempt < maxRetries) {
+                retryCount++;
+                java.log('[合成] 第' + attempt + '次失败(可重试): ' + lastError.substring(0, 60));
+                try { java.lang.Thread.sleep(500 + attempt * 300); } catch(e) {}
+            } else {
+                java.log('[合成] 请求失败(不重试): ' + lastError + ' 文本: ' + seg.txt.substring(0, 30));
+                break;
+            }
+        }
+    }
+    if (audio && audio.length > 0) {
+        out.write(audio);
+    } else if (retryCount > 0) {
+        java.log('[合成] 重试' + retryCount + '次后仍失败: ' + lastError.substring(0, 60));
+    } else if (!audio || audio.length === 0) {
+        java.log('[合成] 返回空音频: ' + seg.txt.substring(0, 20));
     }
 }
 
