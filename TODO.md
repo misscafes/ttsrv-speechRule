@@ -2,6 +2,18 @@
 
 ## 版本变更记录
 
+### v2.115（本次新建）
+- 基于 **v2.114** 添加情绪模块启动状态日志
+- **改动内容**：
+  1. 新增 `logEmotionInitStatus()` 函数（位于 `logBackupInitStatus()` 之前），脚本启动时输出情绪模块三开关状态
+  2. 在 `logBackupInitStatus()` 调用后追加 `logEmotionInitStatus()` 调用
+  3. 日志格式：`【情绪模块】情绪桥接: 开启/关闭 | 调试日志: 开启/关闭 | 本地修正: 开启/关闭`
+- **对应开关**：
+  - `ENABLE_EMOTION_BRIDGE`（情绪桥接）
+  - `ENABLE_EMOTION_DEBUG_LOG`（调试日志）
+  - `ENABLE_LOCAL_EMOTION_CORRECTION`（本地关键词修正）
+- 文件名：`多角色朗读2.115【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json`
+
 ### v2.114（本次新建）
 - 基于 **v2.113** 完整移植2.81版本的情绪模块增强功能
 - **修复1（无可用发音人）**：`extractFayinrenEmotionAuto` 在 `handleText` 开头裸调用，无 try-catch 保护，函数内任何异常（如 `fayinren.json` 格式损坏、`forceFlattenArray` 遇到非数组）都会直接中断整个 `handleText`，导致 `detectAvailableVoices` 从未执行 → `availableVoices` 永远为空。已加 `try-catch` 包裹，情绪提取失败不影响主流程
@@ -603,7 +615,8 @@
 - [x] 生成 `ttsrv-speechRule-情绪模块.json`：将 `模块/emotion-module.js` 包装为 TTS Server 朗读规则格式
 - [x] 生成 `ttsrv-speechRule-情绪桥接.json`：将 `脚本和模块/情绪桥接模块/emotion-bridge-rule.js` 包装为可独立运行的朗读规则
 - [x] 完整移植2.81情绪模块到2.113，生成 v2.114（发音人自动提取+hitSource追踪+扩展本地修正+详细调试日志）
-- [ ] 如需功能迭代，在 v2.114 / v2.94 基础上增量开发
+- [x] 添加情绪模块启动状态日志，生成 v2.115
+- [ ] 如需功能迭代，在 v2.115 / v2.94 基础上增量开发
 
 ## 长期规划
 - [ ] 在 v2.94 基础上逐步优化，避免大规模重构
@@ -652,3 +665,21 @@
 - **文件**：`new/猫剪豆问（优化版）.json`、`参考/猫箱VV大军(优化版).json`
 - **git**：`51e4363`
 
+
+### 2026-06-04 本次会话（v2.115：添加情绪模块启动状态日志）
+- **当前最新版本**：v2.115（朗读规则）/ v6.70（角色管理插件）
+- **本次工作**：
+  - 用户要求在脚本启动时像 `logBackupInitStatus()` 一样输出情绪模块开关状态
+  - 新增 `logEmotionInitStatus()` 函数，读取三个情绪开关：
+    - `ENABLE_EMOTION_BRIDGE` → 情绪桥接 开启/关闭
+    - `ENABLE_EMOTION_DEBUG_LOG` → 调试日志 开启/关闭
+    - `ENABLE_LOCAL_EMOTION_CORRECTION` → 本地修正 开启/关闭
+  - 在 `logBackupInitStatus()` 调用后同步调用 `logEmotionInitStatus()`
+  - 生成 v2.115，同步更新版本号（文件名、顶层 name/version、code 内 name/version）
+  - 同步提取 JS 调阅文件：`js/多角色朗读2.115...js`
+- **主目录结构**：
+  - `多角色朗读2.115【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json` — 主目录最新版
+  - `多角色朗读2.114【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json` — 上一版本保留
+  - `ttsrv-plugin-角色管理6.70.json` — 插件
+- **注意事项**：
+  - 情绪模块启动日志与备用模型接力日志格式保持一致，便于用户快速确认模块状态
