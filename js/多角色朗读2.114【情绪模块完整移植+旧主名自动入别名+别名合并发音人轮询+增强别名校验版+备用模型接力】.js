@@ -7598,6 +7598,7 @@ var SpeechRuleJS = {
       }
 
       // 输出处理结果总览
+                  var segmentEmotionState = { lastBucket: "", mainEmotion: "", mainRawEmotion: "" };
       for (var k = 0; k < list.length; k++) {
           var item = list[k];
           var itemType = item.tag.indexOf("localSound") === 0 ? "【本地音效】" : 
