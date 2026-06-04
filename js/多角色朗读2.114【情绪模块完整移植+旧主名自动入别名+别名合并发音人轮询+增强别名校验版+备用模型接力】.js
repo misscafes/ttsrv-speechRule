@@ -2802,21 +2802,14 @@ CharacterManager.prototype.selectVoiceByGlobalRandom = function(candidates, labe
   if (!this.globalVoiceUsage) this.loadGlobalVoiceUsage();
   label = label || "候选";
 
-  // 先随机打散，再按匹配层级和全局使用次数排序；同次数保留随机顺序。
-  for (var si = candidates.length - 1; si > 0; si--) {
-      var ri = Math.floor(Math.random() * (si + 1));
-      var tmp = candidates[si];
-      candidates[si] = candidates[ri];
-      candidates[ri] = tmp;
-  }
-
+  // 按匹配层级和全局使用次数排序，保持分配稳定性
   var that = this;
   candidates.sort(function(a, b) {
       var levelA = typeof a.matchLevel === "number" ? a.matchLevel : 0;
       var levelB = typeof b.matchLevel === "number" ? b.matchLevel : 0;
       if (levelA !== levelB) return levelA - levelB;
-      var countA = that.globalVoiceUsage[a.voice] || 0;
-      var countB = that.globalVoiceUsage[b.voice] || 0;
+      var countA = that.voiceUsageMap[a.voice] || 0;
+      var countB = that.voiceUsageMap[b.voice] || 0;
       return countA - countB;
   });
 
@@ -5957,7 +5950,11 @@ var SpeechRuleJS = {
 
 
   handleText: function(text, tagsData) {
-    extractFayinrenEmotionAuto(tagsData);
+    try {
+        extractFayinrenEmotionAuto(tagsData);
+    } catch (e) {
+        // 情绪提取失败不影响主流程
+    }
   
   
        // 新增：ES5 兼容的数组扁平化函数（解决 forceFlattenArray 未定义问题）

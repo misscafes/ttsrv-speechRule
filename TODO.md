@@ -4,6 +4,9 @@
 
 ### v2.114（本次新建）
 - 基于 **v2.113** 完整移植2.81版本的情绪模块增强功能
+- **修复1（无可用发音人）**：`extractFayinrenEmotionAuto` 在 `handleText` 开头裸调用，无 try-catch 保护，函数内任何异常（如 `fayinren.json` 格式损坏、`forceFlattenArray` 遇到非数组）都会直接中断整个 `handleText`，导致 `detectAvailableVoices` 从未执行 → `availableVoices` 永远为空。已加 `try-catch` 包裹，情绪提取失败不影响主流程
+- **修复2（发音人混乱/无固定旁白）**：`selectVoiceByGlobalRandom` 函数中先用 `Math.random()` 随机打乱候选数组，再按使用次数排序，导致每次调用都返回不同发音人 → 旁白和角色每次换不同声音。已移除 `Math.random()` 随机打乱逻辑
+- **修复3（排序基准）**：`selectVoiceByGlobalRandom` 排序使用 `globalVoiceUsage`（跨书全局累计），同一角色在不同书中使用次数互相干扰，导致分配不均。已改回 `voiceUsageMap`（当前会话级），与2.86行为一致
 - **移植内容**：
   1. **`extractFayinrenEmotionAuto` IIFE**：自动解析 `fayinren.json` 和全局 `tagsData`，提取每个发音人标签中的情绪配置，生成 `fayinren_emotion_summary.json`（含 `byId`/`byTag`/`rawById`/`rawByTag` 等字段）
   2. **`isLikelyInlineEmotionCue` 函数**：判断括号内文本是否属于 MiMo/情绪导演行内提示词，区分正常旁白括号与情绪导演提示

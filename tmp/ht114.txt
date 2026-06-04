@@ -1,0 +1,1340 @@
+handleText: function(text, tagsData) {
+    extractFayinrenEmotionAuto(tagsData);
+  
+  
+       // 新增：ES5 兼容的数组扁平化函数（解决 forceFlattenArray 未定义问题）
+      var forceFlattenArray = function(arr) {
+          var result = [];
+          for (var i = 0; i < arr.length; i++) {
+              var item = arr[i];
+              // 判断是否为数组（ES5 兼容写法）
+              if (Object.prototype.toString.call(item) === '[object Array]') {
+                  // 递归扁平化嵌套数组
+                  result = result.concat(forceFlattenArray(item));
+              } else {
+                  result.push(item);
+              }
+          }
+          return result;
+      };
+
+      // 新增：判断数组的辅助函数（适配原有代码）
+      var isArray = function(arr) {
+          return Object.prototype.toString.call(arr) === '[object Array]';
+      };
+      
+      
+  
+      
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+      
+      
+      text2 = text.replace(/[(]([\u4E00-\u9Fa5]{1,5})音效[)]/g, "");
+      
+      text = text.replace(/“([\u4E00-\u9FFF]{1,15})”/g, "$1");
+      text = text.replace(/[〖〗‘’〈〔〕〉]/g, "");
+      
+      text = text.replace(/(“[^“”]+)$/g, "$1”");
+      text = text.replace(/(^|音效[)])([^“”)]+”)/g, "$1“$2");
+      
+      text = text.replace(/[【「『]([\u4E00-\u9Fa5]+)[】』」]/g, "$1");
+      
+      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");
+      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");
+      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");
+      text = text.replace(/(“[^“”\n]*)[【「『』」】]([^“”\n]*”)/g, "$1$2");
+ //     text = text.replace(/(^|”)([^a-zA-Z0-9\u4e00-\u9fa5\n]+)($)/g, "$1（时间转场音效）$3");
+      var soundKeywords = [];
+      var yinXiaoList = [];
+      
+      
+      
+      
+      
+      try {
+          var yinXiaoContent = ttsrv.readTxtFile("yinxiao.json");
+          if (yinXiaoContent && yinXiaoContent.trim() !== "") {
+              yinXiaoList = JSON.parse(yinXiaoContent);
+              for (var i = 0; i < yinXiaoList.length; i++) {
+                  var item = yinXiaoList[i];
+                  if (item && item.name) {
+                      var names = item.name.split("|"); // 按“|”分割多关键词
+                      for (var j = 0; j < names.length; j++) {
+                          var name = names[j].trim();
+                          // 新增过滤：跳过开头是“#”的name，仅保留非#开头且非空的name
+                          if (name !== "" && !name.startsWith("#")) { 
+                              soundKeywords.push(name);
+                          }
+                      }
+                  }
+              }
+          }
+      } catch (e) {
+      }
+      
+
+
+
+
+
+
+
+      var commonPunctuation = "。，！？：；、·…—-";
+      var parsedKWs = this.parseSoundKeywords(yinXiaoList);
+
+      // ========== 本地音效双匹配逻辑（只换匹配内容，不碰标签壳） ==========
+      var localSoundOnoMap = {}; 
+      var localSoundRegexMap = {}; 
+      // 新增：生成1~100完整本地音效标签数组（含97个新增标签）
+      var allLocalSoundTags = [];
+      for (var i = 1; i <= 990; i++) {
+          allLocalSoundTags.push("localSound" + i);
+      }
+
+      // 1. 读取本地音效配置（修复反斜杠转义问题）- 覆盖1~100
+      for (var i = 0; i < allLocalSoundTags.length; i++) {
+      var tagKey = allLocalSoundTags[i];
+      if (tagsData && tagsData[tagKey] && tagsData[tagKey].audioName) {
+        var audioNameConfig = tagsData[tagKey].audioName;
+        // 强制扁平化数组，兼容嵌套结构
+        var flatConfig = forceFlattenArray(audioNameConfig);
+        var allOnoList = [];
+        var allRegexList = [];
+        
+        // 直接遍历配置项读取value，彻底避免JSON.stringify导致的二次转义
+        for (var j = 0; j < flatConfig.length; j++) {
+            var configItem = flatConfig[j];
+            var inputValue = "";
+            
+            // 安全读取value，兼容JS对象和Java原生对象
+            if (typeof configItem === 'object' && configItem !== null) {
+                inputValue = configItem.value !== undefined ? (configItem.value + "").trim() : "";
+                // 兜底兼容Java对象的get方法
+                if (inputValue === "" && typeof configItem.get === 'function') {
+                    var tempVal = configItem.get("value");
+                    inputValue = tempVal ? (tempVal + "").trim() : "";
+                }
+            }
+            if (inputValue === "") continue;
+
+            // 正则关键词处理
+            if (inputValue.startsWith("@") || inputValue.startsWith("＜") || inputValue.startsWith("＞") || inputValue.startsWith("<")) {
+                allRegexList.push({
+                    originKW: inputValue,
+                    type: inputValue.charAt(0),
+                    regex: new RegExp(inputValue.slice(1), 'g')
+                });
+            } else {
+                // 普通关键词分割
+                var allParts = inputValue.split('|');
+                for (var m = 0; m < allParts.length; m++) {
+                    var part = allParts[m].trim();
+                    if (part) allOnoList.push(part);
+                }
+            }
+        }
+        var tagName = this.tags[tagKey];
+        
+        localSoundOnoMap[tagKey] = {};
+        for (var k = 0; k < allOnoList.length; k++) {
+            localSoundOnoMap[tagKey][allOnoList[k]] = tagKey;
+        }
+
+        localSoundRegexMap[tagKey] = allRegexList;
+      }
+      }
+
+      // 2. 本地普通音效：替换「匹配到的内容」- 覆盖1~100（修改版：保留匹配内容，仅留中文汉字）
+      var onoMarkedText = text;
+      for (var i = 0; i < allLocalSoundTags.length; i++) {
+          var tagKey = allLocalSoundTags[i];
+          var tagAudioMap = localSoundOnoMap[tagKey];
+          if (!tagAudioMap) continue;
+          var tagName = this.tags[tagKey];
+          
+          for (var targetOno in tagAudioMap) {
+              var escapedOno = targetOno.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              var onoReg = new RegExp('“(' + escapedOno + ')([。，！？：；、…—-]{0,2})”', 'g');
+              
+              onoMarkedText = onoMarkedText.replace(onoReg, function(match, onoContent) {
+                  // 核心修改：过滤匹配内容，仅保留中文汉字
+                  var onlyChineseContent = onoContent.replace(/[^\u4e00-\u9fa5]/g, "");
+                  // 兜底兼容：过滤后为空时，保留原始匹配内容
+                  var finalContent = onlyChineseContent || onoContent;
+                  // 原符号转义逻辑保留
+                  var replacedContent = SpeechRuleJS.replaceTargetContentSymbols(finalContent);
+                  var startMark = "{{" + tagName + "_" + replacedContent + "}}";
+                  var endMark = "{{" + tagName + "结束}}";
+                  return "\n" + startMark + finalContent + endMark + "\n";
+              });
+          }
+      }
+
+      // 3. 本地＞＜正则音效：替换「匹配到的内容」- 覆盖1~100（修改版：保留匹配内容，仅留中文汉字）
+      var regexMarkedText = onoMarkedText;
+      for (var i = 0; i < allLocalSoundTags.length; i++) {
+          var tagKey = allLocalSoundTags[i];
+          var regexList = localSoundRegexMap[tagKey];
+          if (!regexList || regexList.length === 0) continue;
+          var tagName = this.tags[tagKey];
+
+          for (var r = 0; r < regexList.length; r++) {
+              var rkw = regexList[r];
+              
+              regexMarkedText = regexMarkedText.replace(rkw.regex, function(match) {
+                  // 核心修改：过滤匹配内容，仅保留中文汉字
+                  var onlyChineseContent = match.replace(/[^\u4e00-\u9fa5]/g, "");
+                  // 兜底兼容：过滤后为空时，保留原始匹配内容
+                  var finalContent = onlyChineseContent || match;
+                  // 原符号转义逻辑保留
+                  var replacedContent = SpeechRuleJS.replaceTargetContentSymbols(finalContent);
+                  var newContentWithTag = "{{" + tagName + "_" + replacedContent + "}}" + finalContent + "{{" + tagName + "结束}}";
+
+                  // 原全角/半角符号前后插逻辑完全保留
+                  if (rkw.type === "＜" || rkw.type === "<") {
+                      return "\n" + newContentWithTag + "\n" + match;
+                  } else if (rkw.type === "＞" || rkw.type === ">") {
+                      return match + "\n" + newContentWithTag + "\n";
+                  } else {
+                      return "\n" + newContentWithTag + "\n";
+                  }
+              });
+              rkw.regex.lastIndex = 0;
+          }
+      }
+
+
+      text = regexMarkedText;
+      // ========== 本地音效双匹配结束 ==========
+
+      // -------------------------- 在线音效处理（双引号内：用originFullKW替换，保留完整关键词；支持全角/半角＜＞） --------------------------
+      if (soundKeywords.length > 0 && text.includes("“")) {
+          var quotedReg = new RegExp('“.*?”', 'g'); // 最兼容正则写法
+          text = text.replace(quotedReg, function(match) {
+              var result = match;
+
+              // 1. 在线正则关键词：替换「关键词本身」（保留全/半角符号）
+              for (var r = 0; r < parsedKWs.regexKWs.length; r++) {
+                  var rkw = parsedKWs.regexKWs[r];
+              
+              
+                                  
+                                      // -------------------------- 新增：跳过<>开头的正则关键词（双引号内不匹配） --------------------------
+                  if (rkw.flag === "<" || rkw.flag === "＜" || rkw.flag === "＞" || rkw.flag === ">" || rkw.flag === "@") { // 半角<、全角＜开头的正则，直接跳过
+                      continue; 
+                  }
+                  // --------------------------------------------------------------------------------------------------
+                  
+                  
+              
+              
+              
+              
+                  var tempResult = "";
+                  var lastIndex = 0;
+                  var regexMatch;
+                  var matchCount = 0;
+
+                  while ((regexMatch = rkw.regex.exec(result)) !== null) {
+                      matchCount++;
+                      var matchedContent = regexMatch[0];
+                      // 只替换关键词本身（rkw.originKW，含全/半角符号）
+                      var replacedKeyword = SpeechRuleJS.replaceTargetContentSymbols(rkw.originKW);
+                      var tag = "";
+
+                      // 兼容判断：全角＜、半角<归为左符号（前插）；全角＞、半角>归为右符号（后插）
+                      if (rkw.flag === "＜" || rkw.flag === "<") {
+                          tag = "\n〖" + replacedKeyword + "〗\n" + matchedContent;
+                      } else if (rkw.flag === "＞" || rkw.flag === ">") {
+                          tag = matchedContent + "\n〖" + replacedKeyword + "〗\n";
+                      } else {
+                          tag = '〖' + replacedKeyword + '〗';
+                      }
+
+                      tempResult += result.substring(lastIndex, regexMatch.index) + tag;
+                      lastIndex = rkw.regex.lastIndex;
+                  }
+                  
+                  if (matchCount > 0) {
+                      tempResult += result.substring(lastIndex);
+                      result = tempResult;
+                  }
+                  rkw.regex.lastIndex = 0;
+              }
+
+              // 2. 在线特殊关键词：用originFullKW（完整原始关键词）替换
+              for (var s = 0; s < parsedKWs.specialKWs.length; s++) {
+                  var skw = parsedKWs.specialKWs[s];
+                  var prefixLen = Math.floor(skw.prefixLen) || 1;
+                  var suffixLen = Math.floor(skw.suffixLen) || 1;
+                  var specialReg = new RegExp(
+                      '(.{0,' + prefixLen + '})' + 
+                      escapeRegExp(skw.coreKW) + 
+                      '(.{0,' + suffixLen + '})' + 
+                      '(?=[' + commonPunctuation + ']|$|' + escapeRegExp(skw.coreKW) + ')', 
+                      'g'
+                  );
+
+                  var tempResult = "";
+                  var lastIndex = 0;
+                  var matchResult;
+                  var matchCount = 0;
+                  while ((matchResult = specialReg.exec(result)) !== null) {
+                      matchCount++;
+                      var matchedContent = matchResult[0];
+                      // 关键修改：用完整原始关键词（skw.originFullKW）替换，而非核心KW
+                      var replacedKeyword = SpeechRuleJS.replaceTargetContentSymbols(skw.originFullKW);
+                      tempResult += result.substring(lastIndex, matchResult.index) + '〖' + replacedKeyword + '〗';
+                      lastIndex = matchResult.index + matchResult[0].length;
+                  }
+                  
+                  if (matchCount > 0) {
+                      tempResult += result.substring(lastIndex);
+                      result = tempResult;
+                  }
+              }
+
+
+
+
+
+
+
+
+
+
+
+
+         
+              
+              // 3. 在线普通关键词：替换「关键词本身」
+              var repeatCheck = isSingleKeywordRepeat(result.replace(/〖.*?〗/g, ''), parsedKWs.normalKWs);
+              if (repeatCheck.isRepeat) {
+                  // 新增1：ES5循环找子关键词对应的母关键词组（不破坏原有重复检测逻辑）
+                  var matchedGroup = null;
+                  for (var g = 0; g < parsedKWs.normalKWGroups.length; g++) {
+                      var group = parsedKWs.normalKWGroups[g];
+                      for (var c = 0; c < group.children.length; c++) {
+                          if (group.children[c] === repeatCheck.keyword) {
+                              matchedGroup = group;
+                              break;
+                          }
+                      }
+                      if (matchedGroup) break;
+                  }
+                  // 新增2：优先用母关键词，无匹配则保留原有子关键词
+                  var replaceKW = matchedGroup ? matchedGroup.motherKW : repeatCheck.keyword;
+              
+                  // 以下是你原有代码，完全保留（仅把repeatCheck.keyword改成replaceKW）
+                  var kw = repeatCheck.keyword; // 保留原有kw变量（用于匹配定位）
+                  var kwLen = kw.length;
+                  var normalResult = "";
+                  var currentPos = 0;
+                  var matchCount = 0;
+              
+                  while (currentPos <= result.length - kwLen) {
+                      var kwIndex = result.indexOf(kw, currentPos);
+                      if (kwIndex === -1) break;
+                      
+                      if (result.slice(currentPos, kwIndex).includes("〖")) {
+                          currentPos = kwIndex + kwLen;
+                          continue;
+                      }
+              
+                      var nextKwPos = kwIndex + kwLen;
+                      var isContinuous = result.substr(nextKwPos, kwLen) === kw;
+                      var nextChar = result[nextKwPos] || "";
+                      var isAllowed = isContinuous || nextKwPos >= result.length || 
+                                     commonPunctuation.includes(nextChar) || nextChar === "\"" || nextChar === "”";
+              
+                      if (isAllowed) {
+                          matchCount++;
+                          // 仅修改这里：用replaceKW（母关键词）替换原有kw
+                          var replacedKw = SpeechRuleJS.replaceTargetContentSymbols(replaceKW);
+                          normalResult += result.substring(currentPos, kwIndex) + "〖" + replacedKw + "〗";
+                          currentPos = isContinuous ? nextKwPos : kwIndex + kwLen;
+                      } else {
+                          normalResult += result.substring(currentPos, kwIndex + kwLen);
+                          currentPos = kwIndex + kwLen;
+                      }
+                  }
+                  
+                  if (matchCount > 0) {
+                      result = currentPos < result.length ? normalResult + result.substring(currentPos) : normalResult;
+                  }
+              } else {
+                  // 新增3：ES5循环遍历母关键词组（替代原有直接定义singleKWReg的逻辑）
+                  for (var g = 0; g < parsedKWs.normalKWGroups.length; g++) {
+                      var group = parsedKWs.normalKWGroups[g];
+                      // 新增4：ES5循环拼接子关键词正则（保留原有escapeRegExp逻辑）
+                      var childrenAlt = "";
+                      for (var c = 0; c < group.children.length; c++) {
+                          if (c > 0) childrenAlt += "|"; // 保留原有分隔符逻辑
+                          childrenAlt += escapeRegExp(group.children[c]);
+                      }
+                      if (!childrenAlt) continue;
+              
+                      // 以下是你原有singleKWReg的完整逻辑，完全保留（仅改replacedKw来源）
+                      var singleKWReg = new RegExp('(^|\\s|[' + commonPunctuation + '])(' + childrenAlt + ')([' + commonPunctuation + ']{0,2})?' + '(?=\\s|[' + commonPunctuation + ']|["”]|$)', 'g');
+                      result = result.replace(singleKWReg, function(match, prefix, matchedChildKW, punc) {
+                          if (match.includes("〖")) return match;
+                          var afterPunc = text.substring(text.indexOf(match) + match.length, text.indexOf(match) + match.length + 1);
+                          if (afterPunc && !commonPunctuation.includes(afterPunc) && afterPunc !== " " && afterPunc !== "" && afterPunc !== "\"" && afterPunc !== "”") {
+                              return match;
+                          }
+                          // 仅修改这里：用母关键词替换原有matchedChildKW
+                          var replacedKw = SpeechRuleJS.replaceTargetContentSymbols(group.motherKW);
+                          return prefix + "\n〖" + replacedKw + "〗\n" + (punc || "");
+                      });
+                  }
+              }
+              
+
+
+
+              // 处理引号占位符（兼容原有逻辑）
+              result = result.replace(/〖([^〗]*)“([^〗]*)〗/g, function(m, p1, p2) {
+                  return "〖" + p1 + "###LEFT_QUOTE###" + p2 + "〗";
+              });
+              result = result.replace(/〖([^〗]*)”([^〗]*)〗/g, function(m, p1, p2) {
+                  return "〖" + p1 + "###RIGHT_QUOTE###" + p2 + "〗";
+              });
+
+              return result;
+          });
+      }
+
+      // -------------------------- 在线音效独立场景匹配（用originFullKW替换，保留完整关键词；支持全角/半角＜＞） --------------------------
+      if (soundKeywords.length > 0) {
+          
+          for (var r = 0; r < parsedKWs.regexKWs.length; r++) {
+              var rkw = parsedKWs.regexKWs[r];
+              var tempResult = "";
+              var lastIndex = 0;
+              var regexMatch;
+              var matchCount = 0;
+              
+              while ((regexMatch = rkw.regex.exec(text)) !== null) {
+                  matchCount++;
+                  var matchedContent = regexMatch[0];
+                  // 保留原始关键词（含全/半角符号）
+                  var replacedKeyword = SpeechRuleJS.replaceTargetContentSymbols(rkw.originKW);
+                  var tag = "";
+
+                  // 兼容判断：全角＜、半角<归为左符号；全角＞、半角>归为右符号
+                  if (rkw.flag === "＜" || rkw.flag === "<") {
+                      tag = "\n〖" + replacedKeyword + "〗\n" + matchedContent;
+                  } else if (rkw.flag === "＞" || rkw.flag === ">") {
+                      tag = matchedContent + "\n〖" + replacedKeyword + "〗\n";
+                  } else {
+                      tag = '〖' + replacedKeyword + '〗';
+                  }
+
+                  tempResult += text.substring(lastIndex, regexMatch.index) + tag;
+                  lastIndex = rkw.regex.lastIndex;
+              }
+              
+              if (matchCount > 0) {
+                  tempResult += text.substring(lastIndex);
+                  text = tempResult;
+              }
+              rkw.regex.lastIndex = 0;
+          }
+
+          // 在线独立特殊关键词：用originFullKW（完整原始关键词）替换
+          for (var s = 0; s < parsedKWs.specialKWs.length; s++) {
+              var skw = parsedKWs.specialKWs[s];
+              var prefixLen = Math.floor(skw.prefixLen) || 1;
+              var suffixLen = Math.floor(skw.suffixLen) || 1;
+              var specialIndependentReg = new RegExp(
+                  '(.{0,' + prefixLen + '})' + 
+                  escapeRegExp(skw.coreKW) + 
+                  '(.{0,' + suffixLen + '})' + 
+                  '(?=\\s|[。，！？：；、·…—-]|啊|呀|呢|啦|$|' + escapeRegExp(skw.coreKW) + ')', 
+                  'g'
+              );
+
+              var tempResult = "";
+              var lastIndex = 0;
+              var matchResult;
+              var matchCount = 0;
+              
+              while ((matchResult = specialIndependentReg.exec(text)) !== null) {
+                  matchCount++;
+                  var matchedContent = matchResult[0];
+                  // 关键修改：用完整原始关键词（skw.originFullKW）替换
+                  var replacedKeyword = SpeechRuleJS.replaceTargetContentSymbols(skw.originFullKW);
+                  tempResult += text.substring(lastIndex, matchResult.index) + '〖' + replacedKeyword + '〗';
+                  lastIndex = matchResult.index + matchResult[0].length;
+              }
+              
+              if (matchCount > 0) {
+                  tempResult += text.substring(lastIndex);
+                  text = tempResult;
+              }
+          }
+
+
+
+
+
+
+
+
+
+
+
+// 普通关键词：先处理重复，再处理单个（保留你原有注释）
+          var escapedNormalKWs = [];
+          for (var n = 0; n < parsedKWs.normalKWs.length; n++) {
+              escapedNormalKWs.push(escapeRegExp(parsedKWs.normalKWs[n]));
+          }
+          var normalKWAlt = escapedNormalKWs.join("|");
+          if (normalKWAlt) {
+              // 新增1：先处理重复关键词（复用你原有repeatKWReg逻辑，仅改replacedKw）
+              var repeatCheck = isSingleKeywordRepeat(text.replace(/〖.*?〗/g, ''), parsedKWs.normalKWs);
+              if (repeatCheck.isRepeat) {
+                  // 新增2：ES5循环找母关键词组
+                  var matchedGroup = null;
+                  for (var g = 0; g < parsedKWs.normalKWGroups.length; g++) {
+                      var group = parsedKWs.normalKWGroups[g];
+                      for (var c = 0; c < group.children.length; c++) {
+                          if (group.children[c] === repeatCheck.keyword) {
+                              matchedGroup = group;
+                              break;
+                          }
+                      }
+                      if (matchedGroup) break;
+                  }
+                  var replaceKW = matchedGroup ? matchedGroup.motherKW : repeatCheck.keyword;
+          
+                  // 以下是你原有重复关键词的while循环逻辑，完全保留
+                  var kw = repeatCheck.keyword;
+                  var kwLen = kw.length;
+                  var normalResult = "";
+                  var currentPos = 0;
+                  var matchCount = 0;
+          
+                  while (currentPos <= text.length - kwLen) {
+                      var kwIndex = text.indexOf(kw, currentPos);
+                      if (kwIndex === -1) break;
+                      
+                      if (text.slice(currentPos, kwIndex).includes("〖")) {
+                          currentPos = kwIndex + kwLen;
+                          continue;
+                      }
+          
+                      var nextKwPos = kwIndex + kwLen;
+                      var isContinuous = text.substr(nextKwPos, kwLen) === kw;
+                      var nextChar = text[nextKwPos] || "";
+                      var isAllowed = isContinuous || nextKwPos >= text.length || commonPunctuation.includes(nextChar);
+          
+                      if (isAllowed) {
+                          matchCount++;
+                          // 仅修改这里：用母关键词
+                          var replacedKw = SpeechRuleJS.replaceTargetContentSymbols(replaceKW);
+                          normalResult += text.substring(currentPos, kwIndex) + "〖" + replacedKw + "〗";
+                          currentPos = isContinuous ? nextKwPos : kwIndex + kwLen;
+                      } else {
+                          normalResult += text.substring(currentPos, kwIndex + kwLen);
+                          currentPos = kwIndex + kwLen;
+                      }
+                  }
+                  
+                  if (matchCount > 0) {
+                      text = currentPos < text.length ? normalResult + text.substring(currentPos) : normalResult;
+                  }
+              } else {
+                  // 新增3：ES5循环遍历母关键词组（处理非重复关键词）
+                  for (var g = 0; g < parsedKWs.normalKWGroups.length; g++) {
+                      var group = parsedKWs.normalKWGroups[g];
+                      // 新增4：ES5循环拼接子关键词正则
+                      var childrenAlt = "";
+                      for (var c = 0; c < group.children.length; c++) {
+                          if (c > 0) childrenAlt += "|";
+                          childrenAlt += escapeRegExp(group.children[c]);
+                      }
+                      if (!childrenAlt) continue;
+          
+                      // 1. 重复子关键词匹配（你原有repeatKWReg逻辑，仅改replacedKw）
+                      var repeatKWReg = new RegExp(
+                          '(^|\\s|["“]|[' + commonPunctuation + '])(' + childrenAlt + ')([' + commonPunctuation + ']{0,1})?' + '\\2' +
+                          '(?=\\s|[' + commonPunctuation + ']|["”]|啊|呀|呢|啦|$)', 
+                          'g'
+                      );
+                      text = text.replace(repeatKWReg, function(match, prefix, matchedChildKW, punc) {
+                          if (match.includes("〖")) return match;
+                          // 仅修改这里：用母关键词
+                          var replacedKw = SpeechRuleJS.replaceTargetContentSymbols(group.motherKW);
+                          return prefix + "〖" + replacedKw + "〗" + (punc || "") + "〖" + replacedKw + "〗";
+                      });
+          
+                      // 2. 单个子关键词匹配（你原有singleKWReg逻辑，仅改replacedKw）
+                      var singleKWReg = new RegExp(
+                          '(^|\\s|["“]|[' + commonPunctuation + '])(' + childrenAlt + ')([' + commonPunctuation + ']{0,2})?' +
+                          '(?=\\s|[' + commonPunctuation + ']|["”]|啊|呀|呢|啦|$)', 
+                          'g'
+                      );
+                      text = text.replace(singleKWReg, function(match, prefix, matchedChildKW, punc) {
+                          if (match.includes("〖")) return match;
+                          var afterPunc = text.substring(text.indexOf(match) + match.length, text.indexOf(match) + match.length + 1);
+                          if (afterPunc && !commonPunctuation.includes(afterPunc) && afterPunc !== " " && afterPunc !== "" && 
+                              afterPunc !== "\"" && afterPunc !== "”" && !["啊","呀","呢","啦"].includes(afterPunc)) {
+                              return match;
+                          }
+                          // 仅修改这里：用母关键词
+                          var replacedKw = SpeechRuleJS.replaceTargetContentSymbols(group.motherKW);
+                          return prefix + "\n〖" + replacedKw + "〗\n" + (punc || "");
+                      });
+                  }
+              }
+          
+          }
+          
+
+
+          text = text.replace(/〖([^〗]*)“([^〗]*)〗/g, function(m, p1, p2) {
+              return "〖" + p1 + "###LEFT_QUOTE###" + p2 + "〗";
+          });
+          text = text.replace(/〖([^〗]*)”([^〗]*)〗/g, function(m, p1, p2) {
+              return "〖" + p1 + "###RIGHT_QUOTE###" + p2 + "〗";
+          });
+      }
+
+
+
+
+
+      // ===================== data.json 智能备份机制（v2.98新增：启动检测 + 换书自动备份旧书内容） =====================
+      try {
+          // 1. 检查data.json是否存在，不存在则创建默认空文件
+          var dataJsonExists = false;
+          var dataJsonRawContent = "";
+          try {
+              dataJsonRawContent = ttsrv.readTxtFile("data.json").toString();
+              dataJsonExists = true;
+          } catch (e) {}
+          
+          if (!dataJsonExists || !dataJsonRawContent || dataJsonRawContent.trim() === "") {
+              var defaultDataObj = {
+                  bookName: "未知书名",
+                  texts: "",
+                  bookUrl: "",
+                  durChapterIndex: 0
+              };
+              var defaultDataStr = JSON.stringify(defaultDataObj);
+              ttsrv.writeTxtFile("data.json", defaultDataStr);
+              dataJsonRawContent = defaultDataStr;
+          }
+          
+          // 2. 读取当前data.json的书名
+          var currentDataBookName = "未知书名";
+          try {
+              var tempBookData = JSON.parse(dataJsonRawContent.toString());
+              currentDataBookName = String(tempBookData.bookName || "未知书名").trim();
+          } catch (e) {}
+          
+          // 3. 读取缓存的data_current.json
+          var cachedDataContent = "";
+          var cachedBookName = "";
+          try {
+              cachedDataContent = ttsrv.readTxtFile("data_current.json").toString();
+              var cachedBookData = JSON.parse(cachedDataContent.toString());
+              cachedBookName = String(cachedBookData.bookName || "").trim();
+          } catch (e) {}
+          
+          // 4. 如果书名不同且缓存不为空，说明换书了，把旧缓存备份为data.旧书名.json
+          if (cachedBookName && cachedBookName !== "" && cachedBookName !== currentDataBookName) {
+              try {
+                  var oldDataBackupFile = "data." + cachedBookName + ".json";
+                  ttsrv.writeTxtFile(oldDataBackupFile, cachedDataContent.toString());
+                  // console.log("【data备份】旧书「" + cachedBookName + "」内容已备份到 " + oldDataBackupFile);
+              } catch (backupErr) {}
+          }
+          
+          // 5. 无论是否换书，都更新data_current.json为当前data.json
+          if (dataJsonRawContent && dataJsonRawContent.trim() !== "") {
+              ttsrv.writeTxtFile("data_current.json", dataJsonRawContent.toString());
+          }
+      } catch (e) {}
+      
+      
+      
+      
+      // -------------------------- 书籍切换与角色备份（v2.100：data.json直连+智能备份+按书名隔离上下文+别名合并） --------------------------
+      try {
+          if (text.includes("“")) {
+              var dataJsonContent = "";
+              try {
+                  dataJsonContent = ttsrv.readTxtFile("data.json").toString();
+              } catch (e) {}
+              
+              // 仅当data.json有有效数据时，才执行后续逻辑
+              if (dataJsonContent && dataJsonContent.trim() !== "") {
+                  var bookData = JSON.parse(dataJsonContent.toString());
+                  var newBookName = String(bookData.bookName || "未知书名").trim();
+                  var fullChapterContent = String(bookData.texts || "").toString();
+                  // 【v2.100】设置当前书名，供持久化上下文缓存使用
+                  if (typeof characterManager !== 'undefined' && characterManager) {
+                      characterManager.currentBookName = newBookName;
+                  }
+                  
+                  var oldBookName = "";
+                  var cunfangReadSuccess = false;
+              
+                      // 读取缓存的旧书名，判断是否需要换书
+                      try {
+                          var rawContent = ttsrv.readTxtFile("cunfang.txt").toString();
+                          oldBookName = String(rawContent).trim().toString();
+                          cunfangReadSuccess = true;
+                      } catch (e) {}
+      
+                      // ===================== 第一步：先处理换书逻辑（仅当书名不一致时执行） =====================
+                      if (cunfangReadSuccess && oldBookName !== newBookName) {
+                          try {
+                              // 1. 旧书角色备份（原有逻辑完全保留）
+                              if (oldBookName && oldBookName !== "") {
+                                  try {
+                                      var characterRecordsContent = "[]";
+                                      try {
+                                          var rawRecords = ttsrv.readTxtFile("characterRecords.json").toString();
+                                          characterRecordsContent = String(rawRecords).toString();
+                                      } catch (e) {}
+                                      var oldShumingFileName = "shuming." + oldBookName + ".json";
+                                      ttsrv.writeTxtFile(oldShumingFileName, characterRecordsContent.toString());
+                                  } catch (saveError) {}
+                              }
+                              // 【v2.102】备份完旧书后，清空当前角色记录，避免旧书角色混入新书
+                              try {
+                                  ttsrv.writeTxtFile("characterRecords.json", "[]");
+                                  if (typeof characterManager !== 'undefined' && characterManager) {
+                                      characterManager.characterRecords = [];
+                                      characterManager.usedVoices = {};
+                                      characterManager.voiceUsageMap = {};
+                                      characterManager.nameToMainNameMap = {};
+                                  }
+                              } catch (e) {}
+                              // 2. 新书角色加载（原有逻辑完全保留）
+                              var newShumingFileName = "shuming." + newBookName + ".json";
+                              var newFileExists = false;
+                              try {
+                                  var newShumingContent = ttsrv.readTxtFile(newShumingFileName).toString();
+                                  var jsNewShumingContent = String(newShumingContent).toString();
+                                  if (jsNewShumingContent && jsNewShumingContent.length > 0) {
+                                      newFileExists = true;
+                                      ttsrv.writeTxtFile("gengxin.json", newShumingContent.toString());
+                                  } else {
+                                      throw new Error("文件空");
+                                  }
+                              } catch (e) {
+                                  var emptyArrayContent = "[]";
+                                  ttsrv.writeTxtFile("gengxin.json", emptyArrayContent.toString());
+                              }
+                              // 3. 更新缓存书名（原有逻辑完全保留）
+                              try {
+                                  ttsrv.writeTxtFile("cunfang.txt", newBookName.toString());
+                              } catch (cunfangError) {}
+                              // 4. 书籍列表更新（原有逻辑完全保留）
+                              var liebiaoContent = "[]";
+                              try {
+                                  liebiaoContent = String(ttsrv.readTxtFile("liebiao.json").toString());
+                              } catch (e) {}
+                              var liebiaoArray = [];
+                              try {
+                                  liebiaoArray = JSON.parse(liebiaoContent.toString());
+                              } catch (e) {}
+                              var isInArray = false;
+                              for (var i = 0; i < liebiaoArray.length; i++) {
+                                  if (liebiaoArray[i].toString() === newBookName.toString()) {
+                                      isInArray = true;
+                                      break;
+                                  }
+                              }
+                              if (!isInArray) {
+                                  liebiaoArray.push(newBookName.toString());
+                                  ttsrv.writeTxtFile("liebiao.json", JSON.stringify(liebiaoArray, null, 2).toString());
+                              }
+                              // 5. 换书重置逻辑（按之前需求保留：重置时间、清空上下文）
+                              shijian = new Date(Date.now() - 2 * 60 * 60 * 1000);
+                              shijian.setSeconds(0);
+                              shijian.setMilliseconds(0);
+                              // 换书强制清空旧下文残留，避免异常
+                          //    next100Chars = "";
+                              // 【v2.96修复】换书时清空全局characterManager的上下文和别名映射，避免新书受到旧书干扰
+                              if (typeof characterManager !== 'undefined' && characterManager) {
+                                  characterManager.contextHistory = "";
+                                  characterManager.contextHistory2 = "";
+                                  characterManager.nameToMainNameMap = {};
+                              }
+                              // 【v2.103】换书时清空全局持久化上下文缓存
+                              try {
+                                  ttsrv.writeTxtFile("context_1500.txt", "");
+                              } catch (e) {}
+      
+                              //console.log("【换书成功】已从「" + oldBookName + "」切换到「" + newBookName + "」，已重置时间和上下文");
+                          } catch (fileError) {
+                              console.error("【换书逻辑异常】", fileError.message);
+                              next100Chars = "";
+                          }
+                      }
+      
+                      // ===================== 第二步：无论换不换书，统一执行下文内容获取（v2.97：data.json直连，零HTTP依赖） =====================
+                      try {
+                          var rawBookUrlForGraph = bookData.bookUrl ? String(bookData.bookUrl) : '';
+                          var currentChapterIndex = typeof bookData.durChapterIndex !== 'undefined' ? bookData.durChapterIndex : -1;
+                          if (typeof characterManager !== 'undefined' && characterManager && characterManager.setAliasGraphBook) {
+                              characterManager.setAliasGraphBook(newBookName, rawBookUrlForGraph);
+                          }
+                          graphSetCurrentChapterKey(rawBookUrlForGraph, currentChapterIndex);
+                          
+                          // 【v2.97优化】直接从data.json的texts获取章节内容，不再依赖18326端口
+                          // 如需多章内容，请确保data.json的texts字段包含足够文本，或将NEXT_CHAPTER_COUNT设为0
+      
+                          // 文本匹配定位，原有逻辑完全保留
+                          var textToSearch = text2.toString();
+                          var finalIndex = -1;
+                          var historyTail10 = "";
+                          
+                          if (characterManager.contextHistory2 && characterManager.contextHistory2.length >= 10) {
+                              historyTail10 = characterManager.contextHistory2.slice(-10).trim();
+                          }
+      
+                          var historyPos = -1;
+                          if (historyTail10) {
+                              historyPos = fullChapterContent.indexOf(historyTail10);
+                          }
+      
+                          var currentMatchPositions = [];
+                          var tempPos = fullChapterContent.indexOf(textToSearch);
+                          while (tempPos !== -1) {
+                              currentMatchPositions.push(tempPos);
+                              tempPos = fullChapterContent.indexOf(textToSearch, tempPos + textToSearch.length);
+                          }
+      
+                          // 定位最终匹配位置，原有逻辑完全保留
+                          if (currentMatchPositions.length > 0) {
+                              if (historyPos !== -1) {
+                                  var minDistance = Infinity;
+                                  var closestPos = -1;
+                                  for (var p = 0; p < currentMatchPositions.length; p++) {
+                                      var distance = Math.abs(currentMatchPositions[p] - historyPos);
+                                      if (distance < minDistance) {
+                                          minDistance = distance;
+                                          closestPos = currentMatchPositions[p];
+                                      }
+                                  }
+                                  finalIndex = closestPos !== -1 ? closestPos : currentMatchPositions[0];
+                              } else {
+                                  finalIndex = currentMatchPositions[0];
+                              }
+                          } else {
+                              finalIndex = fullChapterContent.indexOf(textToSearch);
+                          }
+      
+                          // 时间差判断，动态设置xiawen，原有需求逻辑完全保留
+                          var now = new Date();
+                          var diffMinutes = (now.getTime() - shijian.getTime()) / (60 * 1000);
+                          if (diffMinutes > 30) {
+                              xiawen = shouci;
+                          } else {
+                              xiawen = xiawens;
+                          }
+                          // 对比完成后，刷新当前时间到shijian，原有需求逻辑完全保留
+                          shijian = new Date(now);
+                          shijian.setSeconds(0);
+                          shijian.setMilliseconds(0);
+      
+                          // 计算并更新下文内容
+                          if (finalIndex !== -1) {
+                              var startPos = finalIndex + textToSearch.length;
+                              var remainingLength = fullChapterContent.length - startPos;
+                              var extractLength = Math.min(xiawen, remainingLength);
+                              next100Chars = fullChapterContent.substring(startPos, startPos + extractLength);
+                            //  //console.log("【下文获取成功】共" + next100Chars.length + "字，当前书籍：" + newBookName);
+                          } else {
+                              //console.log("【章节匹配失败】下文置空，当前书籍：" + newBookName);
+                              next100Chars = "";
+                          }
+                      } catch (chapterError) {
+                          console.error("【下文获取异常】", chapterError.message);
+                          next100Chars = "";
+                      }
+              }
+          }
+      } catch (e) {
+          // console.error("【书籍模块全局异常】", e.message); // 已静默：web1122端口NetConnectException干扰日志
+          next100Chars = "";
+      }
+      
+
+
+
+
+      // -------------------------- 角色记录更新与发音人检测（含100个本地音效） --------------------------
+      try {
+          var updateFilePath = "gengxin.json";
+          var updateExists = false;
+          var jsonFileContent = "";
+          try {
+              jsonFileContent = ttsrv.readTxtFile(updateFilePath).toString(); // 兼容：转原始String
+              updateExists = true;
+          } catch (e) {
+              updateExists = false;
+          }
+          if (updateExists) {
+              if (jsonFileContent.trim() !== "") {
+                  try {
+                      var newRecords = JSON.parse(jsonFileContent.toString()); // 兼容：转原始String
+                      // 确保角色记录是数组
+                      if (!Array.isArray(newRecords)) throw new Error("角色记录非数组");
+                      
+                      // 【v2.100修复】合并gengxin.json和characterRecords.json的别名，避免换书时别名丢失
+                      var mergedRecords = newRecords.slice();
+                      try {
+                          var currentRecordsContent = ttsrv.readTxtFile("characterRecords.json").toString();
+                          if (currentRecordsContent && currentRecordsContent.trim() !== "") {
+                              var currentRecords = JSON.parse(currentRecordsContent);
+                              if (Array.isArray(currentRecords)) {
+                                  for (var ci = 0; ci < currentRecords.length; ci++) {
+                                      var currentRec = currentRecords[ci];
+                                      if (!currentRec || !currentRec.name) continue;
+                                      var found = false;
+                                      for (var mi = 0; mi < mergedRecords.length; mi++) {
+                                          var mergedRec = mergedRecords[mi];
+                                          if (mergedRec && mergedRec.name && mergedRec.name.trim() === currentRec.name.trim()) {
+                                              found = true;
+                                              // 合并别名：取并集
+                                              if (currentRec.aliases && currentRec.aliases.trim()) {
+                                                  var currentAliasesArr = currentRec.aliases.split("|");
+                                                  var mergedAliasesArr = mergedRec.aliases ? mergedRec.aliases.split("|") : [];
+                                                  var aliasSet = {};
+                                                  var newAliasList = [];
+                                                  for (var ai = 0; ai < mergedAliasesArr.length; ai++) {
+                                                      var aName = mergedAliasesArr[ai].trim();
+                                                      if (aName && !aliasSet[aName]) {
+                                                          aliasSet[aName] = true;
+                                                          newAliasList.push(aName);
+                                                      }
+                                                  }
+                                                  for (var ai = 0; ai < currentAliasesArr.length; ai++) {
+                                                      var aName = currentAliasesArr[ai].trim();
+                                                      if (aName && !aliasSet[aName]) {
+                                                          aliasSet[aName] = true;
+                                                          newAliasList.push(aName);
+                                                      }
+                                                  }
+                                                  mergedRec.aliases = newAliasList.join("|");
+                                              }
+                                              break;
+                                          }
+                                      }
+                                      if (!found) {
+                                          mergedRecords.push(currentRec);
+                                      }
+                                  }
+                              }
+                          }
+                      } catch (mergeErr) {}
+                      
+                      var oldManager = this.characterManager;
+                      this.characterManager = new CharacterManager();
+                      this.characterManager.characterRecords = mergedRecords;
+                      this.characterManager.usedVoices = {};
+                      this.characterManager.voiceUsageMap = {};
+                      this.characterManager.contextHistory = oldManager.contextHistory ? oldManager.contextHistory.toString() : "";
+                      // 初始化发音人使用状态（含100个本地音效）
+                      for (var i = 0; i < this.characterManager.characterRecords.length; i++) {
+                          var record = this.characterManager.characterRecords[i];
+                          if (record && record.voice) {
+                              var voiceTag = record.voice.toString(); // 兼容：转原始String
+                              this.characterManager.usedVoices[voiceTag] = true;
+                              this.characterManager.voiceUsageMap[voiceTag] = (this.characterManager.voiceUsageMap[voiceTag] || 0) + 1;
+                          }
+                      }
+                      this.characterManager.saveRecords();
+                      // 【v2.96修复】同步全局characterManager，确保外部函数（如matchNarrationFromCache）使用最新数据
+                      characterManager = this.characterManager;
+                  } catch (parseError) {
+                  }
+              }
+              try {
+                  ttsrv.deleteFile(updateFilePath);
+              } catch (deleteError) {
+              }
+          }
+      } catch (e) {
+      }
+
+      // 检测可用发音人（含localSound1~100）
+      this.characterManager.detectAvailableVoices(tagsData);
+
+
+   // 新增：在handleText中实时读取duihua配置（ES5强制解嵌套，8个缩进）
+
+      // 新增：在handleText中实时读取duihua配置（ES5强制解嵌套，8
+      // 新增：在handleText中实时读取duihua配置（ES5强制解嵌套，8个缩进）
+      if (tagsData && tagsData['duihua']) {
+              try {
+                      // 1. ES5：获取原始数组
+                      var roles = tagsData['duihua']['role'] || [];
+                      var genderAges = tagsData['duihua']['genderAge'] || [];
+
+                      // 2. ES5：强制双重扁平化（解决Rhino数组识别失败）
+                      roles = forceFlattenArray(roles); // 第一次强制扁平化
+                      roles = forceFlattenArray(roles); // 第二次处理残留嵌套
+                      genderAges = forceFlattenArray(genderAges);
+                      genderAges = forceFlattenArray(genderAges);
+
+                      // 3. 兼容单个对象转为数组
+                      if (!isArray(roles)) {
+                              roles = [roles];
+                      }
+                      if (!isArray(genderAges)) {
+                              genderAges = [genderAges];
+                      }
+
+
+                      // 4. 遍历角色（手动解嵌套兜底）
+                      var finalRoles = [];
+                      for (var i = 0; i < roles.length; i++) {
+                              var item = roles[i];
+                              // 兜底：如果还是数组，手动展开
+                              if (isArray(item)) {
+                                      for (var j = 0; j < item.length; j++) {
+                                              finalRoles.push(item[j]);
+                                      }
+                              } else {
+                                      finalRoles.push(item);
+                              }
+                      }
+                      roles = finalRoles;
+
+                      // 清空之前的对话标签配置（避免重复）
+                      DUIHUA_CHARACTERS = {};
+                      // 5. 遍历单个角色对象
+                      for (var roleIdx = 0; roleIdx < roles.length; roleIdx++) {
+                              var roleItem = roles[roleIdx];
+                              // 关键修复：确保genderAgeItem索引对应，且兜底空对象
+                              var genderAgeItem = genderAges[roleIdx] || {};
+
+                              // 兜底：如果genderAgeItem是数组，取第一个元素
+                              if (isArray(genderAgeItem) && genderAgeItem.length > 0) {
+                                      genderAgeItem = genderAgeItem[0];
+                              }
+
+                              // 6. 安全取value（ES5，增强判空）
+                              var roleValue = "";
+                              if (typeof roleItem === 'object' && roleItem !== null) {
+                                      // 兼容：直接访问value或通过索引获取
+                                      roleValue = roleItem.value !== undefined ? (roleItem.value + "").trim() : "";
+                                      // 兜底：如果value为空，尝试通过get方法（适配Java对象）
+                                      if (roleValue === "" && typeof roleItem.get === 'function') {
+                                              var tempVal = roleItem.get("value");
+                                              roleValue = tempVal ? (tempVal + "").trim() : "";
+                                      }
+                              }
+
+                              var genderAgeValue = "";
+                              if (typeof genderAgeItem === 'object' && genderAgeItem !== null) {
+                                      // 关键修复：安全获取genderAge的value（原代码可能漏了这步）
+                                      genderAgeValue = genderAgeItem.value !== undefined ? (genderAgeItem.value + "").trim() : "";
+                                      if (genderAgeValue === "" && typeof genderAgeItem.get === 'function') {
+                                              var tempGaVal = genderAgeItem.get("value");
+                                              genderAgeValue = tempGaVal ? (tempGaVal + "").trim() : "";
+                                      }
+                              }
+
+
+                              // 7. 校验并添加角色（关键修复：增强判空，避免undefined操作）
+                              if (roleValue !== '' && genderAgeValue !== '' && genderAgeValue.indexOf('/') !== -1) {
+                                      var genderAgeArr = genderAgeValue.split('/');
+                                      var gender = genderAgeArr[0] ? genderAgeArr[0].trim() : "";
+                                      var age = genderAgeArr[1] ? genderAgeArr[1].trim() : "";
+
+                                      if (gender && age) {
+                                              // 关键：添加到对话标签专属配置对象（键名格式统一）
+                                              var charKey = "【对话 " + roleValue + "】";
+                                              DUIHUA_CHARACTERS[charKey] = {
+                                                      gender: gender,
+                                                      age: age,
+                                                      voice: roleValue // role值作为发音人标识
+                                              };
+                                              // 添加到全局可用发音人
+                                              this.characterManager.availableVoices[roleValue] = true;
+                                              var groupKey = gender + "/" + age;
+                                              // 关键修复：确保duihuaVoicePool已初始化
+                                              if (!this.characterManager.duihuaVoicePool) {
+                                                      this.characterManager.duihuaVoicePool = {};
+                                              }
+                                              if (!this.characterManager.duihuaVoicePool[groupKey]) {
+                                                      this.characterManager.duihuaVoicePool[groupKey] = [];
+                                              }
+                                              this.characterManager.duihuaVoicePool[groupKey].push(roleValue);
+                      // 新增：同步构建 role→系统根节点ID 映射表
+                                              roleToRootIdMap[roleValue] = roleItem.id;
+
+                                      } else {
+                                              //console.log("【handleText】❌ 跳过：性别/年龄解析失败");
+                                      }
+                              } else {
+                                      //console.log("【handleText】❌ 跳过：角色名空或性别格式错误");
+                              }
+                      }
+
+                      // 关键步骤：将对话标签配置追加到 GENSHIN_CHARACTERS（确保分配发音人时能识别）
+                      for (var charKey in DUIHUA_CHARACTERS) {
+                              if (DUIHUA_CHARACTERS.hasOwnProperty(charKey)) {
+                                      // 避免覆盖原有配置
+                                      if (!GENSHIN_CHARACTERS[charKey]) {
+                                              GENSHIN_CHARACTERS[charKey] = DUIHUA_CHARACTERS[charKey];
+                                      }
+                              }
+                      }
+                      // 同步更新标签映射（让SpeechRuleJS.tags识别新发音人）
+                      for (var charKey in DUIHUA_CHARACTERS) {
+                              if (DUIHUA_CHARACTERS.hasOwnProperty(charKey)) {
+                                      var voiceTag = DUIHUA_CHARACTERS[charKey].voice;
+                                      if (!SpeechRuleJS.tags[voiceTag]) {
+                                              SpeechRuleJS.tags[voiceTag] = charKey;
+                                      }
+                              }
+                      }
+
+                      // 最终验证
+                      var allVoices = Object.keys(this.characterManager.availableVoices);
+                      var duihuaRoles = allVoices.filter(function(v) {
+                              return v === '青年20' || v === '幼女20';
+                      });
+                      //console.log("【handleText】duihua解析完成，可用发音人总数：" + allVoices.length);
+                      //console.log("【handleText】包含duihua角色：" + duihuaRoles.join(','));
+                      //console.log("【handleText】GENSHIN_CHARACTERS已追加对话标签配置，总数：" + Object.keys(GENSHIN_CHARACTERS).length);
+              } catch (globalErr) {
+                      console.error("【handleText】duihua配置解析异常：", globalErr.message);
+              }
+      } else {
+              //console.log("【handleText】❌ 未获取到duihua配置");
+      }
+
+
+      // 保存可用发音人列表（duihua动态标签置顶，硬编标签后置）
+      if (CONFIG.saveVoicesToFile === 1) {
+          try {
+              var duihuaVoices = []; // duihua动态标签（置顶）
+              var hardcodeVoices = []; // 硬编标签（后置）
+              
+              // 遍历所有可用发音人，按类型分类
+              for (var key in this.characterManager.availableVoices) {
+                  if (this.characterManager.availableVoices.hasOwnProperty(key)) {
+                      var voiceTag = key.toString(); // 兼容：转原始String
+                      // 判断是否为duihua动态标签（通过roleToRootIdMap映射表识别）
+                      var isDuihuaVoice = roleToRootIdMap.hasOwnProperty(voiceTag);
+                      
+                      if (isDuihuaVoice) {
+                          duihuaVoices.push(voiceTag); // duihua标签加入置顶数组
+                      } else {
+                          hardcodeVoices.push(voiceTag); // 硬编标签加入后置数组
+                      }
+                  }
+              }
+              
+              // 合并数组：duihua标签在前，硬编标签在后
+              var voicesArray = duihuaVoices.concat(hardcodeVoices);
+              ttsrv.writeTxtFile("fayinren.json", JSON.stringify(voicesArray, null, 2).toString()); // 兼容：转原始String
+              //console.log("【发音人保存】fayinren.json已更新，duihua标签" + duihuaVoices.length + "个置顶，硬编标签" + hardcodeVoices.length + "个后置");
+          } catch (saveError) {
+              //console.log("【发音人保存异常】" + saveError.message);
+          }
+      }
+      
+      
+      
+                // ===================== 发音人 personality 全自动提取工具（有效数据过滤+二维数组）=====================
+          (function extractFayinrenPersonalityAuto() {
+                  var logPrefix = "[发音人Personality提取]";
+          
+                  // 步骤0：复用原代码中的工具函数（适配duihua的role解析）
+                  var forceFlattenArray = function(arr) {
+                          var result = [];
+                          for (var i = 0; i < arr.length; i++) {
+                                  var item = arr[i];
+                                  if (Object.prototype.toString.call(item) === '[object Array]') {
+                                          result = result.concat(forceFlattenArray(item));
+                                  } else {
+                                          result.push(item);
+                                  }
+                          }
+                          return result;
+                  };
+                  var isArray = function(arr) {
+                          return Object.prototype.toString.call(arr) === '[object Array]';
+                  };
+          
+                  // 步骤1：自动读取fayinren.json纯数组标签（不变）
+                  var extractAllTagsFromFayinren = function() {
+                          var tags = [];
+                          try {
+                                  var fileContent = ttsrv.readTxtFile("fayinren.json");
+                                  if (!fileContent || fileContent === "[]") {
+                                          return tags;
+                                  }
+                                  var parsedData = JSON.parse(fileContent);
+                                  if (Object.prototype.toString.call(parsedData) === "[object Array]") {
+                                          var tagSet = {};
+                                          for (var i = 0; i < parsedData.length; i++) {
+                                                  var tag = String(parsedData[i] || "").trim();
+                                                  if (tag && !tagSet[tag]) {
+                                                          tagSet[tag] = true;
+                                                          tags.push(tag);
+                                                  }
+                                          }
+                                  }
+                          } catch (e) {
+                          }
+                          return tags;
+                  };
+          
+                  // 步骤2：100% 复用本地音效 extractByRegex 逻辑（不变）
+                  var extractByRegex = function(configStr) {
+                          if (typeof configStr !== "string") {
+                                  configStr = String(configStr || "");
+                          }
+                          // 仅调试日志简化，提取逻辑不变
+                          var regex = /value=([^}]+)/i;
+                          var match = configStr.match(regex);
+                          var personality = "";
+                          if (match && match[1]) {
+                                  personality = match[1].trim();
+                          }
+                          return personality;
+                  };
+          
+                  // 步骤3：有效数据过滤 + 二维数组汇总
+                  var allTags = extractAllTagsFromFayinren();
+                  var globalTagsData = tagsData || {};
+                  var personalityArray = []; // 二维数组存储有效数据
+                  var successCount = 0;
+          
+                  // ===================== 核心修复：每个role独立匹配对应性格 =====================
+                  var duihuaConfig = globalTagsData.duihua || {};
+                  
+                  // 1. 解析duihua的role数组（动态角色标识，如“男青年20”“女童20”）
+                  var duihuaRoles = [];
+                  if (duihuaConfig.role) {
+                          duihuaRoles = forceFlattenArray(duihuaConfig.role);
+                          duihuaRoles = forceFlattenArray(duihuaRoles);
+                          if (!isArray(duihuaRoles)) duihuaRoles = [duihuaRoles];
+                          // 提取每个role的value（发音人标识）
+                          duihuaRoles = duihuaRoles.map(function(roleItem) {
+                                  var value = "";
+                                  if (typeof roleItem === 'object' && roleItem !== null) {
+                                          value = roleItem.value !== undefined ? (roleItem.value + "").trim() : "";
+                                          if (value === "" && typeof roleItem.get === 'function') {
+                                                  var tempVal = roleItem.get("value");
+                                                  value = tempVal ? (tempVal + "").trim() : "";
+                                          }
+                                  }
+                                  return value;
+                          }).filter(function(v) { return v !== ""; });
+                  }
+          
+                  // 2. 解析duihua的personality数组（与role按索引一一对应）
+                  var duihuaPersonalities = [];
+                  if (duihuaConfig.personality) {
+                          // 性格数组也需要扁平化（和role数组处理逻辑一致）
+                          duihuaPersonalities = forceFlattenArray(duihuaConfig.personality);
+                          duihuaPersonalities = forceFlattenArray(duihuaPersonalities);
+                          if (!isArray(duihuaPersonalities)) duihuaPersonalities = [duihuaPersonalities];
+                          // 提取每个personality的value（性格值）
+                          duihuaPersonalities = duihuaPersonalities.map(function(personalityItem) {
+                                  var value = "";
+                                  if (typeof personalityItem === 'object' && personalityItem !== null) {
+                                          value = personalityItem.value !== undefined ? (personalityItem.value + "").trim() : "";
+                                          if (value === "" && typeof personalityItem.get === 'function') {
+                                                  var tempVal = personalityItem.get("value");
+                                                  value = tempVal ? (tempVal + "").trim() : "";
+                                          }
+                                  }
+                                  return value;
+                          });
+                  }
+          
+                  // 3. 按索引配对：role[i] ↔ personality[i]（核心逻辑）
+                  if (duihuaRoles.length > 0 && duihuaPersonalities.length > 0) {
+                          for (var r = 0; r < duihuaRoles.length; r++) {
+                                  var roleTag = duihuaRoles[r];
+                                  // 按相同索引取性格（若性格数组长度不足，默认空）
+                                  var rolePersonality = duihuaPersonalities[r] || "";
+                                  
+                                  // 独立有效性验证（每个role的性格单独判断）
+                                  var isvalid = false;
+                                  if (rolePersonality && rolePersonality !== "无") {
+                                          isvalid = true;
+                                  }
+          
+                                  if (isvalid) {
+                                          // 格式：[role标签, role标签+独立性格值]
+                                          personalityArray.push([roleTag, roleTag + rolePersonality]);
+                                          successCount++;
+                                  } else {
+                                  }
+                          }
+                  } else if (duihuaRoles.length === 0) {
+                  } else if (duihuaPersonalities.length === 0) {
+                  }
+                  // =============================================================================
+          
+                  if (allTags.length === 0 && successCount === 0) {
+                          return;
+                  }
+          
+                  // 复用本地音效for循环批量处理其他硬编标签（不变）
+                  for (var i = 0; i < allTags.length; i++) {
+                          var fayinrenTag = allTags[i];
+                          if (fayinrenTag === "duihua") continue; // 跳过duihua标签本身
+                          var tagConfig = globalTagsData[fayinrenTag] || {};
+                          var personality = "";
+          
+                          if (tagConfig.personality) {
+                                  personality = extractByRegex(tagConfig.personality);
+                          } else if (tagConfig.xingge) {
+                                  personality = extractByRegex(tagConfig.xingge);
+                          }
+          
+                          var isvalid = false;
+                          var invalidReason = "";
+                          if (!personality) {
+                                  invalidReason = "personality为空或未配置";
+                          } else if (personality === "无") {
+                                  invalidReason = "personality为'无'";
+                          } else {
+                                  isvalid = true;
+                          }
+          
+          
+                          if (isvalid) {
+                                  personalityArray.push([fayinrenTag, fayinrenTag + personality]);
+                                  successCount++;
+                          } else {
+                          }
+                  }
+          
+                  // 保存有效数据（不变）
+                  if (successCount > 0) {
+                          var jsonContent = JSON.stringify(personalityArray, null, 2);
+                          var fileName = "fayinren_personality_summary.json";
+                          ttsrv.writeTxtFile(fileName, jsonContent);
+          
+                  } else {
+                  }
+          
+          }
