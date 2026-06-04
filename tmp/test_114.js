@@ -5353,7 +5353,7 @@ var characterManager = new CharacterManager();
 characterManager.loadRecords();
 
 // -------------------------- SpeechRuleJS核心对象（整合＜＞本地音效） --------------------------
-(function extractFayinrenEmotionAuto() {
+function extractFayinrenEmotionAuto() {
                   var forceFlattenArray = function(arr) {
                           var result = [];
                           for (var i = 0; i < arr.length; i++) {
@@ -5567,7 +5567,7 @@ var readFieldSafe = function(obj, fieldName) {
 
                   summary.updatedAt = new Date().getTime();
                   ttsrv.writeTxtFile("fayinren_emotion_summary.json", JSON.stringify(summary, null, 2));
-          })();
+          }
 
 var SpeechRuleJS = {
   name: "多角色朗读2.114【情绪模块植入+称号可临时主名+旧主名自动入别名+修复别名丢失+同步shuming+别名合并发音人轮询+增强别名校验版v77+备用模型接力】",
@@ -5957,6 +5957,7 @@ var SpeechRuleJS = {
 
 
   handleText: function(text, tagsData) {
+    extractFayinrenEmotionAuto();
   
   
        // 新增：ES5 兼容的数组扁平化函数（解决 forceFlattenArray 未定义问题）
