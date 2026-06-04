@@ -2,6 +2,27 @@
 
 ## 版本变更记录
 
+### v2.114（本次新建）
+- 基于 **v2.113** 完整移植2.81版本的情绪模块增强功能
+- **移植内容**：
+  1. **`extractFayinrenEmotionAuto` IIFE**：自动解析 `fayinren.json` 和全局 `tagsData`，提取每个发音人标签中的情绪配置，生成 `fayinren_emotion_summary.json`（含 `byId`/`byTag`/`rawById`/`rawByTag` 等字段）
+  2. **`isLikelyInlineEmotionCue` 函数**：判断括号内文本是否属于 MiMo/情绪导演行内提示词，区分正常旁白括号与情绪导演提示
+  3. **`attachEmotionBridgeToText` 去重逻辑**：添加 `pureText.replace(/^\[\[emo:[a-z\-]+\]\]/, "")` 避免重复叠加情绪桥接前缀；移除对不存在函数 `loadJreadRuleRuntimeConfig()` 的调用（该函数在2.81中第一行即为 `return;`，无实际作用）
+  4. **扩展 `applyLocalDialogueEmotionCorrection` 调用点**：
+     - `dialogList.push` 构建缓存条目时添加情绪修正
+     - `currentResult` 获取后返回前添加情绪修正
+     - `analyzeCharacterFallback` 返回对象中添加 `emotion: "无"`
+     - `processCharacter` 中已有的 `LOCAL_EMOTION_CORRECTION_PROCESS_PATCH` 保留不变
+  5. **增强情绪桥接主流程**：
+     - 读取 `fayinren_emotion_summary.json` 作为情绪来源的第二优先级（P1: `rawById` 按ID匹配，P2: `rawByTag` 按tag匹配）
+     - 新增 `hitSource` 全程追踪：记录情绪从哪来（`item.emotion`/`rawById`/`rawByTag`/`bridgePrefix`/`inherit_last_dialogue`/`strong_exception` 等），支持多来源组合
+     - 新增 `itemType` 计算（本地音效/括号发音/旁白/对话）
+     - 详细调试日志：逐条输出 `【运行时情绪】`（序号/类型/标签/原始/命中/来源/文本前30字）
+     - 桥接后输出 `【规则情绪桥接】`（tag/rawEmotion/normalizedEmotion/skip信息/文本前50字）
+     - 调试模式下强制触发 `getTagName` 输出最终tag名称
+- **开关说明**：`ENABLE_EMOTION_BRIDGE` 默认 1（开启），`ENABLE_EMOTION_DEBUG_LOG` 默认 0（关闭），`ENABLE_LOCAL_EMOTION_CORRECTION` 默认 1（开启）
+- 文件名：`多角色朗读2.114【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json`
+
 ### 猫剪豆问（情绪桥接版）修复（2026-06-03）
 - **文件**：`参考/猫剪豆问（情绪桥接版）.json`
 - **备份**：`参考/猫剪豆问（情绪桥接版）_备份.json`
@@ -578,7 +599,8 @@
 - [x] 火山全套配套文件名统一改为 `jiaoseliebiao-1.json`（原 `jiaoseliebiao1.json`）
 - [x] 生成 `ttsrv-speechRule-情绪模块.json`：将 `模块/emotion-module.js` 包装为 TTS Server 朗读规则格式
 - [x] 生成 `ttsrv-speechRule-情绪桥接.json`：将 `脚本和模块/情绪桥接模块/emotion-bridge-rule.js` 包装为可独立运行的朗读规则
-- [ ] 如需功能迭代，在 v2.113 / v2.94 基础上增量开发
+- [x] 完整移植2.81情绪模块到2.113，生成 v2.114（发音人自动提取+hitSource追踪+扩展本地修正+详细调试日志）
+- [ ] 如需功能迭代，在 v2.114 / v2.94 基础上增量开发
 
 ## 长期规划
 - [ ] 在 v2.94 基础上逐步优化，避免大规模重构
@@ -597,6 +619,28 @@
 - **问题**：`extractRuleEmotion` 使用 `^\s*\[\[emo:` 锚定匹配，当朗读脚本在文本中插入 `<<tag>>` 或引号后，`[[emo:xxx]]` 不在文本最开头，导致插件匹配不到，标记被当作普通文本朗读
 - **修复**：去掉 `^` 锚定，`match` 和 `replace` 均改为 `/\[\[emo:[^\]]+\]\]/gi`，支持任意位置匹配和移除
 - **文件**：`参考/🪢猫剪豆问AI-规则联动版.json`（version 35）
+
+### 2026-06-04 本次会话（v2.114：完整移植2.81情绪模块）
+- **当前最新版本**：v2.114（朗读规则）/ v6.70（角色管理插件）
+- **本次工作**：
+  - 用户要求将2.81版本中更完整的情绪模块移植到2.113
+  - 深入对比分析2.81与2.113的情绪模块差异，制定详细移植计划
+  - 生成 v2.114，完整移植以下情绪模块增强功能：
+    1. `extractFayinrenEmotionAuto`：发音人情绪自动提取IIFE
+    2. `isLikelyInlineEmotionCue`：内联情绪提示识别
+    3. `attachEmotionBridgeToText` 去重逻辑+修复 `loadJreadRuleRuntimeConfig` 未定义调用
+    4. 扩展 `applyLocalDialogueEmotionCorrection` 调用点（dialogList.push / currentResult / analyzeCharacterFallback）
+    5. 情绪桥接主流程增强：emotionSummary 读取 / hitSource 全程追踪 / itemType 计算 / 详细调试日志 / 强制触发 getTagName
+  - 同步提取 JS 调阅文件：`js/多角色朗读2.114...js`
+  - Git 提交并推送：`4e99342`
+- **主目录结构**：
+  - `多角色朗读2.114【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json` — 主目录最新版
+  - `多角色朗读2.113【情绪模块植入+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json` — 上一版本保留
+  - `ttsrv-plugin-角色管理6.70.json` — 插件
+- **注意事项**：
+  - 2.81中部分本地免API兜底函数（JREAD结构匹配、说话人提示、动作承接等）在2.113/2.114中已不存在，无法完全移植那些调用点
+  - `extractFayinrenEmotionAuto` 从 `handleText` 内部移到了 `handleText` 之前（全局作用域），避免每次朗读段落都重新执行
+  - `loadJreadRuleRuntimeConfig()` 在2.113中不存在且调用在try外，会导致ReferenceError中断情绪桥接；v2.114已移除该调用
 
 ### 2026-06-03 Plan B放弃，回滚到230e212原始版本
 - **用户决定**：放弃Plan B（按segment原始顺序+各种缓冲/桥梁方案），也放弃Plan A（先文本后音效）
