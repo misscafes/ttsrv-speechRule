@@ -7683,7 +7683,7 @@ var SpeechRuleJS = {
 
                   var logMsg =
                       "【运行时情绪】" +
-                      " | 序号=" + padZero(k2 + 1, 2) +
+                      " | 序号=" + padZero(k + 1, 2) +
                       " | 类型=" + itemType +
                       " | 标签=" + String(item.tag || "") +
                       " | 原始=" + (rawEmotion || "无") +
