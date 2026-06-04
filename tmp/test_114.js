@@ -5353,7 +5353,7 @@ var characterManager = new CharacterManager();
 characterManager.loadRecords();
 
 // -------------------------- SpeechRuleJS核心对象（整合＜＞本地音效） --------------------------
-function extractFayinrenEmotionAuto() {
+function extractFayinrenEmotionAuto(tagsData) {
                   var forceFlattenArray = function(arr) {
                           var result = [];
                           for (var i = 0; i < arr.length; i++) {
@@ -5957,7 +5957,7 @@ var SpeechRuleJS = {
 
 
   handleText: function(text, tagsData) {
-    extractFayinrenEmotionAuto();
+    extractFayinrenEmotionAuto(tagsData);
   
   
        // 新增：ES5 兼容的数组扁平化函数（解决 forceFlattenArray 未定义问题）
