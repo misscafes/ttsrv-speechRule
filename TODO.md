@@ -2,6 +2,14 @@
 
 ## 版本变更记录
 
+### v2.116（本次新建）
+- 基于 **v2.115** 修复旁白缓存匹配时情绪丢失问题
+- **问题根因**：`matchNarrationFromCache` 匹配到缓存对话后，返回的对象只包含 `name/gender/age/voice`，**漏掉了 `emotion`**。`extractFayinrenPersonalityAuto` 中创建 `originalItem` 时也未写入 `emotion`，导致缓存命中的对话在情绪桥接流程中全链路落空（`item.emotion` 为空 → `rawById` 因 `id` 缺失失败 → `rawByTag` 未配置 → 无情绪）
+- **修复内容**：
+  1. `matchNarrationFromCache` 返回值新增 `emotion: matchedItem.emotion`
+  2. `narrationMatchResult` 分支的两个 `originalItem` 创建点（`tag: "duihua"` 和 `tag: targetVoice`）均新增 `emotion: narrationMatchResult.emotion`
+- 文件名：`多角色朗读2.116【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json`
+
 ### v2.115（本次新建）
 - 基于 **v2.114** 添加情绪模块启动状态日志
 - **改动内容**：
@@ -616,7 +624,8 @@
 - [x] 生成 `ttsrv-speechRule-情绪桥接.json`：将 `脚本和模块/情绪桥接模块/emotion-bridge-rule.js` 包装为可独立运行的朗读规则
 - [x] 完整移植2.81情绪模块到2.113，生成 v2.114（发音人自动提取+hitSource追踪+扩展本地修正+详细调试日志）
 - [x] 添加情绪模块启动状态日志，生成 v2.115
-- [ ] 如需功能迭代，在 v2.115 / v2.94 基础上增量开发
+- [x] 修复旁白缓存匹配时情绪丢失，生成 v2.116
+- [ ] 如需功能迭代，在 v2.116 / v2.94 基础上增量开发
 
 ## 长期规划
 - [ ] 在 v2.94 基础上逐步优化，避免大规模重构
@@ -683,3 +692,19 @@
   - `ttsrv-plugin-角色管理6.70.json` — 插件
 - **注意事项**：
   - 情绪模块启动日志与备用模型接力日志格式保持一致，便于用户快速确认模块状态
+
+### 2026-06-04 本次会话（v2.116：修复旁白缓存匹配时情绪丢失）
+- **当前最新版本**：v2.116（朗读规则）/ v6.70（角色管理插件）
+- **本次工作**：
+  - 用户提供日志：`【运行时情绪】| 类型=【旁白】| 标签=男主2 | 原始=无 | 命中=none | 来源=none`
+  - **根因定位**：`matchNarrationFromCache` 匹配到缓存对话条目后，返回结果漏传 `emotion`；`extractFayinrenPersonalityAuto` 创建 `originalItem` 时也未写入 `emotion`
+  - 修复 `matchNarrationFromCache` 返回值：新增 `emotion: matchedItem.emotion`
+  - 修复 `originalItem` 创建点（`tag: "duihua"` 分支和 `tag: targetVoice` 分支）：均新增 `emotion: narrationMatchResult.emotion`
+  - 生成 v2.116，同步更新版本号、提取 JS 调阅文件
+- **主目录结构**：
+  - `多角色朗读2.116【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json` — 主目录最新版
+  - `多角色朗读2.115【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json` — 上一版本保留
+  - `ttsrv-plugin-角色管理6.70.json` — 插件
+- **注意事项**：
+  - 旁白缓存匹配（`matchNarrationFromCache`）用于处理带引号的对话被识别为旁白的场景，此时会从对话缓存中复用角色和情绪
+  - 修复后，缓存命中的对话将正确携带 AI 分析出的情绪（如 `开心`、`愤怒` 等），不再显示 `原始=无`
