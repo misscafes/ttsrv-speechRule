@@ -389,9 +389,29 @@ function getLatestCharacterRecords() {
         if (rawGengxin && rawGengxin.trim() !== "") {
             var gengxinArr = JSON.parse(rawGengxin);
             if (isArray(gengxinArr)) {
-                java.writeExternalFile(EXT_DIR + "characterRecords.json", JSON.stringify(gengxinArr, null, 2));
+                var charPath = EXT_DIR + "characterRecords.json";
+                var existingArr = [];
+                try {
+                    var rawChar = String(java.readExternalFile(charPath));
+                    if (rawChar && rawChar.trim() !== "") {
+                        var parsed = JSON.parse(rawChar);
+                        if (isArray(parsed)) existingArr = parsed;
+                    }
+                } catch (e) {}
+                var existingMap = {};
+                for (var i = 0; i < existingArr.length; i++) {
+                    if (existingArr[i].name) existingMap[String(existingArr[i].name).trim()] = existingArr[i];
+                }
+                for (var i = 0; i < gengxinArr.length; i++) {
+                    if (gengxinArr[i].name) existingMap[String(gengxinArr[i].name).trim()] = gengxinArr[i];
+                }
+                var mergedArr = [];
+                for (var key in existingMap) {
+                    if (existingMap.hasOwnProperty(key)) mergedArr.push(existingMap[key]);
+                }
+                java.writeExternalFile(EXT_DIR + "characterRecords.json", JSON.stringify(mergedArr, null, 2));
                 java.deleteExternalFile(gengxinPath);
-                return gengxinArr;
+                return mergedArr;
             }
         }
     } catch (e) {}
