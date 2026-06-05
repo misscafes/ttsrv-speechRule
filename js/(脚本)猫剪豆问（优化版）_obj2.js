@@ -197,6 +197,12 @@
             var emotion = "";
             var source = "";
 
+            // 跳过纯省略号对话，不推断、不继承、不写入缓存
+            var strippedDialog = d.content.replace(/[\s　 -‏ - ﻿]/g, "").trim();
+            if (/^[…‥⋯]+$/.test(strippedDialog)) {
+                continue;
+            }
+
             if (ENABLE_LOCAL_EMOTION_CORRECTION === 1) {
                 emotion = inferStrongLocalEmotion(d.content);
                 if (emotion) source = "local";
