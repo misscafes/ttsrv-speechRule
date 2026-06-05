@@ -1,0 +1,19 @@
+    function tryMatchExact(items, idx) {
+        var linesArr = items.dialogContent.split("\n");
+        var filteredLines = [];
+        for (var li = 0; li < linesArr.length; li++) {
+            if (linesArr[li].trim() !== "") filteredLines.push(linesArr[li]);
+        }
+        for (var i = 0; i < filteredLines.length; i++) {
+            if (cleanDialogText(filteredLines[i]) === cleanCurrent) {
+                matchedResult = {
+                    name: items.name || "未知",
+                    gender: items.gender || "男",
+                    age: items.age || "青年"
+                };
+                finalMatchedIndex = idx + 1;
+                return true;
+            }
+        }
+        return false;
+    }

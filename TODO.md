@@ -664,6 +664,14 @@
 ` 换行符的字面量处理）
 - **后续方向**：如需修复上述问题，需在确保 Rhino 兼容性的前提下，采用更保守的修改策略
 
+### 猫剪豆问（优化版）脚本修复 getTargetVoiceNum 发音人分配逻辑
+- **文件**：`new/(脚本)猫剪豆问（优化版）.json`
+- **备份**：`new/(脚本)猫剪豆问（优化版）_修复发音人分配备份.json`
+- **修复内容**：
+  1. `getTargetVoiceNum` 占用统计：`ch.genderAge === genderAge` → `allVoices.indexOf(effV) !== -1`，按发音人池判断占用，避免 genderAge 字符串不匹配导致误判
+  2. `getTargetVoiceNum` 池满复用：`ch.genderAge === genderAge` → `ch.genderAge && ...`，复用范围从 genderAge 精确匹配放宽到"只要发音人在当前池内即可复用"，减少池满时分配失败
+- **同步提取 JS 调阅文件**：`js/(脚本)猫剪豆问（优化版）_obj0/1/2.js`
+
 ## 当前任务
 - [x] v2.94 稳定版保持为主版本
 - [x] 在 2.85 基础上注入备用模型接力模块，生成 v2.86

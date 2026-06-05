@@ -1,0 +1,31 @@
+function analyzeOrphanQuotes(text) {
+    var quotes = [];
+    for (var i = 0; i < text.length; i++) {
+        var c = text.charAt(i);
+        if (c === LQ) quotes.push({ type: "L", pos: i });
+        else if (c === RQ) quotes.push({ type: "R", pos: i });
+    }
+    var orphanLeft = [], orphanRight = [], stack = [];
+    for (var i = 0; i < quotes.length; i++) {
+        if (quotes[i].type === "L") {
+            stack.push(quotes[i]);
+        } else {
+            if (stack.length > 0) stack.pop();
+            else orphanRight.push(quotes[i]);
+        }
+    }
+    for (var i = 0; i < stack.length; i++) orphanLeft.push(stack[i]);
+    var normalPairs = [];
+    var tempStack = [];
+    for (var i = 0; i < quotes.length; i++) {
+        if (quotes[i].type === "L") {
+            tempStack.push(quotes[i]);
+        } else {
+            if (tempStack.length > 0) {
+                var left = tempStack.pop();
+                normalPairs.push({ left: left.pos, right: quotes[i].pos });
+            }
+        }
+    }
+    return { orphanLeft: orphanLeft, orphanRight: orphanRight, normalPairs: normalPairs };
+}
