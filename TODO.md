@@ -2,6 +2,23 @@
 
 ## 版本变更记录
 
+### 猫剪豆问（优化版）脚本：添加提取角色性格分配发音人（2026-06-05）
+- **文件**：`参考/(脚本)猫剪豆问（优化版）.json`
+- **备份**：`参考/(脚本)猫剪豆问（优化版）_添加性格分配备份.json`
+- **核心改动**：在现有 `genderAge` 分配发音人逻辑基础上，新增 **角色性格维度** 进行二次匹配优选
+  1. **AI Prompt 扩展**：`buildAnalyzePrompt()` 输出示例新增 `personality` 字段，要求 AI 根据对话内容推断角色性格（从标准标签中选择1-2个：温婉、清冷、妩媚、英飒、活泼、甜美、知性、高傲、阴狠、稳重、冷酷、豪迈、温润、阳光、桀骜、阴鸷、颓废、怯懦、威严、慈祥、干练、优雅、泼辣、市侩、哀怨、热血、温和、狡黠、憨厚、阴郁、乖巧、呆萌、顽劣、坚定、胆小、通用）
+  2. **发音人 personality 映射**：读取 `jiaoseliebiao-list.json` 时同步提取 `tagData.personality`，建立 `voiceTagToPersonality` 映射表
+  3. **性格匹配评分**：新增 `calcPersonalityMatchScore()`，将 AI 返回的性格关键词与发音人 personality 描述做文本匹配，命中关键词越长得分越高
+  4. **分配逻辑增强**：`getTargetVoiceNum()` 新增 `personality` 参数。在 `genderAge` 池内排除已用发音人后，如有性格信息，按匹配度排序，优先返回匹配度最高的发音人；无匹配则保持原有顺序（取第一个）
+  5. **数据流全链路贯通**：
+     - `callAnalyzeApi` → `dialogList` → `getTargetVoiceNum` / `saveCharacter`
+     - `matchDialogFromCache` 缓存匹配也返回 personality
+     - `readBookCharacters` / `saveBookCharacters` 在 `characterRecords.json` 中读写 `personality` 字段
+     - `updateCharacterRecords` 别名清洗时也传递 personality
+     - `pending_quote.json` 跨段状态也保存 personality
+  6. **向后兼容**：AI 未返回 personality、发音人未配置 personality、或匹配失败时，均自动降级到原有 `genderAge` 分配逻辑，零侵入
+- **同步提取 JS 调阅文件**：`js/(脚本)猫剪豆问（优化版）_obj0.js`
+
 ### v2.119（本次新建）
 - 基于 **v2.118** 支持旁白添加情绪桥接前缀
 - **问题根因**：代码中 `isNarrationItem` 导致旁白被排除在 `attachEmotionBridgeToText` 之外，旁白即使有情绪配置也无法输出 `[[emo:xxx]]` 前缀
@@ -860,6 +877,25 @@
 - **注意事项**：
   - 旁白情绪可通过 `tagsData.narration.emotion` 配置默认情绪，或通过 `[[emo:xxx]]` 文本前缀注入
   - 旁白暂不支持跨句继承和本地关键词修正（如需可后续迭代）
+
+### 2026-06-05 本次会话（猫剪豆问（优化版）脚本：提取角色性格分配发音人）
+- **当前最新版本**：v2.119（朗读规则）/ v6.70（角色管理插件）/ 猫剪豆问（优化版）脚本 v3（性格分配版）
+- **本次工作**：
+  - 在 `参考/(脚本)猫剪豆问（优化版）.json` 的 obj0 中添加提取角色性格分配发音人功能
+  - **核心逻辑**：AI 分析对话时同时返回 `personality`（性格标签），发音人分配时在同一 genderAge 池内按性格匹配度优选
+  - **性格来源**：`jiaoseliebiao-list.json` 中 `tagData.personality` 字段（如"温柔治愈"、"冷酷霸总"、"高冷御姐"等）
+  - **匹配算法**：`calcPersonalityMatchScore()` 关键词重叠度评分，按得分排序优选
+  - **数据贯通**：缓存匹配、AI分析、角色保存、跨段 pending 全链路支持 personality
+  - 已备份：`参考/(脚本)猫剪豆问（优化版）_添加性格分配备份.json`
+  - 已同步提取 JS 调阅文件：`js/(脚本)猫剪豆问（优化版）_obj0.js`
+  - 已执行 `git add/commit/push`
+- **主目录结构**：
+  - `参考/(脚本)猫剪豆问（优化版）.json` — 最新修改版（含性格分配）
+  - `参考/(脚本)猫剪豆问（优化版）_添加性格分配备份.json` — 修改前备份
+- **注意事项**：
+  - 性格分配为**优选增强**，不是强制替换。当性格匹配失败或无性格信息时，自动降级到原有 genderAge 顺序分配
+  - `characterRecords.json` 中新增 `personality` 字段，旧数据缺失该字段时自动视为空字符串，不影响读取
+  - AI 返回的 personality 建议为1-2个标签，过多标签会降低匹配精准度
 
 ### 2026-06-04 本次会话（猫剪豆问（优化版）脚本：添加旁白情绪支持 + 跨句继承）
 - **当前最新版本**：v2.119（朗读规则）/ v6.70（角色管理插件）/ 猫剪豆问（优化版）脚本 v2
