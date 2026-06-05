@@ -366,6 +366,7 @@
 - 向后兼容：无 personality 时自动降级到 gender/age 分配
 - 情绪(emotion)与性格(personality)是两个独立字段，互不干扰
 - 修复猫剪豆问脚本bug：allMatched分支中latestRecords未在循环内更新导致同段同角色被分配不同发音人；d.personality引用错误变量（应为m.personality）
+- 主规则 v2.121 修复：matchDialogFromCache 缓存命中时返回结果缺少 personality 字段，导致缓存命中路径下新角色性格匹配不生效；analyzeCharacterFallback 同样补充 personality 字段
 - TODO.md 存在 GBK 编码显示问题，但实际 UTF-8 内容正确
 
 ### 2026-06-03 Plan B：音效MP3帧同步缓冲修复
@@ -784,7 +785,8 @@
 - [x] 修复猫剪豆问（优化版）书源中旁白 [[emo:xxx]] 被朗读的问题
 - [x] 主规则添加提取角色性格分配发音人，生成 v2.120
 - [x] 修复猫剪豆问脚本分配后声音混乱：allMatched分支latestRecords循环内更新+d.personality→m.personality
-- [ ] 如需功能迭代，在 v2.120 / v2.94 基础上增量开发
+- [x] 主规则修复 matchDialogFromCache / analyzeCharacterFallback 返回结果缺少 personality 字段，生成 v2.121
+- [ ] 如需功能迭代，在 v2.121 / v2.94 基础上增量开发
 
 ## 长期规划
 - [ ] 在 v2.94 基础上逐步优化，避免大规模重构
