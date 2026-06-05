@@ -121,6 +121,17 @@ try {
     }
 }
 
+// 若外部列表未提供任何启用tag（文件存在但内容为空/无匹配），启用所有内置发音人兜底
+var _enabledCount = 0;
+for (var _k in enabledTags) { if (enabledTags.hasOwnProperty(_k)) _enabledCount++; }
+if (_enabledCount === 0) {
+    for (var key in GENSHIN_CHARACTERS) {
+        if (GENSHIN_CHARACTERS.hasOwnProperty(key)) {
+            enabledTags[GENSHIN_CHARACTERS[key].voice] = true;
+        }
+    }
+}
+
 // ===================== 过滤发音人：只保留外部列表中启用的 tag =====================
 var ALL_VOICE_TAGS = [];
 var VOICE_TAG_TO_KEY = {};
