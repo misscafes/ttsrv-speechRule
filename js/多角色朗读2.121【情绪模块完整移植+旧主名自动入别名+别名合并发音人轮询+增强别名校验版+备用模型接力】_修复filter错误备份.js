@@ -901,7 +901,46 @@ function voteNameAnalyzeResult(successResults, dialogTextMap) {
 
     // 无有效结果兜底
     if (seqAllResults.length === 0) {
-      finalResult[currentSeq] = {
+      
+
+            // 核心4：选情绪（仅选中主名+性别+年龄的结果统计）
+            var ageMatchedResults = genderMatchedResults.filter(function(item) {
+              return item.age === selectedAge;
+            });
+
+            var emotionCountMap = {};
+            for (var i = 0; i < ageMatchedResults.length; i++) {
+              var emotion = ageMatchedResults[i].emotion || "无";
+              emotionCountMap[emotion] = (emotionCountMap[emotion] || 0) + 1;
+            }
+
+            var maxEmotionCount = 0;
+            var topEmotionList = [];
+            for (var emotion in emotionCountMap) {
+              if (emotionCountMap.hasOwnProperty(emotion)) {
+                if (emotionCountMap[emotion] > maxEmotionCount) {
+                  maxEmotionCount = emotionCountMap[emotion];
+                  topEmotionList = [emotion];
+                } else if (emotionCountMap[emotion] === maxEmotionCount) {
+                  topEmotionList.push(emotion);
+                }
+              }
+            }
+
+            var selectedEmotion = topEmotionList[0] || "无";
+            if (topEmotionList.length > 1) {
+              var sortedEmotionByTime = ageMatchedResults.sort(function(a, b) {
+                return b.timestamp - a.timestamp;
+              });
+              for (var i = 0; i < sortedEmotionByTime.length; i++) {
+                var currentEmotion = sortedEmotionByTime[i].emotion || "无";
+                if (topEmotionList.indexOf(currentEmotion) !== -1) {
+                  selectedEmotion = currentEmotion;
+                  break;
+                }
+              }
+            }
+finalResult[currentSeq] = {
         name: "未知",
         gender: Math.random() > 0.5 ? "男" : "女",
         age: Math.random() > 0.5 ? "青年" : "中年",
@@ -1050,41 +1089,6 @@ function voteNameAnalyzeResult(successResults, dialogTextMap) {
       }
     }
 
-    var ageMatchedResults = genderMatchedResults.filter(function(item) {
-      return item.age === selectedAge;
-    });
-
-    var emotionCountMap = {};
-    for (var i = 0; i < ageMatchedResults.length; i++) {
-      var emotion = ageMatchedResults[i].emotion || "无";
-      emotionCountMap[emotion] = (emotionCountMap[emotion] || 0) + 1;
-    }
-    var maxEmotionCount = 0;
-    var topEmotionList = [];
-    for (var emotion in emotionCountMap) {
-      if (emotionCountMap.hasOwnProperty(emotion)) {
-        if (emotionCountMap[emotion] > maxEmotionCount) {
-          maxEmotionCount = emotionCountMap[emotion];
-          topEmotionList = [emotion];
-        } else if (emotionCountMap[emotion] === maxEmotionCount) {
-          topEmotionList.push(emotion);
-        }
-      }
-    }
-    var selectedEmotion = topEmotionList[0] || "无";
-    if (topEmotionList.length > 1) {
-      var sortedEmotionByTime = ageMatchedResults.sort(function(a, b) {
-        return b.timestamp - a.timestamp;
-      });
-      for (var i = 0; i < sortedEmotionByTime.length; i++) {
-        var currentEmotion = sortedEmotionByTime[i].emotion || "无";
-        if (topEmotionList.indexOf(currentEmotion) !== -1) {
-          selectedEmotion = currentEmotion;
-          break;
-        }
-      }
-    }
-
     var selectedPersonality = "";
     var personalityMatchedResults = ageMatchedResults.filter(function(item) {
       return item.age === selectedAge;
@@ -1126,7 +1130,6 @@ function voteNameAnalyzeResult(successResults, dialogTextMap) {
       name: selectedMainName,
       gender: selectedGender,
       age: selectedAge,
-      emotion: selectedEmotion,
       personality: selectedPersonality
     };
   }
