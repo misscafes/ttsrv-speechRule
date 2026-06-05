@@ -788,6 +788,7 @@
 - [x] 修复猫剪豆问脚本分配后声音混乱：allMatched分支latestRecords循环内更新+d.personality→m.personality
 - [x] 主规则修复 matchDialogFromCache / analyzeCharacterFallback 返回结果缺少 personality 字段，生成 v2.121
 - [x] 修复猫剪豆问脚本发音人串：fixedVoice保护+保留genderAge/usageCount+稳定排序+同段tempAssignedVoices
+- [x] 修复猫剪豆问脚本gengxin.json覆盖问题：改为与characterRecords.json合并而非全量覆盖
 - [ ] 如需功能迭代，在 v2.121 / v2.94 基础上增量开发
 
 ## 长期规划
