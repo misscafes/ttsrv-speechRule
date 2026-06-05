@@ -197,9 +197,9 @@
             var emotion = "";
             var source = "";
 
-            // 跳过纯省略号对话，不推断、不继承、不写入缓存
+            // 跳过纯标点对话（无实质文字内容），不推断、不继承、不写入缓存
             var strippedDialog = d.content.replace(/[\s　 -‏ - ﻿]/g, "").trim();
-            if (/^[…‥⋯]+$/.test(strippedDialog)) {
+            if (!/[A-Za-z0-9一-龥]/.test(strippedDialog)) {
                 continue;
             }
 
