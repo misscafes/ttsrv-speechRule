@@ -19,6 +19,18 @@
   6. **向后兼容**：AI 未返回 personality、发音人未配置 personality、或匹配失败时，均自动降级到原有 `genderAge` 分配逻辑，零侵入
 - **同步提取 JS 调阅文件**：`js/(脚本)猫剪豆问（优化版）_obj0.js`
 
+### v2.120（本次新建）
+- 基于 **v2.119** 添加提取角色性格分配发音人功能
+- **核心改动**：
+  1. `tagsData` 中 `personality` UI 配置彻底启用：新增 `personalityItemsConfig`（36个标准性格标签）和 `moren` 变量，取消注释 `duihua` 和 `GENSHIN_CHARACTERS` 的 `personality.items/default`
+  2. AI prompt 扩展 `personality` 字段，要求 AI 分析角色性格
+  3. `voteNameAnalyzeResult` 增加 personality 投票（name→gender→age→emotion→personality 五级投票，平票选最晚）
+  4. `selectVoiceByGlobalRandom()` 增加 `personality` 参数，在排序时叠加性格匹配度权重：从 `tagsData[voice].personality` 读取发音人性格，与角色性格做关键词重叠度评分
+  5. `assignVoice(gender, age, personality)` 增加 personality 参数，全链路贯通
+  6. `analyzeCharacter` / `processCharacter` / `characterRecords` 全链路支持 personality 读写
+  7. 向后兼容：无 personality 时自动降级到原有 gender/age/使用次数排序逻辑
+- 文件名：`多角色朗读2.120【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json`
+
 ### v2.119（本次新建）
 - 基于 **v2.118** 支持旁白添加情绪桥接前缀
 - **问题根因**：代码中 `isNarrationItem` 导致旁白被排除在 `attachEmotionBridgeToText` 之外，旁白即使有情绪配置也无法输出 `[[emo:xxx]]` 前缀
@@ -333,6 +345,27 @@
 
 ## 会话摘要
 
+**日期**: 2026-06-05  
+**当前版本**: 主规则 v2.120, 猫剪豆问（优化版）脚本  
+**主目录结构**: 
+- 根目录: `多角色朗读2.120【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json`
+- 参考目录: `(脚本)猫剪豆问（优化版）.json`, `jiaoseliebiao-list.json`
+- `js/` 目录: 提取的 JS 调阅文件
+- `历史版本/` 目录: 各历史版本备份
+
+**已完成事项**:
+1. 主规则 v2.119 → v2.120：AI 分析新增 `personality`（性格）字段输出
+2. 主规则 `voteNameAnalyzeResult` 五级投票新增 personality 级
+3. 主规则 `selectVoiceByGlobalRandom` / `assignVoice` 新增性格匹配排序（关键词重叠度评分）
+4. 主规则 `tagsData` personality UI 配置彻底启用（36个标准标签）
+5. 猫剪豆问（优化版）脚本移植相同功能：AI prompt / getTargetVoiceNum / 角色档案全链路支持 personality
+6. 备份原文件，提取 JS，git add/commit/push 同步到 GitHub 和 cnb.cool
+
+**注意事项**:
+- 36个标准性格标签：温婉/清冷/妩媚/英飒/活泼/甜美/知性/高傲/阴狠/稳重/冷酷/豪迈/温润/阳光/桀骜/阴鸷/颓废/怯懦/威严/慈祥/干练/优雅/泼辣/市侩/哀怨/热血/温和/狡黠/憨厚/阴郁/乖巧/呆萌/顽劣/坚定/胆小/通用
+- 向后兼容：无 personality 时自动降级到 gender/age 分配
+- 情绪(emotion)与性格(personality)是两个独立字段，互不干扰
+- TODO.md 存在 GBK 编码显示问题，但实际 UTF-8 内容正确
 
 ### 2026-06-03 Plan B：音效MP3帧同步缓冲修复
 - **问题**：Plan A（先文本后音效）导致音效只能在段落末尾播放，破坏叙事节奏
@@ -748,7 +781,8 @@
 - [x] 扩展本地情绪修正关键词库+修复itemType显示，生成 v2.118
 - [x] 支持旁白添加情绪桥接前缀，生成 v2.119
 - [x] 修复猫剪豆问（优化版）书源中旁白 [[emo:xxx]] 被朗读的问题
-- [ ] 如需功能迭代，在 v2.119 / v2.94 基础上增量开发
+- [x] 主规则添加提取角色性格分配发音人，生成 v2.120
+- [ ] 如需功能迭代，在 v2.120 / v2.94 基础上增量开发
 
 ## 长期规划
 - [ ] 在 v2.94 基础上逐步优化，避免大规模重构
