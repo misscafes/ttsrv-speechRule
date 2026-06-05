@@ -434,6 +434,8 @@ function readBookCharacters() {
                 genderAge: g + a,
                 voice: r.voice || "",
                 personality: r.personality || "",
+                fixedVoice: r.fixedVoice === true,
+                usageCount: typeof r.usageCount === "number" ? r.usageCount : 0,
                 saveTime: new Date().getTime()
             });
         }
@@ -463,8 +465,8 @@ function saveBookCharacters(charArr) {
                 gender: g,
                 age: a,
                 personality: r.personality || "",
-                usageCount: 100,
-                fixedVoice: !!(r.voice)
+                usageCount: typeof r.usageCount === "number" ? r.usageCount : 100,
+                fixedVoice: r.fixedVoice === true
             });
         }
         java.writeExternalFile(EXT_DIR + "characterRecords.json", JSON.stringify(managerArr, null, 2));
@@ -520,7 +522,10 @@ function getTargetVoiceNum(genderAge, existingVoice, extraUsedVoices, personalit
                 var sc = calcPersonalityMatchScore(vp, personality);
                 scoredVoices.push({ voice: v, score: sc });
             }
-            scoredVoices.sort(function(a, b) { return b.score - a.score; });
+            scoredVoices.sort(function(a, b) { 
+                if (b.score !== a.score) return b.score - a.score;
+                return a.voice.localeCompare(b.voice, "zh-CN", { numeric: true });
+            });
             if (scoredVoices[0].score > 0) {
                 return scoredVoices[0].voice;
             }
@@ -555,11 +560,14 @@ function saveCharacter(name, genderAge, voiceNum, voice, personality) {
 
     var existingEffectiveVoice = getEffectiveVoice(existingEntry);
     var finalVoice;
-    if (existingEffectiveVoice) {
+    if (existingEntry && existingEntry.fixedVoice === true && existingEntry.voice) {
+        finalVoice = existingEntry.voice;
+    } else if (existingEffectiveVoice) {
         finalVoice = existingEffectiveVoice;
     } else {
         finalVoice = isValidVoiceNum(voice) ? voice : (isValidVoiceNum(voiceNum) ? voiceNum : getTargetVoiceNum(genderAge, null, [], personality));
     }
+    var finalGenderAge = (existingEntry && existingEntry.genderAge) ? existingEntry.genderAge : genderAge;
 
     var preservedAliases = (existingEntry && existingEntry.aliases) ? existingEntry.aliases : name;
     var aliasArr = preservedAliases.split("|");
@@ -576,10 +584,12 @@ function saveCharacter(name, genderAge, voiceNum, voice, personality) {
     }
     newCharArr.unshift({ 
         name: name, 
-        genderAge: genderAge, 
+        genderAge: finalGenderAge, 
         voice: finalVoice, 
         aliases: newAliases,
-        personality: personality || (existingEntry ? existingEntry.personality : "")
+        personality: personality || (existingEntry ? existingEntry.personality : ""),
+        fixedVoice: (existingEntry && existingEntry.fixedVoice === true) || !!(finalVoice),
+        usageCount: (existingEntry && typeof existingEntry.usageCount === "number") ? existingEntry.usageCount : 100
     });
     if (newCharArr.length > MAX_CHARACTER) newCharArr.pop();
     saveBookCharacters(newCharArr);
@@ -1263,6 +1273,7 @@ function handleSpecialQuoteCases(originalText) {
 
     var finalCharResults = {};
     if (allMatched) {
+        var tempAssignedVoices = {};
         for (var i = 0; i < dialogs.length; i++) {
             var latestRecords = readBookCharacters();
             var seq = padZero(i + 1, 2);
@@ -1290,7 +1301,10 @@ function handleSpecialQuoteCases(originalText) {
             if (resRecord && resRecord.effectiveVoice) {
                 vn = resRecord.effectiveVoice;
             } else {
-                vn = getTargetVoiceNum(genderAge, null, [], m.personality || "");
+                var extraUsed = tempAssignedVoices[genderAge] || [];
+                vn = getTargetVoiceNum(genderAge, null, extraUsed, m.personality || "");
+                if (!tempAssignedVoices[genderAge]) tempAssignedVoices[genderAge] = [];
+                tempAssignedVoices[genderAge].push(vn);
             }
             finalCharResults[seq] = { name: finalName, voiceDisplay: extractVoiceDisplay(vn), genderAge: genderAge, voiceNum: vn };
             saveCharacter(finalName, genderAge, vn, "", m.personality || "");
