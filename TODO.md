@@ -387,30 +387,25 @@
 
 ## 会话摘要
 
-**日期**: 2026-06-05  
-**当前版本**: 主规则 v2.120, 猫剪豆问（优化版）脚本  
+**日期**: 2026-06-06  
+**当前版本**: 主规则 v2.122  
 **主目录结构**: 
-- 根目录: `多角色朗读2.120【情绪模块完整移植+旧主名自动入别名+别名合并发音人轮询+增强别名校验版+备用模型接力】.json`
+- 根目录: `多角色朗读2.122【性格无匹配时随机分配+情绪模块完整移植+别名合并发音人轮询】.json`
 - 参考目录: `(脚本)猫剪豆问（优化版）.json`, `jiaoseliebiao-list.json`
 - `js/` 目录: 提取的 JS 调阅文件
 - `历史版本/` 目录: 各历史版本备份
 
 **已完成事项**:
-1. 主规则 v2.119 → v2.120：AI 分析新增 `personality`（性格）字段输出
-2. 主规则 `voteNameAnalyzeResult` 五级投票新增 personality 级
-3. 主规则 `selectVoiceByGlobalRandom` / `assignVoice` 新增性格匹配排序（关键词重叠度评分）
-4. 主规则 `tagsData` personality UI 配置彻底启用（36个标准标签）
-5. 猫剪豆问（优化版）脚本移植相同功能：AI prompt / getTargetVoiceNum / 角色档案全链路支持 personality
-6. 备份原文件，提取 JS，git add/commit/push 同步到 GitHub 和 cnb.cool
+1. 主规则 v2.121 → v2.122：`selectVoiceByGlobalRandom` 性格无匹配时随机分配发音人，避免按 1-100 顺序集中
+2. 新增 `hasPersonalityHit` 预检测：遍历候选发音人性格配置，无任何命中时启用随机排序
+3. 文件名精简为保留最新3个功能标签（性格无匹配时随机分配 + 情绪模块完整移植 + 别名合并发音人轮询）
+4. 同步提取 JS 调阅文件，更新 TODO.md，git add/commit/push 同步到 GitHub 和 cnb.cool
 
 **注意事项**:
-- 36个标准性格标签：温婉/清冷/妩媚/英飒/活泼/甜美/知性/高傲/阴狠/稳重/冷酷/豪迈/温润/阳光/桀骜/阴鸷/颓废/怯懦/威严/慈祥/干练/优雅/泼辣/市侩/哀怨/热血/温和/狡黠/憨厚/阴郁/乖巧/呆萌/顽劣/坚定/胆小/通用
-- 向后兼容：无 personality 时自动降级到 gender/age 分配
-- 情绪(emotion)与性格(personality)是两个独立字段，互不干扰
-- 修复猫剪豆问脚本bug：allMatched分支中latestRecords未在循环内更新导致同段同角色被分配不同发音人；d.personality引用错误变量（应为m.personality）
-- 主规则 v2.121 修复：matchDialogFromCache 缓存命中时返回结果缺少 personality 字段，导致缓存命中路径下新角色性格匹配不生效；analyzeCharacterFallback 同样补充 personality 字段
-- 猫剪豆问脚本发音人串修复：saveCharacter 新增 fixedVoice 保护（手动固定发音人不再被覆盖）；readBookCharacters/saveBookCharacters 保留 fixedVoice/usageCount/personality；getTargetVoiceNum 性格匹配排序增加稳定性（分数相同时按voice名排序）；allMatched 分支新增 tempAssignedVoices 避免同段同genderAge新角色分配到同一发音人；saveCharacter 保留已有角色的 genderAge（防止AI不同段落返回不同genderAge导致发音人池变化）
-- TODO.md 存在 GBK 编码显示问题，但实际 UTF-8 内容正确
+- v2.122 基于 v2.121，仅修改 `selectVoiceByGlobalRandom` 排序逻辑，其他功能完全保留
+- 性格有匹配时行为不变：按匹配分数 > 使用次数排序
+- 性格无匹配时（含 personality 为空、或所有候选均未配置性格）：使用次数相同则随机打乱
+- 新文件名规范：只保留最近3个主要功能标签，避免文件名过长
 
 ### 2026-06-03 Plan B：音效MP3帧同步缓冲修复
 - **问题**：Plan A（先文本后音效）导致音效只能在段落末尾播放，破坏叙事节奏
