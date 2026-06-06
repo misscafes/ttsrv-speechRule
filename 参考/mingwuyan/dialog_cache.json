@@ -1,0 +1,69 @@
+{
+  "currentIndex": 1,
+  "dialogList": [
+    {
+      "seq": "01",
+      "dialogContent": "好，我知道了。",
+      "name": "沈妤",
+      "gender": "女",
+      "age": "女青年",
+      "personality": "隐忍、哀怨"
+    },
+    {
+      "seq": "02",
+      "dialogContent": "我让人送你回去，这么冷的天，别往外跑了，当心冻着。",
+      "name": "江敛之",
+      "gender": "男",
+      "age": "男青年",
+      "personality": "温润、虚伪"
+    },
+    {
+      "seq": "03",
+      "dialogContent": "不用了，也就几步路而已。",
+      "name": "沈妤",
+      "gender": "女",
+      "age": "女青年",
+      "personality": "隐忍、哀怨"
+    },
+    {
+      "seq": "04",
+      "dialogContent": "咳咳……",
+      "name": "沈妤",
+      "gender": "女",
+      "age": "女青年",
+      "personality": "哀怨、隐忍"
+    },
+    {
+      "seq": "05",
+      "dialogContent": "姐姐。",
+      "name": "林清漓",
+      "gender": "女",
+      "age": "女青年",
+      "personality": "高傲、妩媚"
+    },
+    {
+      "seq": "06",
+      "dialogContent": "姐姐，我是林清漓，不知道姐姐有没有听过我？",
+      "name": "林清漓",
+      "gender": "女",
+      "age": "女青年",
+      "personality": "高傲、妩媚"
+    },
+    {
+      "seq": "07",
+      "dialogContent": "林小姐有事吗？",
+      "name": "沈妤",
+      "gender": "女",
+      "age": "女青年",
+      "personality": "隐忍、清冷"
+    },
+    {
+      "seq": "08",
+      "dialogContent": "我知道姐姐对敛之纳我进门一事颇有意见，但这已经是我做出的最大的让步了。",
+      "name": "林清漓",
+      "gender": "女",
+      "age": "女青年",
+      "personality": "高傲、妩媚"
+    }
+  ]
+}

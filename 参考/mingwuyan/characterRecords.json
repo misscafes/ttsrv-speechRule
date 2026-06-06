@@ -1,0 +1,62 @@
+[
+  {
+    "name": "林清漓",
+    "aliases": "林清漓",
+    "voice": "女青年100",
+    "gender": "女",
+    "age": "女青年",
+    "personality": "高傲、妩媚",
+    "usageCount": 100,
+    "fixedVoice": true
+  },
+  {
+    "name": "沈妤",
+    "aliases": "沈妤",
+    "voice": "女青年116",
+    "gender": "女",
+    "age": "女青年",
+    "personality": "隐忍、清冷",
+    "usageCount": 100,
+    "fixedVoice": true
+  },
+  {
+    "name": "江敛之",
+    "aliases": "江敛之",
+    "voice": "男青年11",
+    "gender": "男",
+    "age": "男青年",
+    "personality": "温润、虚伪",
+    "usageCount": 100,
+    "fixedVoice": true
+  },
+  {
+    "name": "丫鬟",
+    "aliases": "丫鬟",
+    "voice": "女青年02",
+    "gender": "女",
+    "age": "女青年",
+    "personality": "胆小",
+    "usageCount": 100,
+    "fixedVoice": true
+  },
+  {
+    "name": "丫鬟乙",
+    "aliases": "丫鬟乙",
+    "voice": "女青年135",
+    "gender": "女",
+    "age": "女青年",
+    "personality": "温和",
+    "usageCount": 100,
+    "fixedVoice": true
+  },
+  {
+    "name": "丫鬟甲",
+    "aliases": "丫鬟甲",
+    "voice": "女青年01",
+    "gender": "女",
+    "age": "女青年",
+    "personality": "市侩",
+    "usageCount": 100,
+    "fixedVoice": true
+  }
+]
