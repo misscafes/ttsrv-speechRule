@@ -4,6 +4,16 @@
 
 > **版本号规范（猫剪豆问插件）**：从本次起，猫剪豆问（优化版）启用版本号管理，当前基准版本 **v1.0**。以后每次修改前，备份文件名格式为 `(脚本)猫剪豆问（优化版）v{x.y}_{改动描述}_备份.json`，主文件保持 `(脚本)猫剪豆问（优化版）.json` 不变。
 
+### 猫剪豆问（优化版）v1.1 回滚引擎代码到老版本（2026-06-06）
+- **问题经过**：
+  1. 修复 `if/else` 缺少 `}` 和删除多余 `}` 后，Rhino 继续报 `ReferenceError: "ws" 未定义`
+  2. 对比老版本 `参考/猫剪豆问（优化版）(15).json`（用户确认有声音的版本），发现当前引擎代码和老版本差异极小（仅异常引号优化的 `else` 分支）
+  3. Node.js 验证发现**老版本引擎代码本身也存在括号不平衡**（最终 balance=2），但用户确认该版本在 TTS Server/Rhino 中正常工作
+  4. 推测：TTS Server 在加载引擎时会自动添加包装代码，老版本的括号不平衡被包装代码"抵消"；之前修复语法错误时可能破坏了这种平衡
+- **处理方案**：直接将 `new/猫剪豆问（优化版）v1.1.json` 的引擎代码（`url`字段）完全替换为老版本 `参考/猫剪豆问（优化版）(15).json` 的代码
+- **副作用**：引擎中不再包含"异常引号拦截"的 `else` 分支（仅保留 `if (!hasLeftQuoteBefore)` 的处理），异常引号功能回退到老版本行为
+- **待验证**：请用户测试回滚后的版本，确认是否恢复声音
+
 ### 猫剪豆问（优化版）v1.1 优化自检兜底+清理personality残留（2026-06-06）
 - **版本升级**: v1.0 → v1.1
 - **引擎优化**:
@@ -448,40 +458,42 @@
 - **已知问题**：Rhino 跨行字符串报错、JsExtensions 类型无效
 - **新增备用模型**：集成 `BackupModelManager` + `concurrentApiRequest`/`directApiRequest` 故障切换
 
+### 猫剪豆问（优化版）v1.2 修复发音人分配异常（2026-06-06）
+- **问题根因**：
+  1. `BATCH_ROLES` 计数为 300，超出用户实际配置的发音人数量，导致 `getTargetVoiceNum` 可能分配到不存在的发音人
+  2. `tempAssignedVoices[genderAge].push(voiceNum)` 缺少 `indexOf` 重复检查，同一 genderAge 下已分配的发音人可能被重复推入 extraUsed 列表，影响后续角色的发音人选择
+- **修复内容**：
+  1. `BATCH_ROLES` 中 10 个批量角色类型的计数统一从 300 降为 100（与参考文件 `猫箱-VV(加速版+1)` 保持一致）
+  2. `tempAssignedVoices[genderAge].push(voiceNum)` 前添加 `indexOf` 检查：`if (tempAssignedVoices[genderAge].indexOf(voiceNum) === -1)`
+- **参考来源**：`(脚本)猫箱-VV(加速版+1).json` 的发音人分配逻辑（用户确认该参考文件发音人正常分配）
+- **备份文件**：
+  - `new/(脚本)猫剪豆问（优化版）v1.1_修复发音人分配备份.json`
+- **当前文件**：
+  - `new/(脚本)猫剪豆问（优化版）v1.2.json`
+  - `new/猫剪豆问（优化版）v1.1.json`（引擎，本次未修改）
+
 ## 会话摘要
 
 **日期**: 2026-06-06  
-**当前版本**: 主规则 v2.123 / 猫剪豆问插件 **v1.1**  
+**当前版本**: 主规则 v2.123 / 猫剪豆问插件 **v1.2**  
 **目录结构规范**:
 - 根目录: `多角色朗读2.123【...】.json`（主规则）
 - `new/` 目录（只放最新，文件带版本号）：
-  - `猫剪豆问（优化版）v1.1.json`（引擎，最新）
-  - `(脚本)猫剪豆问（优化版）v1.1.json`（脚本，最新）
-- `参考/` 目录（历史备份+参考文件）：
-  - 各历史备份文件（每次升级时把旧版本从new/移过来）
-  - `(脚本)猫箱-VV(加速版)...`（参考用）
-  - `mingwuyan/`（运行时数据）
+  - `猫剪豆问（优化版）v1.1.json`（引擎，未修改）
+  - `(脚本)猫剪豆问（优化版）v1.2.json`（脚本，最新）
+- `参考/` 目录（历史备份+参考文件）
 - `js/` 目录: 提取的 JS 调阅文件
-- `历史版本/` 目录: 主规则各历史版本备份
 
 **已完成事项**:
-1. 主规则 v2.122 → v2.123：修复性格匹配完全失效（3个bug）
-2. Bug1：`tagsData.personality` 是对象但代码当字符串处理，新增 `_extractPersonalityStr` 兼容提取
-3. Bug2：`assignVoice` 某路径漏传 personality 参数
-4. Bug4：`extractByRegex` 未处理对象输入导致 `fayinren_personality_summary.json` 为空
-5. 同步提取 JS 调阅文件，更新 TODO.md，git add/commit/push 同步到 GitHub 和 cnb.cool
-6. 移植猫箱-VV加速版的章节级AI缓存到猫剪豆问（优化版）插件（new/ 和 参考/ 两个版本）
-7. 新增 `CACHE_ROOT`、`readProgress`/`writeProgress`、`locateParagraphInFullText`、`readChapterCache`/`writeChapterCache`/`mergeChapterResults`、`matchInChapterCacheBySeq`、`handleNoQuoteText`
-8. 修改 `handleBookSwitch` 清理 `reading_progress.json`
-9. 修改主执行逻辑：dialog_cache 未命中 → 章节缓存 → AI分析 → 写入章节缓存
-10. 优化异常引号拦截：只拦截"有右无左"，"有左无右"交给正常流程批量分析
-11. v1.0 → v1.1：引擎增加路径自检、离线兜底、空配置兜底；脚本清理personality残留、增加启动自检日志
+1. 对比参考文件 `猫箱-VV(加速版+1)` 与当前脚本 v1.1 的发音人分配逻辑
+2. 修复 `BATCH_ROLES` 计数 300→100，避免分配到不存在的发音人
+3. 修复 `tempAssignedVoices.push` 缺少 `indexOf` 检查，防止同一发音人被重复计入已用列表
+4. 创建 v1.1 备份，生成 v1.2 新文件，同步更新 `script_code.js`
+5. 更新 TODO.md 变更记录和会话摘要
+6. git add/commit/push 同步到远程仓库
 
 **注意事项**:
-- v2.123 基于 v2.122，修复后性格匹配应能正常生效
-- `_extractPersonalityStr` 优先读取对象的 `default`，其次 `items`，最后兜底 `String()`
-- 新文件名规范：只保留最近3个主要功能标签
-- 章节缓存路径：`/storage/emulated/0/Download/chajian/xiaoshuo/书名/章节名.json`
-- 进度文件：`/storage/emulated/0/Download/chajian/xiaoshuo/reading_progress.json`
-- 章节缓存和 dialog_cache.json 共存，前者跨会话持久，后者当前会话快速
-- **目录规范**：`new/` 只存最新引擎+脚本，不放备份；`参考/` 存历史备份+v1.0存档+参考文件；三个主文件用途不同（根目录=主规则，new/=引擎+脚本最新，参考/=历史版本）
+- v1.2 仅修改脚本发音人分配逻辑，引擎文件未变更
+- BATCH_ROLES 降为 100 后，请确保 TTS Server 中实际配置的发音人数量与脚本一致
+- 如需恢复 300 个发音人配置，可手动修改 BATCH_ROLES 计数或回滚到 v1.1 备份
+- `new/` 目录下同时存在 v1.1（引擎）和 v1.2（脚本），使用时请配套加载
