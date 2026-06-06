@@ -44,16 +44,16 @@ var MAIN_ROLES_CONFIG = [
 var BATCH_ROLES = [
   ['主角 男主', '主角', '男主', '男主', 20],
   ['主角 女主', '主角', '女主', '女主', 20],
-  ['女/少女',   '女', '少女',   '少女',   100],
-  ['男/少年',   '男', '少年',   '少年',   100],
-  ['女/女青年', '女', '女青年', '女青年', 100],
-  ['男/男青年', '男', '男青年', '男青年', 100],
-  ['女/女中年', '女', '女中年', '女中年', 100],
-  ['男/男中年', '男', '男中年', '男中年', 100],
-  ['女/女老年', '女', '女老年', '女老年', 100],
-  ['男/男老年', '男', '男老年', '男老年', 100],
-  ['女/女童',   '女', '女童',   '女童',   100],
-  ['男/男童',   '男', '男童',   '男童',   100]
+  ['女/少女',   '女', '少女',   '少女',   300],
+  ['男/少年',   '男', '少年',   '少年',   300],
+  ['女/女青年',   '女', '女青年',   '女青年',   300],
+  ['男/男青年',   '男', '男青年',   '男青年',   300],
+  ['女/女中年',   '女', '女中年',   '女中年',   300],
+  ['男/男中年',   '男', '男中年',   '男中年',   300],
+  ['女/女老年',   '女', '女老年',   '女老年',   300],
+  ['男/男老年',   '男', '男老年',   '男老年',   300],
+  ['女/女童',   '女', '女童',   '女童',   300],
+  ['男/男童',   '男', '男童',   '男童',   300]
 ];
 var SPECIAL_ROLES = [
   ['【】括号发音人', '特殊', '系统', '括号1'],
@@ -835,6 +835,159 @@ function matchDialogFromCache(currentDialogText) {
     return null;
 }
 
+function sanitizeFileName(name) { return name.replace(/?/g, "？").replace(/[/:*?"<>|]/g, "＿"); }
+function getBookDir() { return CACHE_ROOT + sanitizeFileName(getBookNameSafely()) + "/"; }
+
+function ensureBookDir() {
+    var dir = getBookDir();
+    try { java.ensureDirectory(dir); } catch (e) {}
+    return dir;
+}
+
+function getChapterCachePath(chapterTitle) { return getBookDir() + sanitizeFileName(chapterTitle) + ".json"; }
+
+function readProgress() {
+    try {
+        var content = java.readExternalFile(PROGRESS_FILE);
+        if (!content || content.trim() === "") return null;
+        var prog = JSON.parse(content);
+        if (prog && prog.bookName && prog.chapterTitle && typeof prog.lastSeq === "number") return prog;
+    } catch (e) {}
+    return null;
+}
+
+function writeProgress(bookName, chapterTitle, lastSeq) {
+    try {
+        java.writeExternalFile(PROGRESS_FILE, JSON.stringify({
+            bookName: bookName,
+            chapterTitle: chapterTitle,
+            lastSeq: lastSeq
+        }));
+    } catch (e) {}
+}
+
+function readChapterCache(chapterTitle) {
+    try {
+        var path = getChapterCachePath(chapterTitle);
+        var content = java.readExternalFile(path);
+        if (!content || content.trim() === "") return { title: chapterTitle, results: {} };
+        var cache = JSON.parse(String(content));
+        return (cache && cache.results) ? cache : { title: chapterTitle, results: {} };
+    } catch (e) { return { title: chapterTitle, results: {} }; }
+}
+
+function writeChapterCache(chapterTitle, cacheData) {
+    try { java.writeExternalFile(getChapterCachePath(chapterTitle), JSON.stringify(cacheData, null, 2)); } catch (e) { log("【缓存】写入失败：" + e.message); }
+}
+
+function mergeChapterResults(chapterTitle, newResults) {
+    var cache = readChapterCache(chapterTitle);
+    if (!cache.results) cache.results = {};
+    for (var key in newResults) {
+        if (newResults.hasOwnProperty(key)) {
+            cache.results[key] = newResults[key];
+        }
+    }
+    writeChapterCache(chapterTitle, cache);
+}
+
+function matchInChapterCacheBySeq(chapterTitle, predictedSeq, cleanCurrent) {
+    var cache = readChapterCache(chapterTitle);
+    var results = cache.results || {};
+    for (var offset = -2; offset <= 2; offset++) {
+        var trySeq = predictedSeq + offset;
+        if (trySeq < 1) continue;
+        var key = String(trySeq);
+        var cachedItem = results[key];
+        if (!cachedItem) continue;
+        var dialogText = cachedItem.dialogText;
+        if (dialogText && tryMatchTextWithNewlines(dialogText, cleanCurrent)) {
+            return cachedItem;
+        }
+    }
+    return null;
+}
+
+function tryMatchTextWithNewlines(cachedText, cleanCurrent) {
+    if (!cachedText) return false;
+    if (cleanDialogText(cachedText) === cleanCurrent) return true;
+    var lines = cachedText.split("\n");
+    for (var i = 0; i < lines.length; i++) {
+        if (cleanDialogText(lines[i]) === cleanCurrent) return true;
+    }
+    return false;
+}
+
+function locateParagraphInFullText(paragraph) {
+    try {
+        var dataStr = String(java.readExternalFile(DATA_FILE));
+        if (!dataStr || dataStr.trim() === "") return null;
+        var data = JSON.parse(dataStr);
+        var fullText = String(data.texts);
+    } catch (e) { return null; }
+
+    var paraPos = fullText.indexOf(paragraph);
+    if (paraPos === -1) {
+        var shortPara = paragraph.substring(0, Math.min(paragraph.length, 50));
+        paraPos = fullText.indexOf(shortPara);
+        if (paraPos === -1) return null;
+    }
+
+    var lines = fullText.split(/\r?\n/);
+    var chapters = [];
+    var currentTitle = null, currentBody = "";
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (line.trim() === "") continue;
+        var startsWithIndent = (line.charAt(0) === "　" || line.charAt(0) === " ");
+        if (!startsWithIndent && !currentTitle) {
+            currentTitle = line.trim();
+            currentBody = "";
+        } else if (!startsWithIndent && currentTitle) {
+            if (currentBody.trim() !== "") chapters.push({ title: currentTitle, fullText: currentBody });
+            currentTitle = line.trim();
+            currentBody = "";
+        } else {
+            currentBody += line + "\n";
+        }
+    }
+    if (currentTitle && currentBody.trim() !== "") chapters.push({ title: currentTitle, fullText: currentBody });
+
+    var chapterTitle = null;
+    var chapterFullText = "";
+    var cumulativeLength = 0;
+    for (var i = 0; i < chapters.length; i++) {
+        var ch = chapters[i];
+        var nextCumulative = cumulativeLength + ch.fullText.length;
+        if (paraPos < nextCumulative) {
+            chapterTitle = ch.title;
+            chapterFullText = ch.fullText;
+            break;
+        }
+        cumulativeLength = nextCumulative;
+    }
+    if (!chapterTitle) return null;
+
+    var paraPosInChapter = chapterFullText.indexOf(paragraph);
+    if (paraPosInChapter === -1) {
+        paraPosInChapter = chapterFullText.indexOf(paragraph.substring(0, Math.min(paragraph.length, 50)));
+        if (paraPosInChapter === -1) return null;
+    }
+    var beforeText = chapterFullText.substring(0, paraPosInChapter);
+    var beforeCount = (beforeText.match(/“/g) || []).length;
+    var dialogs = extractDialogs(paragraph);
+    var seqList = [];
+    for (var n = 0; n < dialogs.length; n++) seqList.push(beforeCount + n + 1);
+
+    var totalDialogs = (chapterFullText.match(/“/g) || []).length;
+
+    return {
+        chapterTitle: chapterTitle,
+        seqList: seqList,
+        totalDialogs: totalDialogs
+    };
+}
+
 // ===================== 角色解析 =====================
 function resolveNameToRecord(inputName, records) {
     if (!inputName || !records) return null;
@@ -1287,13 +1440,14 @@ function handleNoQuoteText(originalText) {
 
     var finalCharResults = {};
     if (allMatched) {
-        var latestRecords = readBookCharacters();
+        var tempAssignedVoices = {};
         for (var i = 0; i < dialogs.length; i++) {
             var seq = padZero(i + 1, 2);
             var m = matchMap[seq];
             if (!m.gender) m.gender = "男";
             if (!m.age) m.age = "青年";
 
+            var latestRecords = readBookCharacters();
             var resRecord = resolveNameToRecord(m.name, latestRecords);
             var finalName = resRecord ? resRecord.mainName : m.name;
             var finalGender = m.gender || "男";
@@ -1314,7 +1468,10 @@ function handleNoQuoteText(originalText) {
             if (resRecord && resRecord.effectiveVoice) {
                 vn = resRecord.effectiveVoice;
             } else {
-                vn = getTargetVoiceNum(genderAge, null, []);
+                var extraUsed = tempAssignedVoices[genderAge] || [];
+                vn = getTargetVoiceNum(genderAge, null, extraUsed);
+                if (!tempAssignedVoices[genderAge]) tempAssignedVoices[genderAge] = [];
+                if (tempAssignedVoices[genderAge].indexOf(vn) === -1) tempAssignedVoices[genderAge].push(vn);
             }
             finalCharResults[seq] = { name: finalName, voiceDisplay: extractVoiceDisplay(vn), genderAge: genderAge, voiceNum: vn };
             saveCharacter(finalName, genderAge, vn, "");

@@ -460,11 +460,14 @@
 
 ### 猫剪豆问（优化版）v1.2 修复发音人分配异常（2026-06-06）
 - **问题根因**：
-  1. `BATCH_ROLES` 计数为 300，超出用户实际配置的发音人数量，导致 `getTargetVoiceNum` 可能分配到不存在的发音人
-  2. `tempAssignedVoices[genderAge].push(voiceNum)` 缺少 `indexOf` 重复检查，同一 genderAge 下已分配的发音人可能被重复推入 extraUsed 列表，影响后续角色的发音人选择
+  1. **调用未定义函数**：之前移植章节缓存时，主逻辑中调用了 `locateParagraphInFullText`、`matchInChapterCacheBySeq`、`readChapterCache` 等函数，但函数定义未同步复制到当前脚本中。当 `dialog_cache.json` 未命中时，脚本会抛出 `ReferenceError`，导致后续发音人分配逻辑完全无法执行
+  2. **缓存命中分支缺少角色状态更新**：`dialog_cache` 全部命中时，`readBookCharacters()` 在循环**外部**只读取一次，导致同一段落中同一角色的后续对话无法识别为已有角色，被分配到不同发音人
+  3. **缓存命中分支缺少 tempAssignedVoices**：全部缓存命中时，同一 genderAge 的不同新角色未使用 `tempAssignedVoices` 做排重，可能分配到相同发音人
 - **修复内容**：
-  1. `BATCH_ROLES` 中 10 个批量角色类型的计数统一从 300 降为 100（与参考文件 `猫箱-VV(加速版+1)` 保持一致）
-  2. `tempAssignedVoices[genderAge].push(voiceNum)` 前添加 `indexOf` 检查：`if (tempAssignedVoices[genderAge].indexOf(voiceNum) === -1)`
+  1. 从参考文件 `猫箱-VV(加速版+1)` 完整复制缺失的 12 个函数定义：`sanitizeFileName`、`getBookDir`、`ensureBookDir`、`getChapterCachePath`、`readProgress`、`writeProgress`、`readChapterCache`、`writeChapterCache`、`mergeChapterResults`、`matchInChapterCacheBySeq`、`tryMatchTextWithNewlines`、`locateParagraphInFullText`
+  2. 缓存命中分支中：将 `readBookCharacters()` 移入循环内部，确保每次迭代都能读到最新角色记录
+  3. 缓存命中分支中添加 `tempAssignedVoices`，与 AI 分析分支保持一致的发音人排重逻辑
+  4. 保留 `dialog_cache.json`、孤儿引号处理、`pending_quote.json` 等当前脚本特有功能
 - **参考来源**：`(脚本)猫箱-VV(加速版+1).json` 的发音人分配逻辑（用户确认该参考文件发音人正常分配）
 - **备份文件**：
   - `new/(脚本)猫剪豆问（优化版）v1.1_修复发音人分配备份.json`
