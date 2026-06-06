@@ -2,6 +2,26 @@
 
 ## 版本变更记录
 
+### 猫剪豆问（优化版）添加章节级AI缓存（2026-06-06）
+- **功能来源**：移植 `(脚本)猫箱-VV(加速版)` 的章节级AI识别结果缓存机制
+- **核心改动**：
+  1. 新增 `CACHE_ROOT = /storage/emulated/0/Download/chajian/xiaoshuo/`，每本书一个目录，每章一个 `.json` 缓存文件
+  2. 新增 `readProgress`/`writeProgress` 进度指针，记录当前阅读到的 `(bookName, chapterTitle, lastSeq)`
+  3. 新增 `locateParagraphInFullText` 全文定位，从 `data.json` 解析章节结构，定位段落所在章节和对话序号
+  4. 新增 `readChapterCache`/`writeChapterCache`/`mergeChapterResults` 章节缓存读写
+  5. 新增 `matchInChapterCacheBySeq` 按序号 ±2 浮动匹配，`tryMatchTextWithNewlines` 支持换行文本匹配
+  6. 新增 `handleNoQuoteText` 无引号文本走章节缓存匹配（仅限多行缓存对话）
+  7. 修改 `handleSpecialQuoteCases`：在 `matchDialogFromCache` 失败后增加章节缓存匹配
+  8. 修改主执行逻辑：`dialog_cache.json` 未完全命中时，先尝试章节缓存；章节缓存也完全命中则跳过AI；否则调AI并将结果写入章节缓存
+  9. 修改 `handleBookSwitch`：换书时删除 `reading_progress.json`，避免跨书进度污染
+- **缓存层级**：`dialog_cache.json`（当前会话顺序缓存）→ 章节缓存（跨会话持久缓存）→ AI分析
+- **备份文件**：
+  - `new/(脚本)猫剪豆问（优化版）_添加章节缓存备份.json`
+  - `参考/(脚本)猫剪豆问（优化版）_添加章节缓存备份.json`
+- **当前文件**：
+  - `new/猫剪豆问（优化版）.json` / `new/(脚本)猫剪豆问（优化版）.json`
+  - `参考/猫剪豆问（优化版）.json` / `参考/(脚本)猫剪豆问（优化版）.json`
+
 ### v2.123（本次新建）
 - 基于 **v2.122** 修复性格匹配完全失效的问题
 - **问题根因**：`tagsData[voiceTag].personality` 在代码中被显式赋值为 UI 配置对象 `{label, hint, items, default}`，但 `selectVoiceByGlobalRandom` 中 `String(td.personality)` 对对象返回 `"[object Object]"`，导致性格关键词匹配永远失败
@@ -397,10 +417,11 @@
 ## 会话摘要
 
 **日期**: 2026-06-06  
-**当前版本**: 主规则 v2.123  
+**当前版本**: 主规则 v2.123 / 猫剪豆问插件（章节缓存版）  
 **主目录结构**: 
 - 根目录: `多角色朗读2.123【修复性格匹配失效+性格无匹配时随机分配+别名合并发音人轮询】.json`
-- 参考目录: `(脚本)猫剪豆问（优化版）.json`, `jiaoseliebiao-list.json`
+- `new/` 目录: `猫剪豆问（优化版）.json`, `(脚本)猫剪豆问（优化版）.json`（已添加章节缓存）
+- `参考/` 目录: `猫剪豆问（优化版）.json`, `(脚本)猫剪豆问（优化版）.json`（已添加章节缓存）
 - `js/` 目录: 提取的 JS 调阅文件
 - `历史版本/` 目录: 各历史版本备份
 
@@ -410,8 +431,15 @@
 3. Bug2：`assignVoice` 某路径漏传 personality 参数
 4. Bug4：`extractByRegex` 未处理对象输入导致 `fayinren_personality_summary.json` 为空
 5. 同步提取 JS 调阅文件，更新 TODO.md，git add/commit/push 同步到 GitHub 和 cnb.cool
+6. 移植猫箱-VV加速版的章节级AI缓存到猫剪豆问（优化版）插件（new/ 和 参考/ 两个版本）
+7. 新增 `CACHE_ROOT`、`readProgress`/`writeProgress`、`locateParagraphInFullText`、`readChapterCache`/`writeChapterCache`/`mergeChapterResults`、`matchInChapterCacheBySeq`、`handleNoQuoteText`
+8. 修改 `handleBookSwitch` 清理 `reading_progress.json`
+9. 修改主执行逻辑：dialog_cache 未命中 → 章节缓存 → AI分析 → 写入章节缓存
 
 **注意事项**:
 - v2.123 基于 v2.122，修复后性格匹配应能正常生效
 - `_extractPersonalityStr` 优先读取对象的 `default`，其次 `items`，最后兜底 `String()`
 - 新文件名规范：只保留最近3个主要功能标签
+- 章节缓存路径：`/storage/emulated/0/Download/chajian/xiaoshuo/书名/章节名.json`
+- 进度文件：`/storage/emulated/0/Download/chajian/xiaoshuo/reading_progress.json`
+- 章节缓存和 dialog_cache.json 共存，前者跨会话持久，后者当前会话快速
