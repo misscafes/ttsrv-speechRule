@@ -2,6 +2,20 @@
 
 ## 版本变更记录
 
+### 猫剪豆问（优化版）移除性格匹配+跳过外部列表（2026-06-06 11:03）
+- **问题根因**：用户反馈"声音都是乱的"，实际使用单发音人+提示词变音方案
+- **核心改动**：
+  1. 恢复到 `_同步参考版本备份.json` 的插件代码（无 personality 逻辑）
+  2. 保留缓存跨书污染修复（handleBookSwitch 清理 dialog_cache/pending_quote，matchDialogFromCache bookName 校验）
+  3. `enabledTags` 逻辑改为**不读取外部 `jiaoseliebiao-list.json`**，直接启用所有内置 `GENSHIN_CHARACTERS`
+- **备份文件**：
+  - `new/(脚本)猫剪豆问（优化版）_移除性格匹配备份.json`
+- **当前文件**：
+  - `new/猫剪豆问（优化版）.json`
+  - `new/(脚本)猫剪豆问（优化版）.json`
+
+
+
 ### 猫剪豆问（优化版）修复缓存跨书污染（2026-06-06 10:50）
 - **问题根因**：声音都是乱的
   1. `dialog_cache.json` 在书籍切换时未被清除，新书对话错误匹配到旧书缓存角色，导致角色分配错乱

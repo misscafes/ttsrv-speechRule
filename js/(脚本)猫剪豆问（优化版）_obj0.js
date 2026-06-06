@@ -83,52 +83,12 @@ var GENSHIN_CHARACTERS = (function () {
   return chars;
 })();
 
-// ===================== 读取外部启用角色列表，提取有效的 tag 集合 + personality 映射 =====================
+// ===================== 读取外部启用角色列表，提取有效的 tag 集合 =====================
+// 不读取外部列表，直接启用所有内置发音人
 var enabledTags = {};
-var voiceTagToPersonality = {};
-try {
-    var listContent = String(java.readExternalFile(ROLE_LIST_FILE));
-    if (listContent && listContent.trim() !== "") {
-        var roleList = JSON.parse(listContent);
-        if (isArray(roleList)) {
-            for (var gi = 0; gi < roleList.length; gi++) {
-                var group = roleList[gi];
-                var items = group.list;
-                if (items && items.length) {
-                    for (var ii = 0; ii < items.length; ii++) {
-                        var item = items[ii];
-                        if (item.isEnabled === true &&
-                            item.config && item.config.speechRule && item.config.speechRule.tag) {
-                            var _tag = item.config.speechRule.tag;
-                            enabledTags[_tag] = true;
-                            var _td = item.config && item.config.speechRule && item.config.speechRule.tagData ? item.config.speechRule.tagData : {};
-                            var _personality = _td.personality || "";
-                            if (_personality && _personality.trim && _personality.trim()) {
-                                voiceTagToPersonality[_tag] = _personality.trim();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-} catch (e) {
-    // 读取失败则不过滤，启用所有内置发音人
-    for (var key in GENSHIN_CHARACTERS) {
-        if (GENSHIN_CHARACTERS.hasOwnProperty(key)) {
-            enabledTags[GENSHIN_CHARACTERS[key].voice] = true;
-        }
-    }
-}
-
-// 若外部列表未提供任何启用tag（文件存在但内容为空/无匹配），启用所有内置发音人兜底
-var _enabledCount = 0;
-for (var _k in enabledTags) { if (enabledTags.hasOwnProperty(_k)) _enabledCount++; }
-if (_enabledCount === 0) {
-    for (var key in GENSHIN_CHARACTERS) {
-        if (GENSHIN_CHARACTERS.hasOwnProperty(key)) {
-            enabledTags[GENSHIN_CHARACTERS[key].voice] = true;
-        }
+for (var key in GENSHIN_CHARACTERS) {
+    if (GENSHIN_CHARACTERS.hasOwnProperty(key)) {
+        enabledTags[GENSHIN_CHARACTERS[key].voice] = true;
     }
 }
 
@@ -156,23 +116,6 @@ for (var ga in genderAgeToVoices) {
     }
 }
 ALL_VOICE_TAGS = uniqueArr(ALL_VOICE_TAGS).sort(function(a, b) { return a.localeCompare(b, 'zh-CN', { numeric: true }); });
-
-// ===================== 性格匹配评分函数 =====================
-function calcPersonalityMatchScore(voicePersonality, characterPersonality) {
-    if (!voicePersonality || !characterPersonality) return 0;
-    var vp = String(voicePersonality);
-    var cp = String(characterPersonality);
-    var keywords = cp.split(/[,，、|\/\s]+/);
-    var score = 0;
-    for (var i = 0; i < keywords.length; i++) {
-        var kw = keywords[i].trim();
-        if (!kw) continue;
-        if (vp.indexOf(kw) !== -1) {
-            score += (kw.length >= 2) ? 2 : 1;
-        }
-    }
-    return score;
-}
 
 // 生成过滤后的 fayinren.json
 try {
@@ -355,7 +298,7 @@ function getVoiceMarkFromMatch(matchResult) {
     var finalAge = matchResult.age || "青年";
     var gaKey = finalGender + "-" + finalAge;
     var genderAge = genderAgeMap[gaKey] || ((finalGender === "男") ? "男男青年" : "女女青年");
-    saveCharacter(finalName, genderAge, voice, "", matchResult ? matchResult.personality : "");
+    saveCharacter(finalName, genderAge, voice, "");
     return "<<" + extractVoiceDisplay(voice) + ">>";
 }
 
@@ -400,29 +343,9 @@ function getLatestCharacterRecords() {
         if (rawGengxin && rawGengxin.trim() !== "") {
             var gengxinArr = JSON.parse(rawGengxin);
             if (isArray(gengxinArr)) {
-                var charPath = EXT_DIR + "characterRecords.json";
-                var existingArr = [];
-                try {
-                    var rawChar = String(java.readExternalFile(charPath));
-                    if (rawChar && rawChar.trim() !== "") {
-                        var parsed = JSON.parse(rawChar);
-                        if (isArray(parsed)) existingArr = parsed;
-                    }
-                } catch (e) {}
-                var existingMap = {};
-                for (var i = 0; i < existingArr.length; i++) {
-                    if (existingArr[i].name) existingMap[String(existingArr[i].name).trim()] = existingArr[i];
-                }
-                for (var i = 0; i < gengxinArr.length; i++) {
-                    if (gengxinArr[i].name) existingMap[String(gengxinArr[i].name).trim()] = gengxinArr[i];
-                }
-                var mergedArr = [];
-                for (var key in existingMap) {
-                    if (existingMap.hasOwnProperty(key)) mergedArr.push(existingMap[key]);
-                }
-                java.writeExternalFile(EXT_DIR + "characterRecords.json", JSON.stringify(mergedArr, null, 2));
+                java.writeExternalFile(EXT_DIR + "characterRecords.json", JSON.stringify(gengxinArr, null, 2));
                 java.deleteExternalFile(gengxinPath);
-                return mergedArr;
+                return gengxinArr;
             }
         }
     } catch (e) {}
@@ -464,9 +387,6 @@ function readBookCharacters() {
                 age: a,
                 genderAge: g + a,
                 voice: r.voice || "",
-                personality: r.personality || "",
-                fixedVoice: r.fixedVoice === true,
-                usageCount: typeof r.usageCount === "number" ? r.usageCount : 0,
                 saveTime: new Date().getTime()
             });
         }
@@ -495,9 +415,8 @@ function saveBookCharacters(charArr) {
                 voice: r.voice || "",
                 gender: g,
                 age: a,
-                personality: r.personality || "",
-                usageCount: typeof r.usageCount === "number" ? r.usageCount : 100,
-                fixedVoice: r.fixedVoice === true
+                usageCount: 100,
+                fixedVoice: !!(r.voice)
             });
         }
         java.writeExternalFile(EXT_DIR + "characterRecords.json", JSON.stringify(managerArr, null, 2));
@@ -505,7 +424,7 @@ function saveBookCharacters(charArr) {
 }
 
 // ===================== 发音人分配 =====================
-function getTargetVoiceNum(genderAge, existingVoice, extraUsedVoices, personality) {
+function getTargetVoiceNum(genderAge, existingVoice, extraUsedVoices) {
     if (existingVoice && isValidVoiceNum(existingVoice)) {
         return existingVoice;
     }
@@ -544,25 +463,7 @@ function getTargetVoiceNum(genderAge, existingVoice, extraUsedVoices, personalit
         if (usedVoices.indexOf(allVoices[i]) === -1) remainVoices.push(allVoices[i]);
     }
 
-    if (remainVoices.length > 0) {
-        if (personality && voiceTagToPersonality) {
-            var scoredVoices = [];
-            for (var i = 0; i < remainVoices.length; i++) {
-                var v = remainVoices[i];
-                var vp = voiceTagToPersonality[v] || "";
-                var sc = calcPersonalityMatchScore(vp, personality);
-                scoredVoices.push({ voice: v, score: sc });
-            }
-            scoredVoices.sort(function(a, b) { 
-                if (b.score !== a.score) return b.score - a.score;
-                return a.voice.localeCompare(b.voice, "zh-CN", { numeric: true });
-            });
-            if (scoredVoices[0].score > 0) {
-                return scoredVoices[0].voice;
-            }
-        }
-        return remainVoices[0];
-    }
+    if (remainVoices.length > 0) return remainVoices[0];
 
     var seenVoice = {}, dedupedChars = [];
     for (var i = 0; i < savedChars.length; i++) {
@@ -579,7 +480,7 @@ function getTargetVoiceNum(genderAge, existingVoice, extraUsedVoices, personalit
     return allVoices[0] || DEFAULT_VOICE_IDX;
 }
 
-function saveCharacter(name, genderAge, voiceNum, voice, personality) {
+function saveCharacter(name, genderAge, voiceNum, voice) {
     if (saveMassCharacter === 0 && name.indexOf("群众") >= 0) return;
     if (!genderAgeToVoices[genderAge] && genderAge.indexOf("主角") === -1 || !name || name.length < 1 || name.length > 30) return;
 
@@ -591,14 +492,11 @@ function saveCharacter(name, genderAge, voiceNum, voice, personality) {
 
     var existingEffectiveVoice = getEffectiveVoice(existingEntry);
     var finalVoice;
-    if (existingEntry && existingEntry.fixedVoice === true && existingEntry.voice) {
-        finalVoice = existingEntry.voice;
-    } else if (existingEffectiveVoice) {
+    if (existingEffectiveVoice) {
         finalVoice = existingEffectiveVoice;
     } else {
-        finalVoice = isValidVoiceNum(voice) ? voice : (isValidVoiceNum(voiceNum) ? voiceNum : getTargetVoiceNum(genderAge, null, [], personality));
+        finalVoice = isValidVoiceNum(voice) ? voice : (isValidVoiceNum(voiceNum) ? voiceNum : getTargetVoiceNum(genderAge, null, []));
     }
-    var finalGenderAge = (existingEntry && existingEntry.genderAge) ? existingEntry.genderAge : genderAge;
 
     var preservedAliases = (existingEntry && existingEntry.aliases) ? existingEntry.aliases : name;
     var aliasArr = preservedAliases.split("|");
@@ -615,12 +513,9 @@ function saveCharacter(name, genderAge, voiceNum, voice, personality) {
     }
     newCharArr.unshift({ 
         name: name, 
-        genderAge: finalGenderAge, 
+        genderAge: genderAge, 
         voice: finalVoice, 
-        aliases: newAliases,
-        personality: personality || (existingEntry ? existingEntry.personality : ""),
-        fixedVoice: (existingEntry && existingEntry.fixedVoice === true) || !!(finalVoice),
-        usageCount: (existingEntry && typeof existingEntry.usageCount === "number") ? existingEntry.usageCount : 100
+        aliases: newAliases 
     });
     if (newCharArr.length > MAX_CHARACTER) newCharArr.pop();
     saveBookCharacters(newCharArr);
@@ -857,8 +752,7 @@ function matchDialogFromCache(currentDialogText) {
                 matchedResult = {
                     name: items.name || "未知",
                     gender: items.gender || "男",
-                    age: items.age || "青年",
-                    personality: items.personality || ""
+                    age: items.age || "青年"
                 };
                 finalMatchedIndex = idx + 1;
                 return true;
@@ -879,8 +773,7 @@ function matchDialogFromCache(currentDialogText) {
                 matchedResult = {
                     name: items.name || "未知",
                     gender: items.gender || "男",
-                    age: items.age || "青年",
-                    personality: items.personality || ""
+                    age: items.age || "青年"
                 };
                 finalMatchedIndex = idx + 1;
                 return true;
@@ -1072,7 +965,7 @@ function buildAnalyzePrompt() {
         "3. 如果无法确定说话人姓名，就用前后对这个人的描述作为名字，如果连描述也没有，就根据性别年龄填写“群众男青年”“群众男中年”“群众男老年”“群众男童”“群众少女”“群众女青年”“群众女中年”“群众女老年”“群众女童”“系统”其中的一个；\n" +
         "4. 必须包含文本中所有序号的对话结果，不能遗漏、不能多返回、不能少返回。\n" +
         "5. 输出前，请仔细核对每个序号对应的对话内容与上下文，确保说话人归属无误；如遇歧义，优先选择上下文中最合理的角色，并避免因序号相邻而误判。\n" +
-        "输出格式示例：\n{\n  \"01\": {\n    \"name\": \"分析出的说话人姓名\",\n    \"gender\": \"性别（男/女/特殊）\",\n    \"age\": \"年龄分类（女性：女童/少女/女青年/女中年/女老年）；（男性：男童/少年/男青年/男中年/男老年）；（特殊：系统/旁白）\",\n    \"personality\": \"性格标签（从以下标签中选择最匹配的1-2个：温婉、清冷、妩媚、英飒、活泼、甜美、知性、高傲、阴狠、稳重、冷酷、豪迈、温润、阳光、桀骜、阴鸷、颓废、怯懦、威严、慈祥、干练、优雅、泼辣、市侩、哀怨、热血、温和、狡黠、憨厚、阴郁、乖巧、呆萌、顽劣、坚定、胆小、通用。如无法判断可留空）\"\n  },\n  \"02\": { ... }\n}\n";
+        "输出格式示例：\n{\n  \"01\": {\n    \"name\": \"分析出的说话人姓名\",\n    \"gender\": \"性别（男/女/特殊）\",\n    \"age\": \"年龄分类（女性：女童/少女/女青年/女中年/女老年）；（男性：男童/少年/男青年/男中年/男老年）；（特殊：系统/旁白）\"\n  },\n  \"02\": { ... }\n}\n";
 }
 
 function callAnalyzeApi(seqContent, aboveContext) {
@@ -1163,7 +1056,7 @@ function updateCharacterRecords(dialogList, chapterContext) {
         seen[name] = true;
         if (mainNameSet[name] || aliasToMainMap[name]) continue;
         unknownNames.push(name);
-        nameToInfo[name] = { gender: item.gender, age: item.age, personality: item.personality || "" };
+        nameToInfo[name] = { gender: item.gender, age: item.age };
     }
     if (unknownNames.length === 0) return;
 
@@ -1244,7 +1137,7 @@ function updateCharacterRecords(dialogList, chapterContext) {
                 }
             } else {
                 var info = nameToInfo[name] || { gender: "男", age: "青年" };
-                records.unshift({ name: name, aliases: name, gender: info.gender, age: info.age, voice: "", personality: info.personality || "" });
+                records.unshift({ name: name, aliases: name, gender: info.gender, age: info.age, voice: "" });
             }
         } else {
             var info = nameToInfo[name] || { gender: "男", age: "青年" };
@@ -1283,7 +1176,7 @@ function handleSpecialQuoteCases(originalText) {
 
     var gaKey = finalGender + "-" + finalAge;
     var genderAge = genderAgeMap[gaKey] || ((finalGender === "男") ? "男男青年" : "女女青年");
-    saveCharacter(finalName, genderAge, voice, "", matchResult ? matchResult.personality : "");
+    saveCharacter(finalName, genderAge, voice, "");
 
     var voiceMark = "<<" + extractVoiceDisplay(voice) + ">>";
     var outputText = "“" + voiceMark + matchContent + "”";
@@ -1314,9 +1207,8 @@ function handleSpecialQuoteCases(originalText) {
 
     var finalCharResults = {};
     if (allMatched) {
-        var tempAssignedVoices = {};
+        var latestRecords = readBookCharacters();
         for (var i = 0; i < dialogs.length; i++) {
-            var latestRecords = readBookCharacters();
             var seq = padZero(i + 1, 2);
             var m = matchMap[seq];
             if (!m.gender) m.gender = "男";
@@ -1342,13 +1234,10 @@ function handleSpecialQuoteCases(originalText) {
             if (resRecord && resRecord.effectiveVoice) {
                 vn = resRecord.effectiveVoice;
             } else {
-                var extraUsed = tempAssignedVoices[genderAge] || [];
-                vn = getTargetVoiceNum(genderAge, null, extraUsed, m.personality || "");
-                if (!tempAssignedVoices[genderAge]) tempAssignedVoices[genderAge] = [];
-                tempAssignedVoices[genderAge].push(vn);
+                vn = getTargetVoiceNum(genderAge, null, []);
             }
             finalCharResults[seq] = { name: finalName, voiceDisplay: extractVoiceDisplay(vn), genderAge: genderAge, voiceNum: vn };
-            saveCharacter(finalName, genderAge, vn, "", m.personality || "");
+            saveCharacter(finalName, genderAge, vn, "");
         }
     } else {
         var aboveContext = getAboveContext();
@@ -1367,13 +1256,13 @@ function handleSpecialQuoteCases(originalText) {
                     if (newlinePos !== -1) rawDialog = rawDialog.substring(0, newlinePos);
                 }
                 var itemResult = analyzeResult[seqN] || { name: "未知", gender: "男", age: "青年" };
-                dialogList.push({ seq: seqN, dialogContent: rawDialog, name: itemResult.name, gender: itemResult.gender, age: itemResult.age, personality: itemResult.personality || "" });
+                dialogList.push({ seq: seqN, dialogContent: rawDialog, name: itemResult.name, gender: itemResult.gender, age: itemResult.age });
             }
             if (dialogList.length === 0) {
                 for (var i = 0; i < dialogs.length; i++) {
                     var seqN = padZero(i + 1, 2);
                     var itemResult = analyzeResult[seqN] || { name: "未知", gender: "男", age: "青年" };
-                    dialogList.push({ seq: seqN, dialogContent: dialogs[i].content, name: itemResult.name, gender: itemResult.gender, age: itemResult.age, personality: itemResult.personality || "" });
+                    dialogList.push({ seq: seqN, dialogContent: dialogs[i].content, name: itemResult.name, gender: itemResult.gender, age: itemResult.age });
                 }
             }
             writeDialogCache({ currentIndex: 1, dialogList: dialogList });
@@ -1386,7 +1275,6 @@ function handleSpecialQuoteCases(originalText) {
                         name: dialogList[pi].name,
                         gender: dialogList[pi].gender,
                         age: dialogList[pi].age,
-                        personality: dialogList[pi].personality || "",
                         voice: finalCharResults[dialogList[pi].seq] ? finalCharResults[dialogList[pi].seq].voiceNum : ""
                     });
                     break;
@@ -1420,23 +1308,23 @@ function handleSpecialQuoteCases(originalText) {
                     voiceNum = resRecord.effectiveVoice;
                 } else {
                     var extraUsed = tempAssignedVoices[genderAge] || [];
-                    voiceNum = getTargetVoiceNum(genderAge, null, extraUsed, d.personality);
+                    voiceNum = getTargetVoiceNum(genderAge, null, extraUsed);
                     if (!tempAssignedVoices[genderAge]) tempAssignedVoices[genderAge] = [];
                     tempAssignedVoices[genderAge].push(voiceNum);
                 }
                 var voiceDisplay = extractVoiceDisplay(voiceNum);
 
                 if (finalName && finalName.indexOf("群众") === -1) {
-                    saveCharacter(finalName, genderAge, voiceNum, "", d.personality);
+                    saveCharacter(finalName, genderAge, voiceNum, "");
                 } else if (saveMassCharacter === 1 && finalName.indexOf("群众") >= 0) {
-                    saveCharacter(finalName, genderAge, voiceNum, "", d.personality);
+                    saveCharacter(finalName, genderAge, voiceNum, "");
                 }
                 finalCharResults[d.seq] = { name: finalName, voiceDisplay: voiceDisplay, genderAge: genderAge, voiceNum: voiceNum };
             }
         } else {
             for (var i = 0; i < dialogs.length; i++) {
                 var seq = padZero(i + 1, 2);
-                var vn = getTargetVoiceNum("男男青年", null, [], "");
+                var vn = getTargetVoiceNum("男男青年", null, []);
                 finalCharResults[seq] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn };
             }
         }
