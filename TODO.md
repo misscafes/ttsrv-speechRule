@@ -791,6 +791,7 @@
 - [x] 修复猫剪豆问脚本gengxin.json覆盖问题：改为与characterRecords.json合并而非全量覆盖
 - [x] 修复猫剪豆问脚本enabledTags为空导致所有角色分配到DEFAULT_VOICE_IDX：添加兜底fallback启用所有内置发音人
 - [x] 修复主规则v2.121 voteNameAnalyzeResult中ageMatchedResults未定义导致的filter错误
+- [x] 同步new目录猫剪豆问脚本到参考目录最新修复版
 - [ ] 如需功能迭代，在 v2.121 / v2.94 基础上增量开发
 
 ## 长期规划
