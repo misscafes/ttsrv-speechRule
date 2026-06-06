@@ -2,6 +2,25 @@
 
 ## 版本变更记录
 
+### 猫剪豆问（优化版）修复缓存跨书污染（2026-06-06 10:50）
+- **问题根因**：声音都是乱的
+  1. `dialog_cache.json` 在书籍切换时未被清除，新书对话错误匹配到旧书缓存角色，导致角色分配错乱
+  2. `pending_quote.json` 在书籍切换时未被清除，跨段引号状态残留
+  3. 规则文件 `CACHE_KEY_PENDING` 在 `hasLeftQuoteBefore=true` 时未被清除，导致跨段voice残留
+- **修复内容**：
+  1. 插件 `handleBookSwitch`：新增删除 `dialog_cache.json` 和 `pending_quote.json`
+  2. 插件 `readDialogCache/writeDialogCache`：新增 `bookName` 字段读写
+  3. 插件 `matchDialogFromCache`：增加 `bookName` 校验，缓存不属于当前书时自动重置
+  4. 规则文件：在 `hasLeftQuoteBefore=true` 的 `else` 分支中清除 `pendingVoice` 和 `CACHE_KEY_PENDING`
+- **备份文件**：
+  - `new/猫剪豆问（优化版）_修复跨段缓存备份.json`
+  - `new/(脚本)猫剪豆问（优化版）_修复跨段缓存备份.json`
+- **当前文件**：
+  - `new/猫剪豆问（优化版）.json`
+  - `new/(脚本)猫剪豆问（优化版）.json`
+
+
+
 ### 猫剪豆问（优化版）脚本：添加提取角色性格分配发音人（2026-06-05）
 - **文件**：`参考/(脚本)猫剪豆问（优化版）.json`
 - **备份**：`参考/(脚本)猫剪豆问（优化版）_添加性格分配备份.json`

@@ -121,6 +121,17 @@ try {
     }
 }
 
+// 若外部列表未提供任何启用tag（文件存在但内容为空/无匹配），启用所有内置发音人兜底
+var _enabledCount = 0;
+for (var _k in enabledTags) { if (enabledTags.hasOwnProperty(_k)) _enabledCount++; }
+if (_enabledCount === 0) {
+    for (var key in GENSHIN_CHARACTERS) {
+        if (GENSHIN_CHARACTERS.hasOwnProperty(key)) {
+            enabledTags[GENSHIN_CHARACTERS[key].voice] = true;
+        }
+    }
+}
+
 // ===================== 过滤发音人：只保留外部列表中启用的 tag =====================
 var ALL_VOICE_TAGS = [];
 var VOICE_TAG_TO_KEY = {};
@@ -389,9 +400,29 @@ function getLatestCharacterRecords() {
         if (rawGengxin && rawGengxin.trim() !== "") {
             var gengxinArr = JSON.parse(rawGengxin);
             if (isArray(gengxinArr)) {
-                java.writeExternalFile(EXT_DIR + "characterRecords.json", JSON.stringify(gengxinArr, null, 2));
+                var charPath = EXT_DIR + "characterRecords.json";
+                var existingArr = [];
+                try {
+                    var rawChar = String(java.readExternalFile(charPath));
+                    if (rawChar && rawChar.trim() !== "") {
+                        var parsed = JSON.parse(rawChar);
+                        if (isArray(parsed)) existingArr = parsed;
+                    }
+                } catch (e) {}
+                var existingMap = {};
+                for (var i = 0; i < existingArr.length; i++) {
+                    if (existingArr[i].name) existingMap[String(existingArr[i].name).trim()] = existingArr[i];
+                }
+                for (var i = 0; i < gengxinArr.length; i++) {
+                    if (gengxinArr[i].name) existingMap[String(gengxinArr[i].name).trim()] = gengxinArr[i];
+                }
+                var mergedArr = [];
+                for (var key in existingMap) {
+                    if (existingMap.hasOwnProperty(key)) mergedArr.push(existingMap[key]);
+                }
+                java.writeExternalFile(EXT_DIR + "characterRecords.json", JSON.stringify(mergedArr, null, 2));
                 java.deleteExternalFile(gengxinPath);
-                return gengxinArr;
+                return mergedArr;
             }
         }
     } catch (e) {}
@@ -434,6 +465,8 @@ function readBookCharacters() {
                 genderAge: g + a,
                 voice: r.voice || "",
                 personality: r.personality || "",
+                fixedVoice: r.fixedVoice === true,
+                usageCount: typeof r.usageCount === "number" ? r.usageCount : 0,
                 saveTime: new Date().getTime()
             });
         }
@@ -463,8 +496,8 @@ function saveBookCharacters(charArr) {
                 gender: g,
                 age: a,
                 personality: r.personality || "",
-                usageCount: 100,
-                fixedVoice: !!(r.voice)
+                usageCount: typeof r.usageCount === "number" ? r.usageCount : 100,
+                fixedVoice: r.fixedVoice === true
             });
         }
         java.writeExternalFile(EXT_DIR + "characterRecords.json", JSON.stringify(managerArr, null, 2));
@@ -520,7 +553,10 @@ function getTargetVoiceNum(genderAge, existingVoice, extraUsedVoices, personalit
                 var sc = calcPersonalityMatchScore(vp, personality);
                 scoredVoices.push({ voice: v, score: sc });
             }
-            scoredVoices.sort(function(a, b) { return b.score - a.score; });
+            scoredVoices.sort(function(a, b) { 
+                if (b.score !== a.score) return b.score - a.score;
+                return a.voice.localeCompare(b.voice, "zh-CN", { numeric: true });
+            });
             if (scoredVoices[0].score > 0) {
                 return scoredVoices[0].voice;
             }
@@ -555,11 +591,14 @@ function saveCharacter(name, genderAge, voiceNum, voice, personality) {
 
     var existingEffectiveVoice = getEffectiveVoice(existingEntry);
     var finalVoice;
-    if (existingEffectiveVoice) {
+    if (existingEntry && existingEntry.fixedVoice === true && existingEntry.voice) {
+        finalVoice = existingEntry.voice;
+    } else if (existingEffectiveVoice) {
         finalVoice = existingEffectiveVoice;
     } else {
         finalVoice = isValidVoiceNum(voice) ? voice : (isValidVoiceNum(voiceNum) ? voiceNum : getTargetVoiceNum(genderAge, null, [], personality));
     }
+    var finalGenderAge = (existingEntry && existingEntry.genderAge) ? existingEntry.genderAge : genderAge;
 
     var preservedAliases = (existingEntry && existingEntry.aliases) ? existingEntry.aliases : name;
     var aliasArr = preservedAliases.split("|");
@@ -576,10 +615,12 @@ function saveCharacter(name, genderAge, voiceNum, voice, personality) {
     }
     newCharArr.unshift({ 
         name: name, 
-        genderAge: genderAge, 
+        genderAge: finalGenderAge, 
         voice: finalVoice, 
         aliases: newAliases,
-        personality: personality || (existingEntry ? existingEntry.personality : "")
+        personality: personality || (existingEntry ? existingEntry.personality : ""),
+        fixedVoice: (existingEntry && existingEntry.fixedVoice === true) || !!(finalVoice),
+        usageCount: (existingEntry && typeof existingEntry.usageCount === "number") ? existingEntry.usageCount : 100
     });
     if (newCharArr.length > MAX_CHARACTER) newCharArr.pop();
     saveBookCharacters(newCharArr);
@@ -658,6 +699,8 @@ function handleBookSwitch() {
     } catch (err) {}
 
     java.writeExternalFile(HISTORY_FILE, "[]");
+    try { java.deleteExternalFile(CACHE_FILE); } catch (e) {}
+    try { java.deleteExternalFile(PENDING_QUOTE_FILE); } catch (e) {}
     saveCurrentBookName(validCurrBook);
 }
 
@@ -762,9 +805,9 @@ function generateBatchSeqContent(currentParagraph, dialogs, belowContent) {
 function readDialogCache() {
     try {
         var content = String(java.readExternalFile(CACHE_FILE));
-        if (!content || content.trim() === "") return { currentIndex: 1, dialogList: [] };
+        if (!content || content.trim() === "") return { currentIndex: 1, dialogList: [], bookName: "" };
         var raw = JSON.parse(content);
-        if (!raw || typeof raw !== "object") return { currentIndex: 1, dialogList: [] };
+        if (!raw || typeof raw !== "object") return { currentIndex: 1, dialogList: [], bookName: "" };
         var safeList = [];
         if (Object.prototype.toString.call(raw.dialogList) === "[object Array]") {
             for (var di = 0; di < raw.dialogList.length; di++) {
@@ -774,16 +817,24 @@ function readDialogCache() {
         }
         var safeIdx = typeof raw.currentIndex === "number" && raw.currentIndex >= 1 ? raw.currentIndex : 1;
         if (safeIdx > safeList.length + 1) safeIdx = Math.max(1, safeList.length);
-        return { currentIndex: safeIdx, dialogList: safeList };
-    } catch (e) { return { currentIndex: 1, dialogList: [] }; }
+        return { currentIndex: safeIdx, dialogList: safeList, bookName: raw.bookName || "" };
+    } catch (e) { return { currentIndex: 1, dialogList: [], bookName: "" }; }
 }
 function writeDialogCache(cacheData) {
-    try { java.writeExternalFile(CACHE_FILE, JSON.stringify(cacheData, null, 2)); return true; }
+    try {
+        cacheData.bookName = readCurrentBookName();
+        java.writeExternalFile(CACHE_FILE, JSON.stringify(cacheData, null, 2)); return true;
+    }
     catch (e) { return false; }
 }
 
 function matchDialogFromCache(currentDialogText) {
     var cache = readDialogCache();
+    var currentBook = readCurrentBookName();
+    if (cache.bookName && cache.bookName !== currentBook) {
+        writeDialogCache({ currentIndex: 1, dialogList: [], bookName: currentBook });
+        return null;
+    }
     var dialogList = cache.dialogList;
     var currentIndex = cache.currentIndex;
     var MAX_FORWARD_OFFSET = 2;
@@ -1263,8 +1314,9 @@ function handleSpecialQuoteCases(originalText) {
 
     var finalCharResults = {};
     if (allMatched) {
-        var latestRecords = readBookCharacters();
+        var tempAssignedVoices = {};
         for (var i = 0; i < dialogs.length; i++) {
+            var latestRecords = readBookCharacters();
             var seq = padZero(i + 1, 2);
             var m = matchMap[seq];
             if (!m.gender) m.gender = "男";
@@ -1290,10 +1342,13 @@ function handleSpecialQuoteCases(originalText) {
             if (resRecord && resRecord.effectiveVoice) {
                 vn = resRecord.effectiveVoice;
             } else {
-                vn = getTargetVoiceNum(genderAge, null, [], d.personality);
+                var extraUsed = tempAssignedVoices[genderAge] || [];
+                vn = getTargetVoiceNum(genderAge, null, extraUsed, m.personality || "");
+                if (!tempAssignedVoices[genderAge]) tempAssignedVoices[genderAge] = [];
+                tempAssignedVoices[genderAge].push(vn);
             }
             finalCharResults[seq] = { name: finalName, voiceDisplay: extractVoiceDisplay(vn), genderAge: genderAge, voiceNum: vn };
-            saveCharacter(finalName, genderAge, vn, "", d.personality);
+            saveCharacter(finalName, genderAge, vn, "", m.personality || "");
         }
     } else {
         var aboveContext = getAboveContext();
