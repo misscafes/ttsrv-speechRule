@@ -2,6 +2,17 @@
 
 ## 版本变更记录
 
+### 猫剪豆问（优化版）优化异常引号拦截逻辑（2026-06-06）
+- **修改来源**：`(脚本)猫箱-VV(加速版+1)` 只拦截"有右无左"的异常引号段落
+- **核心改动**：
+  1. 主逻辑开头从无条件调用 `handleSpecialQuoteCases` 改为**只在"有右引号但无左引号"时调用**
+  2. "有左引号但无右引号"的段落不再被 `handleSpecialQuoteCases` 提前拦截，交给后续正常流程
+  3. 正常流程中 `extractDialogs` 会提取有左无右的对话，然后走 `dialog_cache.json` / 章节缓存 / AI分析
+  4. 这样可以对有左无右的段落进行**批量AI分析**（和其他对话一起），而不是被 `handleSpecialQuoteCases` 单独处理
+- **备份文件**：
+  - `new/(脚本)猫剪豆问（优化版）_优化异常引号拦截备份.json`
+  - `参考/(脚本)猫剪豆问（优化版）_优化异常引号拦截备份.json`
+
 ### 猫剪豆问（优化版）添加章节级AI缓存（2026-06-06）
 - **功能来源**：移植 `(脚本)猫箱-VV(加速版)` 的章节级AI识别结果缓存机制
 - **核心改动**：
@@ -435,6 +446,7 @@
 7. 新增 `CACHE_ROOT`、`readProgress`/`writeProgress`、`locateParagraphInFullText`、`readChapterCache`/`writeChapterCache`/`mergeChapterResults`、`matchInChapterCacheBySeq`、`handleNoQuoteText`
 8. 修改 `handleBookSwitch` 清理 `reading_progress.json`
 9. 修改主执行逻辑：dialog_cache 未命中 → 章节缓存 → AI分析 → 写入章节缓存
+10. 优化异常引号拦截：只拦截"有右无左"，"有左无右"交给正常流程批量分析
 
 **注意事项**:
 - v2.123 基于 v2.122，修复后性格匹配应能正常生效
