@@ -1,6 +1,3 @@
-// ===================== 猫剪豆问脚本 v1.3 =====================
-// 版本: 1.3
-// 变更: 基于猫箱-VV(加速版+1)完整替换主逻辑
 // ===================== 朗读脚本：进度指针 + 章节缓存 + 无引号多行匹配 + 严格标注 =====================
 var EXT_DIR = "/storage/emulated/0/Download/chajian/mingwuyan/";
 var CACHE_ROOT = "/storage/emulated/0/Download/chajian/xiaoshuo/";
@@ -473,7 +470,7 @@ function generateBatchSeqContent(currentParagraph, dialogs, belowContent) {
 
     fullRawText = fullRawText.replace(/(“[^“”\n]*)(\n[^“”]+($|“))/g, "$1”$2");
 
-    fullRawText = fullRawText.replace(/【\d\d?】/g, "");
+    fullRawText = fullRawText.replace(/【\d{1,4}】/g, "");
     fullRawText = fullRawText.replace(/[『「【〈〉〔'']/g, "");
     var allLeftQuotes = fullRawText.match(/“/g);
     var totalQuoteCount = allLeftQuotes ? allLeftQuotes.length : 0;
@@ -662,70 +659,92 @@ function handleNoQuoteText(originalText) {
 
 // ===================== 异常引号处理（仅限多行缓存对话） =====================
 
+// ===================== 异常引号处理（已修复旁白丢失） =====================
 function handleSpecialQuoteCases(originalText) {
-    var hasLeftQuote = originalText.indexOf("“") !== -1;
-    var hasRightQuote = originalText.indexOf("”") !== -1;
-    if (hasLeftQuote && hasRightQuote) return null;
+  var hasLeftQuote = originalText.indexOf("“") !== -1;
+  var hasRightQuote = originalText.indexOf("”") !== -1;
+  // 如果引号已完整，交给正常流程
+  if (hasLeftQuote && hasRightQuote) return null;
 
-    var matchContent = "";
-    if (hasLeftQuote && !hasRightQuote) {
-        matchContent = originalText.substring(originalText.indexOf("“") + 1);
-    } else if (!hasLeftQuote && hasRightQuote) {
-        matchContent = originalText.substring(0, originalText.indexOf("”"));
-    } else {
-        matchContent = originalText;
-    }
+  var matchContent = "";
+  var afterQuote = "";    // ★ 存放右引号后面的内容（旁白）
+  var leftPos = -1, rightPos = -1;
 
-    var cleanContent = cleanDialogText(matchContent);
-    if (cleanContent.length > 0) {
-        var progress = readProgress();
-        if (progress) {
-            var cache = readChapterCache(progress.chapterTitle);
-            var results = cache.results || {};
-            for (var key in results) {
-                if (results.hasOwnProperty(key)) {
-                    var cachedItem = results[key];
-                    var cachedDialog = cachedItem.dialogText || "";
+  if (hasLeftQuote && !hasRightQuote) {
+      // 只有左引号，缺右引号
+      leftPos = originalText.indexOf("“");
+      matchContent = originalText.substring(leftPos + 1);
+      afterQuote = "";   // 右引号缺失，后续内容为空
+  } else if (!hasLeftQuote && hasRightQuote) {
+      // 只有右引号，缺左引号（如 “你好呀！”张三说。）
+      rightPos = originalText.indexOf("”");
+      matchContent = originalText.substring(0, rightPos);
+      afterQuote = originalText.substring(rightPos + 1);   // ★ 保留右引号后的旁白
+  } else {
+      // 完全无引号，交 handleNoQuoteText 处理
+      return null;
+  }
 
-                    // 缺少左引号：只匹配多行拆分的对话
-                    if (!hasLeftQuote && hasRightQuote && cachedDialog.indexOf("\n") === -1) {
-                        continue;
-                    }
-                    // 缺少右引号或完全无引号：不限制，单行多行均可
+  var cleanContent = cleanDialogText(matchContent);
+  if (cleanContent.length === 0) return null;
 
-                    if (tryMatchTextWithNewlines(cachedDialog, cleanContent)) {
-                        var finalName = cachedItem.name;
-                        var finalGender = cachedItem.gender || "男";
-                        var finalAge = cachedItem.age || "青年";
-                        var latestRecords = readBookCharacters();
-                        var resRecord = resolveNameToRecord(finalName, latestRecords);
-                        var voice;
-                        if (resRecord && resRecord.effectiveVoice) {
-                            voice = resRecord.effectiveVoice;
-                            if (resRecord.gender) finalGender = resRecord.gender;
-                            if (resRecord.age) finalAge = resRecord.age;
-                        } else {
-                            var gaKey = finalGender + "-" + finalAge;
-                            var genderAge = genderAgeMap[gaKey] || ((finalGender === "男") ? "男男青年" : "女女青年");
-                            voice = getTargetVoiceNum(genderAge, null, []);
-                        }
-                        var voiceMark = "<<" + extractVoiceDisplay(voice) + ">>";
-                        var outputText = "“" + voiceMark + matchContent + "”";
-                        log("【异常引号】缓存命中 → " + progress.chapterTitle + " 序号" + key + " → " + finalName + " [" + voice + "]");
-                        saveCurrentToHistory(originalText);
-                        return outputText;
-                    }
-                }
-            }
-        }
-    }
+  // --- 尝试在缓存中匹配说话人（逻辑不变） ---
+  var finalName = null, finalGender = "男", finalAge = "青年", voice = null;
+  var progress = readProgress();
+  if (progress) {
+      var cache = readChapterCache(progress.chapterTitle);
+      var results = cache.results || {};
+      for (var key in results) {
+          if (results.hasOwnProperty(key)) {
+              var cachedItem = results[key];
+              var cachedDialog = cachedItem.dialogText || "";
+              // 缺左引号时，只匹配多行拆分的对话（避免误伤）
+              if (!hasLeftQuote && hasRightQuote && cachedDialog.indexOf("\n") === -1) continue;
+              if (tryMatchTextWithNewlines(cachedDialog, cleanContent)) {
+                  finalName = cachedItem.name;
+                  finalGender = cachedItem.gender || "男";
+                  finalAge = cachedItem.age || "青年";
+                  break;
+              }
+          }
+      }
+  }
 
-    var vn = getTargetVoiceNum("男男青年", null, []);
-    var voiceMark = "<<" + extractVoiceDisplay(vn) + ">>";
-    var outputText = "“" + voiceMark + matchContent + "”";
-    log("【异常引号】使用默认发音人：" + voiceMark);
-    saveCurrentToHistory(originalText);
-    return outputText;
+  // --- 确定最终使用的发音人 ---
+  if (!finalName) {
+      finalName = "群众";
+      voice = getTargetVoiceNum("男男青年", null, []);
+  } else {
+      var latestRecords = readBookCharacters();
+      var resRecord = resolveNameToRecord(finalName, latestRecords);
+      if (resRecord && resRecord.effectiveVoice) {
+          voice = resRecord.effectiveVoice;
+          if (resRecord.gender) finalGender = resRecord.gender;
+          if (resRecord.age) finalAge = resRecord.age;
+      } else {
+          var gaKey = finalGender + "-" + finalAge;
+          var genderAge = genderAgeMap[gaKey] || ((finalGender === "男") ? "男男青年" : "女女青年");
+          voice = getTargetVoiceNum(genderAge, null, []);
+      }
+  }
+
+  var voiceMark = "<<" + extractVoiceDisplay(voice) + ">>";
+  var resultText = "";
+
+  // ★ 关键修复：拼接时把旁白（afterQuote）补回去
+  if (!hasLeftQuote) {
+      // 缺左引号：补左引号 + 标记 + 对话内容 + 右引号（原段落后段本就是右引号） + 旁白
+      resultText = "“" + voiceMark + matchContent + "”" + afterQuote;
+  } else {
+      // 缺右引号：左引号已存在，在左引号后插入标记，并在段落末尾补上右引号
+      var beforeLeft = originalText.substring(0, leftPos + 1);
+      var afterLeft = originalText.substring(leftPos + 1);
+      resultText = beforeLeft + voiceMark + afterLeft + "”";
+  }
+
+  log("【异常引号修复】" + finalName + " [" + voice + "] → 已保留旁白");
+  saveCurrentToHistory(originalText);
+  return resultText;
 }
 
 // ===================== API 调用 =====================
@@ -826,7 +845,7 @@ function buildAnalyzePrompt() {
         "2. 示例：`张伟说：“别提了，都是为了王明那个项目。”` 中，说话人是**张伟**，绝非王明。\n" +
         "3. 连续对话中，说话人通常交替出现，若某角色连续多句对话，需检查是否有明确提示词（如“他接着说”）或上下文支持，避免错归为同一人。\n" +
         "**【输出要求】**\n" +
-        "1. 分析文本中所有带【01】【02】【03】...序号标记的对话，每个序号对应一个结果，序号和对话一一对应，不能错位；\n" +
+        "1. 分析文本中所有带【01】【02】...【9999】序号标记的对话，每个序号对应一个结果，序号和对话一一对应，不能错位；\n" +
         "2. 返回严格的JSON格式，key为对话的序号（如'01'、'02'，必须和文本里的序号完全一致），value为对应角色信息；\n" +
         "3. 如果无法确定说话人姓名，就用前后对这个人的描述作为名字，如果连描述也没有，就根据性别年龄填写“群众男青年”“群众男中年”“群众男老年”“群众男童”“群众少女”“群众女青年”“群众女中年”“群众女老年”“群众女童”“系统”其中的一个；\n" +
         "4. 必须包含文本中所有序号的对话结果，不能遗漏、不能多返回、不能少返回。\n" +
@@ -878,18 +897,35 @@ function callAnalyzeApi(seqContent, aboveContext) {
 
 // ===================== 标注与别名 =====================
 function genMarkText(name, voiceDisplay) { return "<<" + voiceDisplay + ">>"; }
+
 function annotateText(paragraph, dialogs, charResults) {
-    var result = paragraph;
-    for (var i = dialogs.length - 1; i >= 0; i--) {
-        var seq = padZero(i + 1, 2);
-        var info = charResults[seq];
-        if (!info) continue;
-        var mark = genMarkText(info.name, info.voiceDisplay);
-        var d = dialogs[i];
-        result = result.substring(0, d.index) + "：" + result.substring(d.index, d.index + 1) + mark + result.substring(d.index + 1);
-    }
-    return result;
+  var result = paragraph;
+  // 从后往前处理，避免索引错乱
+  for (var i = dialogs.length - 1; i >= 0; i--) {
+      var seq = padZero(i + 1, 2);
+      var info = charResults[seq];
+      if (!info) continue;
+      var d = dialogs[i];
+
+      if (info.name === "旁白") {
+          // 旁白：去掉整个引号对（左右引号），只保留文字内容
+          // d.index 是左引号的位置，d.length 是完整引号标记的长度（含左右引号）
+          result = result.substring(0, d.index) +
+                   d.content +
+                   result.substring(d.index + d.length);
+      } else {
+          // 普通角色：在左引号后插入发音人标记
+          var mark = genMarkText(info.name, info.voiceDisplay);
+          result = result.substring(0, d.index) +
+                   result.substring(d.index, d.index + 1) +
+                   mark +
+                   result.substring(d.index + 1);
+      }
+  }
+  return result;
 }
+
+
 function updateCharacterRecords(dialogList, chapterContext) {
     var RECORDS_FILE = EXT_DIR + "characterRecords.json";
     var records = getLatestCharacterRecords();
@@ -1119,7 +1155,7 @@ function updateCharacterRecords(dialogList, chapterContext) {
 
                 if (analyzeResult) {
                     var allPairs = [];
-                    var seqReg = /【(\d{2})】“([^”]*)”/g;
+                    var seqReg = /【(\d{1,4})】“([^”]*)”/g;
                     var m;
                     while ((m = seqReg.exec(seqContent)) !== null) {
                         allPairs.push({ localSeq: m[1], text: m[2] });
@@ -1277,6 +1313,12 @@ function updateCharacterRecords(dialogList, chapterContext) {
     }
 
     var annotatedText = annotateText(originalText, dialogs, finalCharResults);
+
+    annotatedText = annotatedText.replace(/“(<<[^<>]+>>)?([\u4E00-\u9FFF]{1,15})”/g, "$2");
+
+
+
+
     saveCurrentToHistory(originalText);
     IS_BOOK_SWITCHED = false;
     return annotatedText;
