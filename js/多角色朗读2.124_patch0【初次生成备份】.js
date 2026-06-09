@@ -5809,8 +5809,14 @@ function v2124_writeChapterCache(bookName, chapterTitle, cacheData) {
 }
 
 function v2124_cleanDialogText(text) {
-    return String(text || "").replace(/[\s -‏ - ﻿]/g, "")
-        .replace(/【\d{1,4}】/g, "")
+    var result = String(text || "");
+    // v2.124-fix: 用 new RegExp 避免正则字面量中出现 LINE SEPARATOR (U+2028)
+    result = result.replace(new RegExp("[\s\u2000-\u200f\u2028-\u202f\ufeff]", "g"), "");
+    result = result.replace(/【\d{1,4}】/g, "");
+    result = result.replace(/["""'']/g, "");
+    result = result.replace(/[^一-龥。？！，、；："""'（）【】《》…—·a-zA-Z0-9]/g, "");
+    return result.trim();
+}】/g, "")
         .replace(/["""'']/g, "")
         .replace(/[^一-龥。？！，、；："""'（）【】《》…—·a-zA-Z0-9]/g, "")
         .trim();

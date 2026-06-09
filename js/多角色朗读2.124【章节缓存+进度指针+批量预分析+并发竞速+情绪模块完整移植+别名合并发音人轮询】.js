@@ -1697,7 +1697,7 @@ function graphBookCacheSafeKey(bookName, bookUrl) {
   bookUrl = graphSafeString(bookUrl || "", 500).trim();
   var key = bookName || (bookUrl ? ("book-" + graphHash(bookUrl)) : "default");
   key = key.replace(/[\\/:*?"<>|]/g, "_");
-  key = key.replace(/[\s\u3000]+/g, "_");
+key = key.replace(/[\s\u3000]+/g, "_");
   key = key.replace(/_+/g, "_");
   key = key.replace(/^_+|_+$/g, "");
   if (!key) key = "default";
@@ -5083,7 +5083,7 @@ function cleanDialogText(text) {
 
       .replace(/(.[\u4e00-\u9fa5]+音效.)/g, "") // 清除音效
       .replace(/[\s\u3000\u2000-\u200F\u2028-\u202F\uFEFF]/g, "") // 清除所有半角/全角/零宽/换行不可见空白符
-      .replace(/【\d+】/g, "") // 移除序号标记
+.replace(/【\d+】/g, "") // 移除序号标记
       .replace(/[“”"''"]/g, "") // 移除所有引号
       .replace(/[^\u4e00-\u9fa5\u3002\uff1f\uff01\uff0c\uff1b\uff1a\u3001\u201c\u201d\u2018\u2019\uff08\uff09\u3010\u3011\u300a\u300b\u2026\u2014\u00b7a-zA-Z0-9.,!?;:"'()\[\]{}<>-]/g, "")
       .trim();
@@ -5370,7 +5370,7 @@ function matchDialogFromCache(currentDialogText) {
 
           .replace(/.[\u4e00-\u9fa5]+音效./g, "") // 清除音效
           .replace(/[\s\u3000\u2000-\u200F\u2028-\u202F\uFEFF]/g, "") // 清除所有半角/全角/零宽/换行不可见空白符
-          .replace(/【\d+】/g, "")
+.replace(/【\d+】/g, "")
           .replace(/[“”"''"]/g, "")
           .replace(/\s+/g, "")
           .replace(/[^\u4e00-\u9fa5\u3002\uff1f\uff01\uff0c\uff1b\uff1a\u3001\u201c\u201d\u2018\u2019\uff08\uff09\u3010\u3011\u300a\u300b\u2026\u2014\u00b7a-zA-Z0-9.,!?;:"'()\[\]{}<>-]/g, "")
@@ -5847,7 +5847,7 @@ function v2124_writeProgress(bookName, chapterTitle, lastSeq) {
 
 function v2124_getChapterCachePath(bookName, chapterTitle) {
     var safeBook = String(bookName || "未知书籍").replace(/[\/:*?"<>|]/g, "_");
-    var safeChapter = String(chapterTitle || "未知章节").replace(/[\/:*?"<>|]/g, "_");
+var safeChapter = String(chapterTitle || "未知章节").replace(/[\/:*?"<>|]/g, "_");
     return CHAPTER_CACHE_ROOT + safeBook + "/" + safeChapter + ".json";
 }
 
@@ -5916,8 +5916,7 @@ function v2124_getBelowContentFromDataJson(currentText, length) {
         var dataObj = JSON.parse(dataContent);
         if (!dataObj || !dataObj.texts) return "";
         var texts = dataObj.texts;
-        var fullText = Array.isArray(texts) ? texts.join("
-") : String(texts);
+        var fullText = Array.isArray(texts) ? texts.join("\n") : String(texts);
         var idx = fullText.indexOf(currentText);
         if (idx === -1) return "";
         var start = idx + currentText.length;
@@ -5957,13 +5956,10 @@ function v2124_getChapterTitleFromDataJson() {
 }
 
 function v2124_generateBatchSeqContent(currentDialogues, belowContent, startSeq) {
-    var combined = currentDialogues + "
-" + belowContent;
+    var combined = currentDialogues + "\n" + belowContent;
     combined = combined.replace(/【\d{1,4}】/g, "");
     combined = combined.replace(/[『「【〈〉〔'']/g, "");
-    combined = combined.replace(/("[^"
-]*)(
-[^""]+($|"))/g, "$1"$2");
+    combined = combined.replace(/("[^"\n]*)(\n[^""]+($|"))/g, "$1\"$2");
     var totalQuotes = (combined.match(/"/g) || []).length;
     var seqLimit = totalQuotes <= 5 ? totalQuotes : Math.floor(totalQuotes * SEQ_ADD_RATIO);
     var counter = startSeq;
@@ -5983,9 +5979,7 @@ function v2124_applyShortQuoteRemove(annotatedText) {
 
 function v2124_applyQuoteFix(text) {
     if (ENABLE_QUOTE_FIX !== 1) return text;
-    text = text.replace(/("[^"
-]*)(
-[^""]+($|"))/g, "$1"$2");
+    text = text.replace(/("[^"\n]*)(\n[^""]+($|"))/g, "$1"$2");
     return text;
 }
 
