@@ -514,6 +514,13 @@
 - **兼容性**：零侵入情绪模块、性格匹配、别名合并、图谱分析等现有功能
 - 文件名：`多角色朗读2.124【章节缓存+进度指针+批量预分析+并发竞速+情绪模块完整移植+别名合并发音人轮询】.json`
 
+### v2.124 patch 1（2026-06-09）
+- **Prompt 序号扩展**：`【01】【02】【03】...` → `【01】【02】...【9999】`
+- **章节标题动态化**：新增 `v2124_getChapterTitleFromDataJson()`，从 `data.json` 的 `durChapterIndex`/`durChapterName` 读取真实章节标题，替代写死的 `"当前章节"`
+- **批量预分析真正接入**：`analyzeCharacter` 中在 `generateBatchSeqContent` 之后，如果 `ENABLE_BATCH_BELOW_ANALYZE === 1`，自动从 `data.json` 提取下文并追加到 batchContent
+- **竞速并发实现**：新增 `v2124_raceApiRequest()` 函数，在 `concurrentApiRequest` 内部，当 `ENABLE_RACE_REQUEST === 1` 时优先走竞速模式
+- **版本注释**：code 头部增加 `// 多角色朗读 v2.124` 注释
+
 ## 会话摘要
 
 **日期**: 2026-06-09  
