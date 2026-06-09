@@ -561,7 +561,7 @@
 ## 会话摘要
 
 **日期**: 2026-06-09  
-**当前版本**: 主规则 **v2.124 patch8** / 猫剪豆问插件 v1.4  
+**当前版本**: 主规则 **v2.124 patch9** / 猫剪豆问插件 v1.4  
 **目录结构规范**:
 - 根目录: `多角色朗读2.124【...】.json`（主规则）
 - `new/` 目录（只放最新，文件带版本号）：
@@ -604,4 +604,17 @@
   6. 保留 v2.124 的所有新全局函数（`v2124_*` 系列）和尾部全局函数（`printAvailableVoices`、`qjs`、`setFixedVoice` 等）
 - **影响文件**：v2.124 主文件
 - **已知遗留问题**：由于 v2.124 的 `handleText` 从 patch0 起就不完整（仅 181 行，缺失 v2.123 的 1832 行核心逻辑），patch8 恢复的是 v2.123 的完整 `handleText`。因此 v2.124 新特性（章节缓存读写、进度指针更新等）在 `handleText` 中的调用点尚未接入，需要后续 patch 补充
+
+
+### v2.124 patch 9（2026-06-09）
+- **功能优化**：将所有散落在代码深处的配置项集中到文件最前面，方便统一查找和修改
+- **移动的配置项**：
+  - `API_KEY`、`API_ENDPOINT`、`CONFIG`、`MAX_ALIAS_CHECK_CHARACTERS`、`CHARACTER_ANALYZE_RETRY_MAX`（原 line 1519-1537）
+  - `ENABLE_SEGMENT_MAIN_EMOTION`（原 line 4974）
+  - `MIN_CONCURRENT_COUNT`（原 line 354，在 `DualKeyManager` IIFE 内）
+  - `MAX_OFFSET`（原 line 5127，在 `matchNarrationFromCache()` 内）
+  - `MAX_FORWARD_OFFSET`、`MAX_BACKWARD_OFFSET`（原 line 5358-5359，在 `matchDialogFromCache()` 内）
+- **插入位置**：文件顶部现有配置区之后（`MAX_CHAPTER_CACHE_SEQ` 之后），新增 3 个分类注释区块分隔
+- **影响**：零功能变更，仅调整配置项声明位置，所有变量作用域从局部提升到全局，语义不变
+- **备份文件**：`多角色朗读2.124_patch9【设置全部前置】.json`
 
