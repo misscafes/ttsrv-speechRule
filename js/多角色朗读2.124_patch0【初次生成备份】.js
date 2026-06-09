@@ -1,4 +1,4 @@
-// ===================== 多角色朗读 v2.124 =====================\n// 新增：章节缓存 + 进度指针 + 批量预分析 + 并发竞速 + 关闭思考链\n// ===================== ===================== =====================\n// ES5兼容的补0函数（保留不变）
+// ES5兼容的补0函数（保留不变）
 function padZero(num, length) {
   num = num.toString();
   while (num.length < length) num = '0' + num;
@@ -549,43 +549,6 @@ var DualKeyManager = (function() {
 
 
 // ===================== 修复后：通用并发API请求工具（彻底解决提前唤醒问题，严格等待指定数量结果）=====================
-
-// v2.124：竞速并发请求（当 ENABLE_RACE_REQUEST === 1 时）
-function v2124_raceApiRequest(requestList, delayMs, timeout, responseParser) {
-    var results = [];
-    var completed = false;
-    var startTime = Date.now();
-    var tasks = [];
-    
-    for (var i = 0; i < requestList.length; i++) {
-        (function(idx) {
-            var req = requestList[idx];
-            var task = java.ajax(req.endpoint, JSON.stringify(req.data), req.headers, function(res) {
-                if (!completed) {
-                    try {
-                        var parsed = responseParser(res);
-                        results.push({ index: idx, data: parsed });
-                        completed = true;
-                    } catch (e) {}
-                }
-            });
-            tasks.push(task);
-        })(i);
-    }
-    
-    // 轮询等待第一个成功结果或超时
-    while (!completed && Date.now() - startTime < timeout) {
-        try { java.lang.Thread.sleep(50); } catch (e) {}
-    }
-    
-    // 取消其他请求
-    for (var j = 0; j < tasks.length; j++) {
-        try { tasks[j].cancel(); } catch (e) {}
-    }
-    
-    return results.length > 0 ? results[0].data : null;
-}
-
 function concurrentApiRequest(scene, requestBuilder, responseParser, maxConcurrent, timeout) {
   // 移除5的上限限制，仅保留最小1并发的合法性校验
 var safeBingfa = parseInt(bingfa, 10);
@@ -612,21 +575,6 @@ if (!maxConcurrent || maxConcurrent <= 0) {
   var countDownLatch = new java.util.concurrent.CountDownLatch(1);
   // 标记是否已经唤醒过主线程，避免重复操作
   var hasWakedUp = new java.util.concurrent.atomic.AtomicBoolean(false);
-
-  // v2.124：如果开启竞速模式，使用多请求竞速
-  if (ENABLE_RACE_REQUEST === 1) {
-    var raceApiList = DualKeyManager.getAvailableApiList(scene, RACE_REQUEST_COUNT);
-    if (raceApiList && raceApiList.length > 0) {
-      var raceRequests = [];
-      for (var ri = 0; ri < raceApiList.length; ri++) {
-        raceRequests.push(requestBuilder(raceApiList[ri]));
-      }
-      var raceResult = v2124_raceApiRequest(raceRequests, RACE_DELAY_MS, timeout || NAME_ANALYZE_TIMEOUT, responseParser);
-      if (raceResult) {
-        return { success: true, data: raceResult, isMultiResult: false, errors: [] };
-      }
-    }
-  }
 
   // ===================== 核心：按规则获取本次并发的API列表 =====================
   var apiList = DualKeyManager.getAvailableApiList(scene, maxConcurrent);
@@ -3340,8 +3288,7 @@ CharacterManager.prototype.analyzeCharacter = function(fullText, characterId, al
     try {
       var currentBook = v2124_getBookNameFromDataJson();
       if (currentBook) {
-        var chTitle = v2124_getChapterTitleFromDataJson();
-        var chCache = v2124_readChapterCache(currentBook, chTitle);
+        var chCache = v2124_readChapterCache(currentBook, "当前章节");
         var chMatch = v2124_matchInChapterCacheBySeq(targetIndex + 1, currentDialogueText, chCache);
         if (chMatch) {
           return {
@@ -3355,17 +3302,7 @@ CharacterManager.prototype.analyzeCharacter = function(fullText, characterId, al
       }
     } catch (e) {}
   }
-  var belowContent = "";
-  if (ENABLE_BATCH_BELOW_ANALYZE === 1) {
-    try {
-      belowContent = v2124_getBelowContentFromDataJson(currentDialogueText, BELOW_ANALYZE_LENGTH);
-    } catch (e) { belowContent = ""; }
-  }
   var fullBatchContent = generateBatchSeqContent(allDialogues, next100Chars);
-  // v2.124：如果开启了批量预分析，把下文追加到 batchContent 中
-  if (ENABLE_BATCH_BELOW_ANALYZE === 1 && belowContent) {
-    fullBatchContent = fullBatchContent + "\n" + belowContent;
-  }
   
   // 【v2.100优化】按书名读取持久化1500字上文缓存，切回旧书时恢复上下文
   try {
@@ -3399,7 +3336,7 @@ CharacterManager.prototype.analyzeCharacter = function(fullText, characterId, al
 "2. 示例：`张伟说：“别提了，都是为了王明那个项目。”` 中，说话人是**张伟**，绝非王明。\n" +
 "3. 连续对话中，说话人通常交替出现，若某角色连续多句对话，需检查是否有明确提示词（如“他接着说”）或上下文支持，避免错归为同一人。\n" +
 "**【输出要求】**\n" +
-"1. 分析文本中所有带【01】【02】...【9999】序号标记的对话，每个序号对应一个结果，序号和对话一一对应，不能错位；\n" +
+"1. 分析文本中所有带【01】【02】【03】...序号标记的对话，每个序号对应一个结果，序号和对话一一对应，不能错位；\n" +
 "2. 返回严格的JSON格式，key为对话的序号（如'01'、'02'，必须和文本里的序号完全一致），value为对应角色信息；\n" +
 "3. 如果无法确定说话人姓名，就用前后对这个人的描述作为名字，如果连描述也没有，就根据性别年龄填写“群众男青年”、“群众男中年”、“群众男老年”、“群众男童”、“群众少女”、“群众女青年”、“群众女中年”、“群众女老年”、“群众女童”、“系统”其中的一个；\n" +
 "4. 必须包含文本中所有序号的对话结果，不能遗漏、不能多返回、不能少返回。\n" +
@@ -3570,8 +3507,7 @@ CharacterManager.prototype.analyzeCharacter = function(fullText, characterId, al
             dialogText: dItem.dialogContent
           };
         }
-        var chTitle2 = v2124_getChapterTitleFromDataJson();
-        v2124_writeChapterCache(currentBook2, chTitle2, chCache2);
+        v2124_writeChapterCache(currentBook2, "当前章节", chCache2);
       }
     } catch (e) {}
   }
@@ -5873,13 +5809,11 @@ function v2124_writeChapterCache(bookName, chapterTitle, cacheData) {
 }
 
 function v2124_cleanDialogText(text) {
-    var result = String(text || "");
-    // v2.124-fix: 用 new RegExp 避免正则字面量中出现 LINE SEPARATOR (U+2028)
-    result = result.replace(new RegExp("[\s\u2000-\u200f\u2028-\u202f\ufeff]", "g"), "");
-    result = result.replace(/【\d{1,4}】/g, "");
-    result = result.replace(/["""'']/g, "");
-    result = result.replace(/[^一-龥。？！，、；："""'（）【】《》…—·a-zA-Z0-9]/g, "");
-    return result.trim();
+    return String(text || "").replace(/[\s -‏ - ﻿]/g, "")
+        .replace(/【\d{1,4}】/g, "")
+        .replace(/["""'']/g, "")
+        .replace(/[^一-龥。？！，、；："""'（）【】《》…—·a-zA-Z0-9]/g, "")
+        .trim();
 }
 
 function v2124_matchInChapterCacheBySeq(predictedSeq, dialogText, chapterCache) {
@@ -5932,28 +5866,6 @@ function v2124_getBookNameFromDataJson() {
         var dataObj = JSON.parse(dataContent);
         return dataObj.bookName || "";
     } catch (e) { return ""; }
-}
-
-function v2124_getChapterTitleFromDataJson() {
-    try {
-        var dataContent = String(ttsrv.readTxtFile("data.json") || "");
-        if (!dataContent) return "当前章节";
-        var dataObj = JSON.parse(dataContent);
-        // 优先用 durChapterIndex 定位当前章节
-        if (dataObj.durChapterIndex !== undefined && dataObj.texts && Object.prototype.toString.call(dataObj.texts) === "[object Array]") {
-            var idx = parseInt(dataObj.durChapterIndex, 10);
-            if (!isNaN(idx) && idx >= 0 && idx < dataObj.texts.length) {
-                var chapterText = String(dataObj.texts[idx] || "");
-                // 尝试从章节文本第一行提取标题
-                var firstLine = chapterText.split("\n")[0] || "";
-                firstLine = firstLine.replace(/^\s*第[一二三四五六七八九十百千万\d]+章[\s\u3000]*/, "").trim();
-                if (firstLine) return firstLine.substring(0, 50);
-            }
-        }
-        // 兜底：用 durChapterName
-        if (dataObj.durChapterName) return String(dataObj.durChapterName).substring(0, 50);
-        return "当前章节";
-    } catch (e) { return "当前章节"; }
 }
 
 function v2124_generateBatchSeqContent(currentDialogues, belowContent, startSeq) {
@@ -7373,8 +7285,7 @@ var SpeechRuleJS = {
           if (currentBook4) {
             v2124_progress = v2124_readProgress();
             if (ENABLE_CHAPTER_CACHE === 1) {
-              var chTitle4 = v2124_getChapterTitleFromDataJson();
-            v2124_chapterCache = v2124_readChapterCache(currentBook4, chTitle4);
+              v2124_chapterCache = v2124_readChapterCache(currentBook4, "当前章节");
             }
           }
         } catch (e) {}
@@ -8248,8 +8159,7 @@ if (typeof debugTagData === "object" && debugTagData !== null) {
                 lastSeq++;
               }
             }
-            var chTitle3 = v2124_getChapterTitleFromDataJson();
-            v2124_writeProgress(currentBook3, chTitle3, lastSeq);
+            v2124_writeProgress(currentBook3, "当前章节", lastSeq);
           }
         } catch (e) {}
       }
