@@ -561,7 +561,7 @@
 ## 会话摘要
 
 **日期**: 2026-06-09  
-**当前版本**: 主规则 **v2.124 patch7** / 猫剪豆问插件 v1.4  
+**当前版本**: 主规则 **v2.124 patch8** / 猫剪豆问插件 v1.4  
 **目录结构规范**:
 - 根目录: `多角色朗读2.124【...】.json`（主规则）
 - `new/` 目录（只放最新，文件带版本号）：
@@ -591,3 +591,17 @@
 - 猫剪豆问原有特色功能（dialog_cache.json、孤儿引号处理、pending_quote.json）在 v1.4 中不再保留
 - `new/` 目录下同时存在 v1.1（引擎）和 v1.4（脚本），使用时请配套加载
 - **JSON ↔ JS 转义层级陷阱**：Python `json.dumps` 处理 `"` 和 `\n` 时容易丢失层级，修复时需逐字节验证 Rhino 最终看到的源码
+
+### v2.124 patch 8（2026-06-09）
+- **修复 Rhino 报错**：`语法错误`（line 6184）
+- **问题根因**：patch1 植入 v2.124 新代码时，不仅删除了 `handleText` 的定义行，还**意外删除了整个 `SpeechRuleJS = { ... }` 对象定义**（约 2275 行代码，包含 `tags`、`tagsData`、`getTagName`、`handleText`、`fx`、`replaceTargetContentSymbols` 等全部属性和方法）。后续 patch5-patch7 只恢复了局部代码段，但未恢复 `SpeechRuleJS` 对象本身，导致 `fx:` 和 `replaceTargetContentSymbols:` 变成全局作用域中的孤立语法，`handleText` 被嵌套在 spurious 的 `showConfig()` 函数内部，结构完全崩坏
+- **修复方案**：
+  1. 从 v2.123 完整复制 `SpeechRuleJS` 对象定义（5705-7980 行，共 2276 行），作为结构基础
+  2. 更新对象内 `version: 120` → `version: 124`，`name` 字段同步更新
+  3. 删除 v2.124 中 spurious 的 `function showConfig() {` 及嵌套其中的损坏 `handleText`
+  4. 删除孤立的 `fx:` / `replaceTargetContentSymbols:` / `};`
+  5. 在正确位置重新插入完整的 `SpeechRuleJS` 对象和 `showConfig` 全局函数
+  6. 保留 v2.124 的所有新全局函数（`v2124_*` 系列）和尾部全局函数（`printAvailableVoices`、`qjs`、`setFixedVoice` 等）
+- **影响文件**：v2.124 主文件
+- **已知遗留问题**：由于 v2.124 的 `handleText` 从 patch0 起就不完整（仅 181 行，缺失 v2.123 的 1832 行核心逻辑），patch8 恢复的是 v2.123 的完整 `handleText`。因此 v2.124 新特性（章节缓存读写、进度指针更新等）在 `handleText` 中的调用点尚未接入，需要后续 patch 补充
+
