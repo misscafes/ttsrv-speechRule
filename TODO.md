@@ -552,10 +552,16 @@
 - **修复方案**：从 v2.123 原始文件恢复 `if (ENABLE_EMOTION_BRIDGE === 1) { try { var emotionSummaryStr = ""; ... }` 整块代码（从 `if (ENABLE_EMOTION_BRIDGE === 1)` 到 `if (ENABLE_EMOTION_DEBUG_LOG === 1)` 之前的全部代码），插入到 `v2124_applyQuoteFix` 函数之后
 - **影响文件**：v2.124 主文件 + patch0 备份文件同步修复
 
+### v2.124 patch 7（2026-06-09）
+- **修复 Rhino 报错**：`返回的值无效`（line 6184: `return list;`）
+- **问题根因**：patch1 植入 v2.124 新代码时，意外删除了 `SpeechRuleJS.handleText` 方法的定义行 `handleText: function(text, tagsData) {`，导致 `handleText` 方法体内的所有代码变成了全局代码。`return list;` 因此不在任何函数内部，Rhino 报 "返回的值无效"
+- **修复方案**：从 v2.123 原始文件恢复 `handleText: function(text, tagsData) {` 及其后的 `try { extractFayinrenEmotionAuto(tagsData); } catch (e) {}`，插入到方法体代码之前
+- **影响文件**：v2.124 主文件 + patch0 备份文件同步修复
+
 ## 会话摘要
 
 **日期**: 2026-06-09  
-**当前版本**: 主规则 **v2.124 patch6** / 猫剪豆问插件 v1.4  
+**当前版本**: 主规则 **v2.124 patch7** / 猫剪豆问插件 v1.4  
 **目录结构规范**:
 - 根目录: `多角色朗读2.124【...】.json`（主规则）
 - `new/` 目录（只放最新，文件带版本号）：
@@ -574,7 +580,8 @@
 6. **patch4**: 修复 `v2124_applyQuoteFix` 中 `$1\"$2\"` 反斜杠丢失导致 Rhino `缺少 ")"` 报错
 7. **patch5**: 修复 patch1 意外删除 `try { var debugTagData = {};` 导致 Rhino `语法错误` 报错
 8. **patch6**: 修复 patch1 意外删除 `if (ENABLE_EMOTION_BRIDGE === 1) { try {` 导致 Rhino `语法错误` 报错
-9. patch0 备份从 git e4f2a55 恢复，所有 patch 同步应用到主文件和 patch0 备份
+9. **patch7**: 修复 patch1 意外删除 `handleText: function(text, tagsData) {` 导致 Rhino `返回的值无效` 报错
+10. patch0 备份从 git e4f2a55 恢复，所有 patch 同步应用到主文件和 patch0 备份
 8. 保留情绪模块、性格匹配、别名合并、图谱分析等全部现有功能
 9. 所有新功能均有独立开关，默认关闭，可安全回退到 v2.123
 10. 更新 TODO.md
