@@ -2,6 +2,32 @@
 
 ## 版本变更记录
 
+### 猫剪豆问引擎 v1.8 Markdown 合成日志 + 会话重置（2026-06-16）
+- **版本升级**: v1.7 → v1.8（引擎），脚本保持 v1.11
+- **问题背景**：v1.7 引擎只在合成前把请求参数写入 `tts_request_log.txt`，用户希望同时看到合成结果（成功/失败、音频字节数、重试次数、错误信息），并且日志在 App 退出后自动重置，避免无限膨胀
+- **改动内容**：
+  1. 新增 `SAVE_RESPONSE_LOG` 开关（默认 `1` 开启），与 `SAVE_REQUEST_LOG` 共同控制 Markdown 合成日志
+  2. 新增 `LOG_RESET_PER_SESSION`（默认 `1`）：App 新会话首次合成时自动清空 `tts_request_log.txt`
+  3. 新增 `LOG_MAX_SIZE_BYTES`（默认 `1048576` = 1MB）：日志超过上限时自动清空，防止极端情况膨胀
+  4. 新增 `LOG_SESSION_KEY` 内存缓存标记，用于判断当前是否为新 App 会话
+  5. 新增辅助函数 `writeSessionHeader`、`checkAndResetLog`、`buildMarkdownLogEntry`
+  6. 日志格式改为 Markdown，每个合成请求一个竖向块，字段包括：
+     - 文本、voice、emotion、speed、volume、len
+     - result（success/failed）、bytes、retries、error
+     - extra 子项：audio_config 逐项展开，contextTexts 等长设定显示 `[已省略设定]`
+  7. 合成结果在 `ws.maoxiang()` 返回后写入日志，与请求参数合并为同一条记录
+  8. 引擎 code 头部增加 `// 猫剪豆问引擎 v1.8` 版本注释
+- **影响**：
+  - `tts_request_log.txt` 现在可直接看到每次合成的最终结果
+  - 杀后台后再启动朗读，日志会自动清空并重新写入会话标题
+  - 旧版 TXT 单行格式不再使用，统一为 Markdown 格式
+- **备份文件**：
+  - `new/猫剪豆问（优化版）v1.7_合成日志增强备份.json`
+- **当前文件**：
+  - `new/猫剪豆问（优化版）v1.8.json`
+- **JS 调阅文件同步**：
+  - `js/new/猫剪豆问（优化版）v1.8.js`
+
 ### 猫剪豆问（优化版）v1.11 修复音效下载 URL + 删除冗余对象2（2026-06-16）
 - **版本升级**: v1.10 → v1.11（脚本），引擎保持 v1.7
 - **问题背景**：用户反馈音效失效，且对象2（情绪桥接 v2）已禁用但脚本中仍有残留
@@ -817,6 +843,38 @@
 - **影响文件**：v2.124 主文件 + patch0 备份文件同步修复
 
 ## 会话摘要
+
+**日期**: 2026-06-16
+**当前版本**: 猫剪豆问引擎 **v1.8** / 猫剪豆问脚本 **v1.11**
+**目录结构规范**:
+- `new/猫剪豆问（优化版）v1.8.json`（引擎，最新）
+- `new/(脚本)猫剪豆问（优化版）v1.11.json`（脚本，最新，含2个对象：obj0 主脚本、obj1 音效替换）
+- `js/new/猫剪豆问（优化版）v1.8.js`（引擎调阅）
+- `js/new/(脚本)猫剪豆问（优化版）v1.11_obj{0,1}.js`（脚本调阅）
+- `new/猫剪豆问（优化版）v1.7_合成日志增强备份.json`（v1.7 备份）
+- `new/(脚本)猫剪豆问（优化版）v1.10_修复音效URL+删除对象2备份.json`（v1.10 备份）
+
+**已完成事项**:
+1. 设计并确认 Markdown 格式合成日志：每个请求一个竖向块，含文本/voice/emotion/speed/volume/len/result/bytes/retries/error，extra 子项展开
+2. 设计并确认日志重置策略：App 新会话首次合成时清空 + 文件大小超过 1MB 时清空
+3. 升级引擎 v1.7 → v1.8：
+   - 新增 `SAVE_RESPONSE_LOG` / `LOG_RESET_PER_SESSION` / `LOG_MAX_SIZE_BYTES` / `LOG_SESSION_KEY` 配置
+   - 新增 `writeSessionHeader` / `checkAndResetLog` / `buildMarkdownLogEntry` 辅助函数
+   - 合成完成后把结果（success/failed、bytes、retries、error）写入 `tts_request_log.txt`
+   - 引擎 code 头部增加 `// 猫剪豆问引擎 v1.8` 版本注释
+4. 备份 v1.7 引擎为 `new/猫剪豆问（优化版）v1.7_合成日志增强备份.json`
+5. 生成 `new/猫剪豆问（优化版）v1.8.json`
+6. 同步提取 `js/new/猫剪豆问（优化版）v1.8.js` 调阅文件
+7. 更新 TODO.md 变更记录和会话摘要
+8. 推送远程仓库（GitHub + cnb.cool）
+
+**注意事项**:
+- v1.11 脚本与 v1.8 引擎配套使用
+- 日志文件路径仍为 `/storage/emulated/0/Download/chajian/mingwuyan/tts_request_log.txt`
+- 日志格式已从旧版 TXT 单行改为 Markdown，杀后台后再启动会自动清空并写入新会话标题
+- 关闭日志可将引擎顶部 `SAVE_REQUEST_LOG` 和 `SAVE_RESPONSE_LOG` 都设为 `0`
+
+---
 
 **日期**: 2026-06-16
 **当前版本**: 猫剪豆问引擎 **v1.7** / 猫剪豆问脚本 **v1.11**
