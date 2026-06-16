@@ -4,6 +4,27 @@
 
 > **版本号规范（猫剪豆问插件）**：从本次起，猫剪豆问（优化版）启用版本号管理，当前基准版本 **v1.0**。以后每次修改前，备份文件名格式为 `(脚本)猫剪豆问（优化版）v{x.y}_{改动描述}_备份.json`，主文件保持 `(脚本)猫剪豆问（优化版）.json` 不变。
 
+### 猫剪豆问引擎 v1.7 精简 tts_request_log 日志内容（2026-06-16）
+- **版本升级**: v1.6 → v1.7（引擎），脚本保持 v1.10
+- **问题背景**：v1.6 引擎把完整 `extraObj` 写入 `tts_request_log.txt`，其中包含 `contextTexts`、`manualContextTexts`、`context_texts`、`source.data` 等长设定文本，导致日志内容过乱，难以查看关键参数
+- **改动内容**：
+  1. 日志写入前构建 `logExtraObj`，复制 `extraObj` 后把长设定字段替换为 `'[已省略设定]'`
+  2. 精简范围包括：
+     - `extraObj.contextTexts`
+     - `extraObj.manualContextTexts`
+     - `extraObj.context_texts`
+     - `extraObj.source.data` 中的上述字段
+  3. 实际发送给 TTS API 的 `extra` 仍保留完整设定，仅日志显示精简版
+- **影响**：
+  - 日志中只保留 voice、emotion、speed、volume、len、文本摘要、audio_config 等关键信息
+  - 便于用户快速确认 emotion 是否传输
+- **备份文件**：
+  - `new/猫剪豆问（优化版）v1.6_日志精简备份.json`
+- **当前文件**：
+  - `new/猫剪豆问（优化版）v1.7.json`
+- **JS 调阅文件同步**：
+  - `js/new/猫剪豆问（优化版）v1.7.js`
+
 ### 猫剪豆问（优化版）v1.10 情绪桥接覆盖全部路径 + 引擎 v1.6 修复对话情绪（2026-06-16）
 - **版本升级**: v1.9 → v1.10（脚本），v1.5 → v1.6（引擎）
 - **问题背景**：v1.9 脚本 + v1.5 引擎日志显示：
