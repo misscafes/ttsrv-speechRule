@@ -4,6 +4,32 @@
 
 > **版本号规范（猫剪豆问插件）**：从本次起，猫剪豆问（优化版）启用版本号管理，当前基准版本 **v1.0**。以后每次修改前，备份文件名格式为 `(脚本)猫剪豆问（优化版）v{x.y}_{改动描述}_备份.json`，主文件保持 `(脚本)猫剪豆问（优化版）.json` 不变。
 
+### 猫剪豆问（优化版）v1.8 修复 java.readExternalFile 未 String() 转换（2026-06-16）
+- **版本升级**: v1.7 → v1.8（脚本），引擎保持 v1.5
+- **问题背景**：Rhino 中 `java.readExternalFile()` 返回的是 `NativeJavaObject`（Java String），不转换为 JS String 会导致 `===`、`.trim()`、`.indexOf()` 等操作表现异常，出现"文件存在却判空"、"缓存永远读不到"等玄学 bug
+- **改动内容**：
+  1. 统一将所有 `var x = java.readExternalFile(path)` 改为 `var x = String(java.readExternalFile(path))`
+  2. 修复位置包括：
+     - `ROLE_LIST_FILE`
+     - `BOOK_LIST_FILE`
+     - `gengxin.json`
+     - `characterRecords.json`
+     - `cunfang.txt`
+     - 换书备份读取 `characterRecords.json`
+     - 换书读取 `shuming.书名.json`
+     - `PROGRESS_FILE`
+     - 章节缓存文件
+  3. 共修复 11 处调用点
+- **影响**：
+  - 文件读取结果与 JS 字符串操作行为一致
+  - 减少因类型不一致导致的缓存/角色记录/进度读取异常
+- **备份文件**：
+  - `new/(脚本)猫剪豆问（优化版）v1.7_java.readExternalFile String转换备份.json`
+- **当前文件**：
+  - `new/(脚本)猫剪豆问（优化版）v1.8.json`
+- **JS 调阅文件同步**：
+  - `js/new/(脚本)猫剪豆问（优化版）v1.8_obj{0,1,2}.js`
+
 ### 猫剪豆问引擎 v1.5 合成参数写入文件调试（2026-06-16）
 - **版本升级**: v1.4 → v1.5（引擎），脚本保持 v1.7
 - **问题背景**：用户想确认情绪参数是否真的传给 TTS API，但 TTS Server 内置引擎不显示日志
@@ -703,13 +729,13 @@
 ## 会话摘要
 
 **日期**: 2026-06-16
-**当前版本**: 猫剪豆问引擎 **v1.5** / 猫剪豆问脚本 **v1.7**
+**当前版本**: 猫剪豆问引擎 **v1.5** / 猫剪豆问脚本 **v1.8**
 **目录结构规范**:
 - `new/猫剪豆问（优化版）v1.5.json`（引擎，最新）
-- `new/(脚本)猫剪豆问（优化版）v1.7.json`（脚本，含情绪桥接）
+- `new/(脚本)猫剪豆问（优化版）v1.8.json`（脚本，含情绪桥接）
 - `js/new/猫剪豆问（优化版）v1.5.js`（引擎调阅）
-- `js/new/(脚本)猫剪豆问（优化版）v1.7_obj{0,1,2}.js`（脚本调阅）
-- `历史版本/猫剪豆问/`：v1.1 ~ v1.4 全部历史 JSON 及备份
+- `js/new/(脚本)猫剪豆问（优化版）v1.8_obj{0,1,2}.js`（脚本调阅）
+- `历史版本/猫剪豆问/`：v1.1 ~ v1.7 全部历史 JSON 及备份
 - `js/历史版本/猫剪豆问/`：对应历史版本的 JS 调阅文件
 
 **已完成事项**:
@@ -720,18 +746,19 @@
 5. 重命名 v1.6 脚本备份为 `v1.5_旁白默认情绪+配套引擎v1.3备份.json`，更准确体现版本关联
 6. 升级引擎 v1.3 → v1.4：重写合成请求重试逻辑，空音频/过短音频也触发 5 次重试；增加详细合成日志；修复全段无对话时中文引号未移除的 bug
 7. 升级引擎 v1.4 → v1.5：新增 `SAVE_REQUEST_LOG` 开关，把每次合成的 voice/emotion/speed/volume/extraObj 写入 `tts_request_log.txt`，便于确认情绪参数是否真正传输
-8. 同步提取 `js/new/` 调阅文件
-9. 更新 TODO.md 变更记录、会话摘要和逻辑说明文档
+8. 升级脚本 v1.7 → v1.8：统一修复 11 处 `java.readExternalFile()` 返回值未 `String()` 转换的问题
+9. 同步提取 `js/new/` 调阅文件
+10. 更新 TODO.md 变更记录、会话摘要和逻辑说明文档
 
 **注意事项**:
-- **v1.5 引擎**与 **v1.7 脚本**配套使用
+- **v1.5 引擎**与 **v1.8 脚本**配套使用
 - 旁白情绪生效不再强制要求 narrator voice ID 含 `emo` 字样
 - 默认旁白情绪为 `"平静"`（映射为 `neutral`），如需关闭默认兜底，可将 `DEFAULT_NARRATION_EMOTION` 设为 `""`
 - `fayinren.json` 现在按自然数顺序输出，不再出现 `括号10` 排在 `括号2` 前面的情况
 - 502/空音频/过短音频会自动重试 5 次，仍失败则跳过本段，请观察日志进一步定位"音频播放一半"的根因
 - 调试文件路径：`/storage/emulated/0/Download/chajian/mingwuyan/tts_request_log.txt`
 - 关闭参数写入可将引擎顶部 `SAVE_REQUEST_LOG` 设为 `0`
-- 下一会话可继续处理 v1.7 脚本中存在的 Rhino 兼容性隐患（`java.readExternalFile` 未 `String()` 转换、`Array.prototype.filter`、正则 Unicode 字符等）
+- 下一会话可继续处理 v1.8 脚本中剩余的 Rhino 兼容性隐患（`Array.prototype.filter`、正则 Unicode 字符等）
 
 **日期**: 2026-06-16
 **当前版本**: 猫剪豆问插件 **v1.5** / 主朗读脚本 v1.5
