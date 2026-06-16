@@ -1,0 +1,602 @@
+--- js/new/(脚本)猫剪豆问（优化版）v1.9_obj0.js	2026-06-16 15:00:10.413520300 +0800
++++ js/new/(脚本)猫剪豆问（优化版）v1.10_obj0.js	2026-06-16 15:43:11.666005000 +0800
+@@ -167,7 +167,12 @@
+     if (!record || !targetName) return false;
+     var mainName = String(record.name || "").trim();
+     var aliases = String(record.aliases || mainName).trim();
+-    var allNames = uniqueArr(aliases.split("|").filter(function(s) { return s && s.trim(); }).concat([mainName]));
++    var aliasArr = aliases.split("|");
++    var filteredAliases = [];
++    for (var ai = 0; ai < aliasArr.length; ai++) {
++        if (aliasArr[ai] && aliasArr[ai].trim()) filteredAliases.push(aliasArr[ai]);
++    }
++    var allNames = uniqueArr(filteredAliases.concat([mainName]));
+     var clean = String(targetName).trim();
+     for (var i = 0; i < allNames.length; i++) if (String(allNames[i]).trim() === clean) return true;
+     return false;
+@@ -1045,291 +1050,6 @@
+     try { java.writeExternalFile(RECORDS_FILE, JSON.stringify(records, null, 2)); } catch (e) {}
+ }
+ 
+-// ===================== 主执行逻辑 =====================
+-(function() {
+-    var originalText = text;
+-
+-// ★ 只拦截“有右引号但无左引号”的特殊段落，其他情况（包括有左无右）交给后续正常流程
+-    if (originalText.indexOf("”") !== -1 && originalText.indexOf("“") === -1) {
+-    var specialResult = handleSpecialQuoteCases(originalText);
+-    if (specialResult) return specialResult;
+-    }
+-
+-    if (originalText && originalText.indexOf("“") > -1) handleBookSwitch();
+-    var dialogs = extractDialogs(originalText);
+-
+-    // ★ 如果没有找到任何对话，尝试用多行缓存匹配
+-    if (dialogs.length === 0) {
+-        var noQuoteResult = handleNoQuoteText(originalText);
+-        if (noQuoteResult) return noQuoteResult;
+-        // 实在匹配不到，保留原样
+-        saveCurrentToHistory(originalText);
+-        return text;
+-    }
+-
+-    var bookName = getBookNameSafely();
+-    var progress = readProgress();
+-    var useProgress = progress && progress.bookName === bookName && !IS_BOOK_SWITCHED;
+-
+-    var finalCharResults = {};
+-    var chapterTitle = null;
+-    var seqList = [];
+-    var location = null;
+-
+-    // 尝试用进度指针顺序匹配
+-    if (useProgress) {
+-        chapterTitle = progress.chapterTitle;
+-        var lastSeq = progress.lastSeq;
+-        var allCachedByProgress = true;
+-        for (var i = 0; i < dialogs.length; i++) {
+-            var predictedSeq = lastSeq + 1 + i;
+-            var cleanCur = cleanDialogText(dialogs[i].content);
+-            var cachedItem = matchInChapterCacheBySeq(chapterTitle, predictedSeq, cleanCur);
+-            if (cachedItem) {
+-                finalCharResults[padZero(i + 1, 2)] = cachedItem;
+-            } else {
+-                allCachedByProgress = false;
+-                break;
+-            }
+-        }
+-        if (!allCachedByProgress) {
+-            log("【进度】浮动匹配失败，回退全文定位");
+-            location = locateParagraphInFullText(originalText);
+-            if (location) {
+-                chapterTitle = location.chapterTitle;
+-                seqList = location.seqList;
+-                finalCharResults = {};
+-                var allCachedAfterLocate = true;
+-                for (var i = 0; i < dialogs.length; i++) {
+-                    var realSeq = seqList[i];
+-                    var cleanCur = cleanDialogText(dialogs[i].content);
+-                    var cachedItem = matchInChapterCacheBySeq(chapterTitle, realSeq, cleanCur);
+-                    if (cachedItem) {
+-                        finalCharResults[padZero(i + 1, 2)] = cachedItem;
+-                    } else {
+-                        allCachedAfterLocate = false;
+-                        break;
+-                    }
+-                }
+-                if (!allCachedAfterLocate) {
+-                    location.needAI = true;
+-                }
+-                writeProgress(bookName, chapterTitle, seqList[seqList.length - 1]);
+-            } else {
+-                for (var i = 0; i < dialogs.length; i++) {
+-                    var vn = getTargetVoiceNum("男男青年", null, []);
+-                    finalCharResults[padZero(i + 1, 2)] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn };
+-                }
+-                var annotated = annotateText(originalText, dialogs, finalCharResults);
+-                saveCurrentToHistory(originalText);
+-                return annotated;
+-            }
+-        } else {
+-            writeProgress(bookName, chapterTitle, lastSeq + dialogs.length);
+-        }
+-    }
+-
+-    if (!useProgress || (location && location.needAI) || (!location && !useProgress)) {
+-        if (!location) {
+-            location = locateParagraphInFullText(originalText);
+-        }
+-        if (location) {
+-            chapterTitle = location.chapterTitle;
+-            seqList = location.seqList;
+-            writeProgress(bookName, chapterTitle, seqList[seqList.length - 1]);
+-
+-            if (!finalCharResults || Object.keys(finalCharResults).length === 0) {
+-                for (var i = 0; i < dialogs.length; i++) {
+-                    var realSeq = seqList[i];
+-                    var cleanCur = cleanDialogText(dialogs[i].content);
+-                    var cachedItem = matchInChapterCacheBySeq(chapterTitle, realSeq, cleanCur);
+-                    if (cachedItem) {
+-                        finalCharResults[padZero(i + 1, 2)] = cachedItem;
+-                    }
+-                }
+-            }
+-
+-            var needAI = false;
+-            for (var i = 0; i < dialogs.length; i++) {
+-                if (!finalCharResults[padZero(i + 1, 2)]) {
+-                    needAI = true;
+-                    break;
+-                }
+-            }
+-
+-            if (needAI) {
+-                log("【缓存】仍缺失，启动AI分析（限制长度）");
+-                var aboveContext = getAboveContext();
+-                var belowContent = getBelowContent(originalText);
+-                var seqContent = generateBatchSeqContent(originalText, dialogs, belowContent);
+-                var analyzeResult = callAnalyzeApi(seqContent, aboveContext);
+-
+-                if (analyzeResult) {
+-                    var allPairs = [];
+-                    var seqReg = /【(\d{1,4})】“([^”]*)”/g;
+-                    var m;
+-                    while ((m = seqReg.exec(seqContent)) !== null) {
+-                        allPairs.push({ localSeq: m[1], text: m[2] });
+-                    }
+-                    if (allPairs.length === 0) {
+-                        for (var i = 0; i < dialogs.length; i++) {
+-                            allPairs.push({ localSeq: padZero(i + 1, 2), text: dialogs[i].content });
+-                        }
+-                    }
+-
+-                    var chapterResultsToMerge = {};
+-                    var allNamesForAlias = [];
+-                    var currentCount = dialogs.length;
+-                    var lastCurrentRealSeq = seqList[seqList.length - 1];
+-                    var nextRealSeq = lastCurrentRealSeq + 1;
+-
+-                    for (var p = 0; p < allPairs.length; p++) {
+-                        var pair = allPairs[p];
+-                        var aiInfo = analyzeResult[pair.localSeq];
+-                        if (!aiInfo) continue;
+-                        var isCurrent = p < currentCount;
+-                        var realSeq;
+-                        if (isCurrent) {
+-                            realSeq = seqList[p];
+-                        } else {
+-                            realSeq = nextRealSeq + (p - currentCount);
+-                            if (location.totalDialogs && realSeq > location.totalDialogs) continue;
+-                        }
+-                        chapterResultsToMerge[String(realSeq)] = {
+-                            name: aiInfo.name,
+-                            gender: aiInfo.gender,
+-                            age: aiInfo.age,
+-                            dialogText: pair.text
+-                        };
+-                        allNamesForAlias.push({ name: aiInfo.name, gender: aiInfo.gender, age: aiInfo.age });
+-                    }
+-                    if (Object.keys(chapterResultsToMerge).length > 0) {
+-                        mergeChapterResults(chapterTitle, chapterResultsToMerge);
+-                    }
+-                    if (allNamesForAlias.length > 0) {
+-                        updateCharacterRecords(allNamesForAlias, seqContent);
+-                    }
+-
+-                    var tempAssignedVoices = {};
+-                    for (var i = 0; i < dialogs.length; i++) {
+-                        var localSeq = padZero(i + 1, 2);
+-                        var aiInfo = analyzeResult[localSeq];
+-                        var charName = aiInfo ? aiInfo.name : "未知";
+-                        var finalGender = aiInfo ? aiInfo.gender : "男";
+-                        var finalAge = aiInfo ? aiInfo.age : "青年";
+-
+-                        var latestRecords = readBookCharacters();
+-                        var resRecord = resolveNameToRecord(charName, latestRecords);
+-                        var finalName = resRecord ? resRecord.mainName : charName;
+-                        if (resRecord) {
+-                            if (resRecord.gender && (resRecord.gender === "男" || resRecord.gender === "女" || resRecord.gender === "特殊")) finalGender = resRecord.gender;
+-                            if (resRecord.age) finalAge = resRecord.age;
+-                        }
+-                        var gaKey = finalGender + "-" + finalAge;
+-                        var genderAge = genderAgeMap[gaKey] || ((finalGender === "男") ? "男男青年" : "女女青年");
+-                        var voiceNum;
+-                        if (resRecord && resRecord.effectiveVoice) {
+-                            voiceNum = resRecord.effectiveVoice;
+-                        } else {
+-                            var extraUsed = tempAssignedVoices[genderAge] || [];
+-                            voiceNum = getTargetVoiceNum(genderAge, null, extraUsed);
+-                            if (!tempAssignedVoices[genderAge]) tempAssignedVoices[genderAge] = [];
+-                            if (tempAssignedVoices[genderAge].indexOf(voiceNum) === -1) tempAssignedVoices[genderAge].push(voiceNum);
+-                        }
+-                        finalCharResults[localSeq] = {
+-                            name: finalName,
+-                            voiceDisplay: extractVoiceDisplay(voiceNum),
+-                            genderAge: genderAge,
+-                            voiceNum: voiceNum
+-                        };
+-                        if (finalName.indexOf("群众") === -1 || saveMassCharacter === 1) {
+-                            saveCharacter(finalName, genderAge, voiceNum, "");
+-                        }
+-                    }
+-                } else {
+-                    for (var i = 0; i < dialogs.length; i++) {
+-                        var vn = getTargetVoiceNum("男男青年", null, []);
+-                        finalCharResults[padZero(i + 1, 2)] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn };
+-                    }
+-                }
+-            } else {
+-                for (var i = 0; i < dialogs.length; i++) {
+-                    var localSeq = padZero(i + 1, 2);
+-                    var cached = finalCharResults[localSeq];
+-                    if (!cached) continue;
+-                    var finalName = cached.name || "未知";
+-                    var finalGender = cached.gender || "男";
+-                    var finalAge = cached.age || "青年";
+-                    var latestRecords = readBookCharacters();
+-                    var resRecord = resolveNameToRecord(finalName, latestRecords);
+-                    if (resRecord) {
+-                        finalName = resRecord.mainName;
+-                        if (resRecord.gender && (resRecord.gender === "男" || resRecord.gender === "女" || resRecord.gender === "特殊")) finalGender = resRecord.gender;
+-                        if (resRecord.age) finalAge = resRecord.age;
+-                    }
+-                    var gaKey = finalGender + "-" + finalAge;
+-                    var genderAge = genderAgeMap[gaKey] || ((finalGender === "男") ? "男男青年" : "女女青年");
+-                    var voiceNum;
+-                    if (resRecord && resRecord.effectiveVoice) {
+-                        voiceNum = resRecord.effectiveVoice;
+-                    } else {
+-                        voiceNum = getTargetVoiceNum(genderAge, null, []);
+-                    }
+-                    finalCharResults[localSeq] = {
+-                        name: finalName,
+-                        voiceDisplay: extractVoiceDisplay(voiceNum),
+-                        genderAge: genderAge,
+-                        voiceNum: voiceNum
+-                    };
+-                    saveCharacter(finalName, genderAge, voiceNum, "");
+-                }
+-            }
+-        } else {
+-            for (var i = 0; i < dialogs.length; i++) {
+-                var vn = getTargetVoiceNum("男男青年", null, []);
+-                finalCharResults[padZero(i + 1, 2)] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn };
+-            }
+-        }
+-    } else if (useProgress && finalCharResults && Object.keys(finalCharResults).length === dialogs.length) {
+-        for (var i = 0; i < dialogs.length; i++) {
+-            var localSeq = padZero(i + 1, 2);
+-            var cached = finalCharResults[localSeq];
+-            if (!cached) continue;
+-            var finalName = cached.name || "未知";
+-            var finalGender = cached.gender || "男";
+-            var finalAge = cached.age || "青年";
+-            var latestRecords = readBookCharacters();
+-            var resRecord = resolveNameToRecord(finalName, latestRecords);
+-            if (resRecord) {
+-                finalName = resRecord.mainName;
+-                if (resRecord.gender && (resRecord.gender === "男" || resRecord.gender === "女" || resRecord.gender === "特殊")) finalGender = resRecord.gender;
+-                if (resRecord.age) finalAge = resRecord.age;
+-            }
+-            var gaKey = finalGender + "-" + finalAge;
+-            var genderAge = genderAgeMap[gaKey] || ((finalGender === "男") ? "男男青年" : "女女青年");
+-            var voiceNum;
+-            if (resRecord && resRecord.effectiveVoice) {
+-                voiceNum = resRecord.effectiveVoice;
+-            } else {
+-                voiceNum = getTargetVoiceNum(genderAge, null, []);
+-            }
+-            finalCharResults[localSeq] = {
+-                name: finalName,
+-                voiceDisplay: extractVoiceDisplay(voiceNum),
+-                genderAge: genderAge,
+-                voiceNum: voiceNum
+-            };
+-            saveCharacter(finalName, genderAge, voiceNum, "");
+-        }
+-    }
+-
+-    var annotatedText = annotateText(originalText, dialogs, finalCharResults);
+-
+-    annotatedText = annotatedText.replace(/“(<<[^<>]+>>)?([\u4E00-\u9FFF]{1,15})”/g, "$2");
+-
+-
+-
+-
+ 
+ // ===================== 情绪桥接（合并自原 obj2.js）=====================
+ function applyEmotionBridge(inputText) {
+@@ -1595,9 +1315,290 @@
+ 
+         return result;
+ }
+-    annotatedText = applyEmotionBridge(annotatedText);
++
++// ===================== 主执行逻辑 =====================
++(function() {
++
++
++    var originalText = text;
++    var resultText = text;
++
++// ★ 只拦截“有右引号但无左引号”的特殊段落，其他情况（包括有左无右）交给后续正常流程
++    if (originalText.indexOf("”") !== -1 && originalText.indexOf("“") === -1) {
++        var specialResult = handleSpecialQuoteCases(originalText);
++        if (specialResult) resultText = specialResult;
++    }
++
++    if (resultText === text) {
++        if (originalText && originalText.indexOf("“") > -1) handleBookSwitch();
++        var dialogs = extractDialogs(originalText);
++
++        // ★ 如果没有找到任何对话，尝试用多行缓存匹配
++        if (dialogs.length === 0) {
++            var noQuoteResult = handleNoQuoteText(originalText);
++            if (noQuoteResult) resultText = noQuoteResult;
++        } else {
++
++    var bookName = getBookNameSafely();
++    var progress = readProgress();
++    var useProgress = progress && progress.bookName === bookName && !IS_BOOK_SWITCHED;
++
++    var finalCharResults = {};
++    var chapterTitle = null;
++    var seqList = [];
++    var location = null;
++
++    // 尝试用进度指针顺序匹配
++    if (useProgress) {
++        chapterTitle = progress.chapterTitle;
++        var lastSeq = progress.lastSeq;
++        var allCachedByProgress = true;
++        for (var i = 0; i < dialogs.length; i++) {
++            var predictedSeq = lastSeq + 1 + i;
++            var cleanCur = cleanDialogText(dialogs[i].content);
++            var cachedItem = matchInChapterCacheBySeq(chapterTitle, predictedSeq, cleanCur);
++            if (cachedItem) {
++                finalCharResults[padZero(i + 1, 2)] = cachedItem;
++            } else {
++                allCachedByProgress = false;
++                break;
++            }
++        }
++        if (!allCachedByProgress) {
++            log("【进度】浮动匹配失败，回退全文定位");
++            location = locateParagraphInFullText(originalText);
++            if (location) {
++                chapterTitle = location.chapterTitle;
++                seqList = location.seqList;
++                finalCharResults = {};
++                var allCachedAfterLocate = true;
++                for (var i = 0; i < dialogs.length; i++) {
++                    var realSeq = seqList[i];
++                    var cleanCur = cleanDialogText(dialogs[i].content);
++                    var cachedItem = matchInChapterCacheBySeq(chapterTitle, realSeq, cleanCur);
++                    if (cachedItem) {
++                        finalCharResults[padZero(i + 1, 2)] = cachedItem;
++                    } else {
++                        allCachedAfterLocate = false;
++                        break;
++                    }
++                }
++                if (!allCachedAfterLocate) {
++                    location.needAI = true;
++                }
++                writeProgress(bookName, chapterTitle, seqList[seqList.length - 1]);
++            } else {
++                for (var i = 0; i < dialogs.length; i++) {
++                    var vn = getTargetVoiceNum("男男青年", null, []);
++                    finalCharResults[padZero(i + 1, 2)] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn };
++                }
++                resultText = annotateText(originalText, dialogs, finalCharResults);
++            }
++        } else {
++            writeProgress(bookName, chapterTitle, lastSeq + dialogs.length);
++        }
++    }
++
++    if (!useProgress || (location && location.needAI) || (!location && !useProgress)) {
++        if (!location) {
++            location = locateParagraphInFullText(originalText);
++        }
++        if (location) {
++            chapterTitle = location.chapterTitle;
++            seqList = location.seqList;
++            writeProgress(bookName, chapterTitle, seqList[seqList.length - 1]);
++
++            if (!finalCharResults || Object.keys(finalCharResults).length === 0) {
++                for (var i = 0; i < dialogs.length; i++) {
++                    var realSeq = seqList[i];
++                    var cleanCur = cleanDialogText(dialogs[i].content);
++                    var cachedItem = matchInChapterCacheBySeq(chapterTitle, realSeq, cleanCur);
++                    if (cachedItem) {
++                        finalCharResults[padZero(i + 1, 2)] = cachedItem;
++                    }
++                }
++            }
++
++            var needAI = false;
++            for (var i = 0; i < dialogs.length; i++) {
++                if (!finalCharResults[padZero(i + 1, 2)]) {
++                    needAI = true;
++                    break;
++                }
++            }
++
++            if (needAI) {
++                log("【缓存】仍缺失，启动AI分析（限制长度）");
++                var aboveContext = getAboveContext();
++                var belowContent = getBelowContent(originalText);
++                var seqContent = generateBatchSeqContent(originalText, dialogs, belowContent);
++                var analyzeResult = callAnalyzeApi(seqContent, aboveContext);
++
++                if (analyzeResult) {
++                    var allPairs = [];
++                    var seqReg = /【(\d{1,4})】“([^”]*)”/g;
++                    var m;
++                    while ((m = seqReg.exec(seqContent)) !== null) {
++                        allPairs.push({ localSeq: m[1], text: m[2] });
++                    }
++                    if (allPairs.length === 0) {
++                        for (var i = 0; i < dialogs.length; i++) {
++                            allPairs.push({ localSeq: padZero(i + 1, 2), text: dialogs[i].content });
++                        }
++                    }
++
++                    var chapterResultsToMerge = {};
++                    var allNamesForAlias = [];
++                    var currentCount = dialogs.length;
++                    var lastCurrentRealSeq = seqList[seqList.length - 1];
++                    var nextRealSeq = lastCurrentRealSeq + 1;
++
++                    for (var p = 0; p < allPairs.length; p++) {
++                        var pair = allPairs[p];
++                        var aiInfo = analyzeResult[pair.localSeq];
++                        if (!aiInfo) continue;
++                        var isCurrent = p < currentCount;
++                        var realSeq;
++                        if (isCurrent) {
++                            realSeq = seqList[p];
++                        } else {
++                            realSeq = nextRealSeq + (p - currentCount);
++                            if (location.totalDialogs && realSeq > location.totalDialogs) continue;
++                        }
++                        chapterResultsToMerge[String(realSeq)] = {
++                            name: aiInfo.name,
++                            gender: aiInfo.gender,
++                            age: aiInfo.age,
++                            dialogText: pair.text
++                        };
++                        allNamesForAlias.push({ name: aiInfo.name, gender: aiInfo.gender, age: aiInfo.age });
++                    }
++                    if (Object.keys(chapterResultsToMerge).length > 0) {
++                        mergeChapterResults(chapterTitle, chapterResultsToMerge);
++                    }
++                    if (allNamesForAlias.length > 0) {
++                        updateCharacterRecords(allNamesForAlias, seqContent);
++                    }
++
++                    var tempAssignedVoices = {};
++                    for (var i = 0; i < dialogs.length; i++) {
++                        var localSeq = padZero(i + 1, 2);
++                        var aiInfo = analyzeResult[localSeq];
++                        var charName = aiInfo ? aiInfo.name : "未知";
++                        var finalGender = aiInfo ? aiInfo.gender : "男";
++                        var finalAge = aiInfo ? aiInfo.age : "青年";
++
++                        var latestRecords = readBookCharacters();
++                        var resRecord = resolveNameToRecord(charName, latestRecords);
++                        var finalName = resRecord ? resRecord.mainName : charName;
++                        if (resRecord) {
++                            if (resRecord.gender && (resRecord.gender === "男" || resRecord.gender === "女" || resRecord.gender === "特殊")) finalGender = resRecord.gender;
++                            if (resRecord.age) finalAge = resRecord.age;
++                        }
++                        var gaKey = finalGender + "-" + finalAge;
++                        var genderAge = genderAgeMap[gaKey] || ((finalGender === "男") ? "男男青年" : "女女青年");
++                        var voiceNum;
++                        if (resRecord && resRecord.effectiveVoice) {
++                            voiceNum = resRecord.effectiveVoice;
++                        } else {
++                            var extraUsed = tempAssignedVoices[genderAge] || [];
++                            voiceNum = getTargetVoiceNum(genderAge, null, extraUsed);
++                            if (!tempAssignedVoices[genderAge]) tempAssignedVoices[genderAge] = [];
++                            if (tempAssignedVoices[genderAge].indexOf(voiceNum) === -1) tempAssignedVoices[genderAge].push(voiceNum);
++                        }
++                        finalCharResults[localSeq] = {
++                            name: finalName,
++                            voiceDisplay: extractVoiceDisplay(voiceNum),
++                            genderAge: genderAge,
++                            voiceNum: voiceNum
++                        };
++                        if (finalName.indexOf("群众") === -1 || saveMassCharacter === 1) {
++                            saveCharacter(finalName, genderAge, voiceNum, "");
++                        }
++                    }
++                } else {
++                    for (var i = 0; i < dialogs.length; i++) {
++                        var vn = getTargetVoiceNum("男男青年", null, []);
++                        finalCharResults[padZero(i + 1, 2)] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn };
++                    }
++                }
++            } else {
++                for (var i = 0; i < dialogs.length; i++) {
++                    var localSeq = padZero(i + 1, 2);
++                    var cached = finalCharResults[localSeq];
++                    if (!cached) continue;
++                    var finalName = cached.name || "未知";
++                    var finalGender = cached.gender || "男";
++                    var finalAge = cached.age || "青年";
++                    var latestRecords = readBookCharacters();
++                    var resRecord = resolveNameToRecord(finalName, latestRecords);
++                    if (resRecord) {
++                        finalName = resRecord.mainName;
++                        if (resRecord.gender && (resRecord.gender === "男" || resRecord.gender === "女" || resRecord.gender === "特殊")) finalGender = resRecord.gender;
++                        if (resRecord.age) finalAge = resRecord.age;
++                    }
++                    var gaKey = finalGender + "-" + finalAge;
++                    var genderAge = genderAgeMap[gaKey] || ((finalGender === "男") ? "男男青年" : "女女青年");
++                    var voiceNum;
++                    if (resRecord && resRecord.effectiveVoice) {
++                        voiceNum = resRecord.effectiveVoice;
++                    } else {
++                        voiceNum = getTargetVoiceNum(genderAge, null, []);
++                    }
++                    finalCharResults[localSeq] = {
++                        name: finalName,
++                        voiceDisplay: extractVoiceDisplay(voiceNum),
++                        genderAge: genderAge,
++                        voiceNum: voiceNum
++                    };
++                    saveCharacter(finalName, genderAge, voiceNum, "");
++                }
++            }
++        } else {
++            for (var i = 0; i < dialogs.length; i++) {
++                var vn = getTargetVoiceNum("男男青年", null, []);
++                finalCharResults[padZero(i + 1, 2)] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn };
++            }
++        }
++    } else if (useProgress && finalCharResults && Object.keys(finalCharResults).length === dialogs.length) {
++        for (var i = 0; i < dialogs.length; i++) {
++            var localSeq = padZero(i + 1, 2);
++            var cached = finalCharResults[localSeq];
++            if (!cached) continue;
++            var finalName = cached.name || "未知";
++            var finalGender = cached.gender || "男";
++            var finalAge = cached.age || "青年";
++            var latestRecords = readBookCharacters();
++            var resRecord = resolveNameToRecord(finalName, latestRecords);
++            if (resRecord) {
++                finalName = resRecord.mainName;
++                if (resRecord.gender && (resRecord.gender === "男" || resRecord.gender === "女" || resRecord.gender === "特殊")) finalGender = resRecord.gender;
++                if (resRecord.age) finalAge = resRecord.age;
++            }
++            var gaKey = finalGender + "-" + finalAge;
++            var genderAge = genderAgeMap[gaKey] || ((finalGender === "男") ? "男男青年" : "女女青年");
++            var voiceNum;
++            if (resRecord && resRecord.effectiveVoice) {
++                voiceNum = resRecord.effectiveVoice;
++            } else {
++                voiceNum = getTargetVoiceNum(genderAge, null, []);
++            }
++            finalCharResults[localSeq] = {
++                name: finalName,
++                voiceDisplay: extractVoiceDisplay(voiceNum),
++                genderAge: genderAge,
++                voiceNum: voiceNum
++            };
++            saveCharacter(finalName, genderAge, voiceNum, "");
++        }
++    }
++
++    resultText = annotateText(originalText, dialogs, finalCharResults);
++    }
++
++    resultText = applyEmotionBridge(resultText);
+ 
+     saveCurrentToHistory(originalText);
+     IS_BOOK_SWITCHED = false;
+-    return annotatedText;
++    return resultText;
+ })();
+\ No newline at end of file
