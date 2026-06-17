@@ -1,4 +1,4 @@
-// 猫剪豆问引擎 v1.9
+// 猫剪豆问引擎 v1.0（自然情绪版）
 try {
 
 if (!Array.isArray) { Array.isArray = function(arg) { return Object.prototype.toString.call(arg) === "[object Array]"; }; }
@@ -334,10 +334,11 @@ for (var s = 0; s < mixedSegments.length; s++) {
             var remTrim = rem.trim();
             if (remTrim.length > 0) {
                 var narCfg = JSON.parse(JSON.stringify(narratorCfg));
-                var emoMatch = rem.match(/\[\[emo:([^\]]+)\]\]/);
+                var emoMatch = rem.match(/\[\[emo:([^|\]]+)(?:\|([^\]]+))?\]\]/);
                 if (emoMatch) {
                     rem = rem.replace(/\[\[emo:[^\]]+\]\]/, '');
                     narCfg.emotion = emoMatch[1];
+                    if (emoMatch[2]) narCfg.performancePrompt = emoMatch[2];
                 }
                 segments.push({txt: rem, config: narCfg});
             }
@@ -348,10 +349,11 @@ for (var s = 0; s < mixedSegments.length; s++) {
             var preTrim = pre.trim();
             if (preTrim.length > 0) {
                 var narCfg = JSON.parse(JSON.stringify(narratorCfg));
-                var emoMatch = pre.match(/\[\[emo:([^\]]+)\]\]/);
+                var emoMatch = pre.match(/\[\[emo:([^|\]]+)(?:\|([^\]]+))?\]\]/);
                 if (emoMatch) {
                     pre = pre.replace(/\[\[emo:[^\]]+\]\]/, '');
                     narCfg.emotion = emoMatch[1];
+                    if (emoMatch[2]) narCfg.performancePrompt = emoMatch[2];
                 }
                 segments.push({txt: pre, config: narCfg});
             }
@@ -380,11 +382,12 @@ for (var s = 0; s < mixedSegments.length; s++) {
         }
 
         // 移除情绪桥接标记 [[emo:xxx]]，避免被猫箱API当作普通文本朗读
-        var emoMatch = dialogText.match(/\[\[emo:([^\]]+)\]\]/);
+        var emoMatch = dialogText.match(/\[\[emo:([^|\]]+)(?:\|([^\]]+))?\]\]/);
         if (emoMatch) {
             dialogText = dialogText.replace(/\[\[emo:[^\]]+\]\]/, '');
             // 保存情绪值供阶段4传入extra参数（v1.6：不再限制voice必须包含emo）
             roleCfg.emotion = emoMatch[1];
+            if (emoMatch[2]) roleCfg.performancePrompt = emoMatch[2];
         }
 
         var pureText = dialogText.replace(/[“”]/g, '').trim();
@@ -409,10 +412,11 @@ if (segments.length === 0) {
     var allTrim = allText.replace(/[""]/g, '').replace(/[“”]/g, '').trim();
     if (allTrim.length > 0) {
         var narCfg = JSON.parse(JSON.stringify(narratorCfg));
-        var emoMatch = allText.match(/\[\[emo:([^\]]+)\]\]/);
+        var emoMatch = allText.match(/\[\[emo:([^|\]]+)(?:\|([^\]]+))?\]\]/);
         if (emoMatch) {
             allText = allText.replace(/\[\[emo:[^\]]+\]\]/, '');
             narCfg.emotion = emoMatch[1];
+            if (emoMatch[2]) narCfg.performancePrompt = emoMatch[2];
         }
         segments.push({txt: allText, config: narCfg});
     }
@@ -563,6 +567,13 @@ for (var i = 0; i < segments.length; i++) {
         }
     } else {
         delete extraObj.context_texts;
+    }
+
+    // v1.10 新增：追加脚本侧动态生成的自然语言表演指令
+    if (cfg.performancePrompt) {
+        extraObj.context_texts = extraObj.context_texts || [];
+        extraObj.context_texts.push(String(cfg.performancePrompt));
+        java.log('[表演指令] voice=' + cfg.voice + ' | ' + cfg.performancePrompt.substring(0, 60));
     }
 
     extraObj.audio_config = {

@@ -1,4 +1,4 @@
-// ===================== 朗读脚本 v1.14：修复括号发音人强制启用 + 配合引擎 v1.9 长文本切分 =====================
+// ===================== 朗读脚本 v1.0（自然情绪版）：表演链路试点 =====================
 var EXT_DIR = "/storage/emulated/0/Download/chajian/mingwuyan/";
 var CACHE_ROOT = "/storage/emulated/0/Download/chajian/xiaoshuo/";
 var KEY_FILE = EXT_DIR + "miyue.txt";
@@ -1185,10 +1185,60 @@ var ENABLE_EMOTION_BRIDGE = 1;
             return "";
         }
 
-        function buildEmotionBridgePrefix(rawEmotion) {
+        // ===================== 表演链路：自然语言表演指令生成（v1.15 新增）=====================
+        function inferSceneMood(dialogs) {
+            if (!dialogs || dialogs.length === 0) return "";
+            var strongCount = 0, tensionCount = 0, sadCount = 0, warmCount = 0;
+            for (var i = 0; i < dialogs.length; i++) {
+                var t = String(dialogs[i].content || "");
+                if (/(愤怒|暴怒|怒吼|吼道|冷笑|喝道|厉声|咬牙|颠怒|怒不可遏)/.test(t)) strongCount++;
+                if (/(紧张|慌张|惊慌|焦急|惊呼|连忙|不妙|糟糕|快跑|快走)/.test(t)) tensionCount++;
+                if (/(悲伤|哭泣|哽咽|流泪|痛苦|绝望|心碎|心酸)/.test(t)) sadCount++;
+                if (/(温柔|温暖|安慰|关切|心疼|呵护|轻声|柔声)/.test(t)) warmCount++;
+            }
+            if (strongCount >= 2) return "\u4e89\u543b";
+            if (tensionCount >= 2) return "\u7d27\u5f20";
+            if (sadCount >= 2) return "\u60b2\u4f24";
+            if (warmCount >= 2) return "\u6e29\u60c5";
+            return "";
+        }
+
+        function buildPerformancePrompt(emotion, dialogText, sceneMood) {
+            if (!emotion || emotion === "\u65e0" || emotion === "\u5e73\u9759") return "";
+            var parts = [];
+            var t = String(dialogText || "");
+            if (emotion === "\u6124\u6012") parts.push("\u8bed\u6c14\u6124\u6012\uff0c\u8bed\u901f\u52a0\u5feb\uff0c\u91cd\u97f3\u843d\u5728\u60c5\u7eea\u8bcd\u4e0a");
+            else if (emotion === "\u60b2\u4f24") parts.push("\u58f0\u97f3\u4f4e\u6c89\uff0c\u8bed\u901f\u653e\u6162\uff0c\u5e26\u54fd\u54bd\u611f");
+            else if (emotion === "\u7d27\u5f20") parts.push("\u58f0\u97f3\u7ef4\u7d27\uff0c\u8bed\u901f\u6025\u4fc3\uff0c\u5e26\u547c\u5438\u611f");
+            else if (emotion === "\u60ca\u8bb6") parts.push("\u8bed\u6c14\u4e0a\u626c\uff0c\u8bed\u901f\u7a81\u7136\u52a0\u5feb");
+            else if (emotion === "\u5f00\u5fc3") parts.push("\u8bed\u6c14\u8f7b\u5feb\uff0c\u5c3e\u97f3\u5e26\u7b11\u610f");
+            else if (emotion === "\u5174\u594b") parts.push("\u8bed\u6c14\u6fc0\u52a8\uff0c\u8bed\u901f\u660e\u663e\u52a0\u5feb");
+            else if (emotion === "\u5bb3\u7f9e") parts.push("\u58f0\u97f3\u653e\u8f7b\uff0c\u8bed\u901f\u653e\u6162\uff0c\u5e26\u72b9\u8c6b");
+            else if (emotion === "\u59d4\u5c48") parts.push("\u58f0\u97f3\u53d1\u98a4\uff0c\u8bed\u901f\u653e\u6162\uff0c\u5e26\u54fd\u54bd");
+            else if (emotion === "\u51b7\u9177") parts.push("\u8bed\u6c14\u51b7\u6de1\uff0c\u8bed\u901f\u5747\u5300\uff0c\u4e0d\u5e26\u611f\u60c5");
+            else if (emotion === "\u614c\u5f20") parts.push("\u58f0\u97f3\u53d1\u6296\uff0c\u8bed\u901f\u6025\u4fc3\uff0c\u5e26\u54b3\u5598");
+            else if (emotion === "\u865a\u5f31") parts.push("\u58f0\u97f3\u5fae\u5f31\uff0c\u8bed\u901f\u7f13\u6162\uff0c\u5e26\u6c14\u58f0");
+            else if (emotion === "\u575a\u5b9a") parts.push("\u8bed\u6c14\u575a\u5b9a\uff0c\u8bed\u901f\u6c89\u7a33\uff0c\u91cd\u97f3\u6e05\u6670");
+
+            if (sceneMood === "\u4e89\u543b") parts.push("\u8fd9\u662f\u4e89\u543b\u573a\u666f\uff0c\u5bf9\u8bdd\u5e26\u523a\uff0c\u60c5\u7eea\u5916\u9732");
+            else if (sceneMood === "\u7d27\u5f20") parts.push("\u573a\u666f\u7d27\u5f20\uff0c\u6c14\u606f\u7ef4\u7d27");
+            else if (sceneMood === "\u60b2\u4f24") parts.push("\u6574\u4f53\u6c1b\u56f4\u60b2\u4f24\uff0c\u58f0\u97f3\u538b\u6291");
+            else if (sceneMood === "\u6e29\u60c5") parts.push("\u6c1b\u56f4\u6e29\u60c5\uff0c\u8bed\u6c14\u67d4\u548c");
+
+            if (/\uff01/.test(t)) parts.push("\u53e5\u672b\u5e26\u611f\u53f9\uff0c\u60c5\u7eea\u5916\u653e");
+            if (/\?|\uff1f/.test(t)) parts.push("\u53e5\u672b\u5e26\u7591\u95ee\uff0c\u8bed\u6c14\u4e0a\u626c");
+            if (/\u2026/.test(t)) parts.push("\u53e5\u4e2d\u6709\u7701\u7565\uff0c\u5e26\u72b9\u8c6b\u6216\u505c\u987f");
+
+            return parts.join("\uff1b");
+        }
+
+        function buildEmotionBridgePrefix(rawEmotion, performancePrompt) {
             try {
                 var normalized = normalizeEmotionDebugValue(rawEmotion);
                 if (!normalized) return "";
+                if (performancePrompt && performancePrompt.trim()) {
+                    return "[[emo:" + normalized + "|" + performancePrompt.trim() + "]]";
+                }
                 return "[[emo:" + normalized + "]]";
             } catch (e) { return ""; }
         }
@@ -1249,6 +1299,12 @@ var ENABLE_EMOTION_BRIDGE = 1;
             }
         }
 
+        // 计算整段场景温度，供表演指令使用
+        var sceneMood = inferSceneMood(dialogs);
+        if (sceneMood) {
+            java.log("[\u8868\u6f14\u94fe\u8def] \u573a\u666f\u6e29\u5ea6: " + sceneMood);
+        }
+
         // 处理对话（从后往前）
         for (var i = dialogs.length - 1; i >= 0; i--) {
             var d = dialogs[i];
@@ -1275,11 +1331,12 @@ var ENABLE_EMOTION_BRIDGE = 1;
             }
 
             if (emotion && ENABLE_EMOTION_BRIDGE === 1 && !hasExistingEmotion(d.content)) {
-                var prefix = buildEmotionBridgePrefix(emotion);
+                var performancePrompt = buildPerformancePrompt(emotion, d.content, sceneMood);
+                var prefix = buildEmotionBridgePrefix(emotion, performancePrompt);
                 if (prefix) {
                     result = result.substring(0, d.leftPos + 1) + prefix + result.substring(d.leftPos + 1);
                     writeLastEmotion(emotion);
-                    java.log("[\u60c5\u7eea\u6865\u63a5] \u5bf9\u8bdd " + emotion + " -> " + prefix + " | " + d.content.substring(0, 30));
+                    java.log("[\u60c5\u7eea\u6865\u63a5] \u5bf9\u8bdd " + emotion + (performancePrompt ? " + \u8868\u6f14\u6307\u4ee4" : "") + " -> " + prefix.substring(0, 60) + " | " + d.content.substring(0, 30));
                 }
             } else if (emotion || existingEmotion) {
                 writeLastEmotion(emotion || existingEmotion);
@@ -1305,11 +1362,12 @@ var ENABLE_EMOTION_BRIDGE = 1;
             }
 
             if (narEmotion && ENABLE_EMOTION_BRIDGE === 1 && !hasExistingEmotion(narText)) {
-                var narPrefix = buildEmotionBridgePrefix(narEmotion);
+                var narPerformancePrompt = buildPerformancePrompt(narEmotion, narClean, sceneMood);
+                var narPrefix = buildEmotionBridgePrefix(narEmotion, narPerformancePrompt);
                 if (narPrefix) {
                     result = result.substring(0, nar.start) + narPrefix + result.substring(nar.start);
                     writeLastEmotion(narEmotion);
-                    java.log("[\u60c5\u7eea\u6865\u63a5] \u65c1\u767d " + narEmotion + " -> " + narPrefix + " | " + narClean.substring(0, 30));
+                    java.log("[\u60c5\u7eea\u6865\u63a5] \u65c1\u767d " + narEmotion + (narPerformancePrompt ? " + \u8868\u6f14\u6307\u4ee4" : "") + " -> " + narPrefix.substring(0, 60) + " | " + narClean.substring(0, 30));
                 }
             } else if (narEmotion) {
                 writeLastEmotion(narEmotion);
