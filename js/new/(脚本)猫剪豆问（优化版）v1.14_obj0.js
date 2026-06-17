@@ -1,4 +1,4 @@
-// ===================== 朗读脚本 v1.13：修复括号发音人强制启用 + 配合引擎 v1.9 长文本切分 =====================
+// ===================== 朗读脚本 v1.14：修复括号发音人强制启用 + 配合引擎 v1.9 长文本切分 =====================
 var EXT_DIR = "/storage/emulated/0/Download/chajian/mingwuyan/";
 var CACHE_ROOT = "/storage/emulated/0/Download/chajian/xiaoshuo/";
 var KEY_FILE = EXT_DIR + "miyue.txt";

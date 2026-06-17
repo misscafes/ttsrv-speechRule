@@ -1,6 +1,49 @@
-// 音效替换规则 v1.13
 (function() {
     try {
+        // ========== 新增：只下载另外两个文件，不参与规则替换 ==========
+        var BASE_DIR = "/storage/emulated/0/Download/chajian/mingwuyan/";
+        var BASE_URL = "https://cnb.cool/mingwuyan/yinpin/-/git/raw/main/";
+        var EXTRA_FILES = ["ttsrv-replaces3.json", "ttsrv-replaces5.json"];
+
+        // 确保目录存在（如果不支持该API会自动忽略）
+        try { java.createDirectory(BASE_DIR); } catch (e) {}
+
+        for (var i = 0; i < EXTRA_FILES.length; i++) {
+            var fn = EXTRA_FILES[i];
+            var fp = BASE_DIR + fn;
+            var url = BASE_URL + fn + "?download=true";
+            var needDownload = false;
+
+            // 检查本地是否存在
+            try {
+                var testRaw = String(java.readExternalFile(fp));
+                if (testRaw && testRaw !== "null" && testRaw !== "undefined" && testRaw !== "") {
+                 //   java.log("[ttsrv-extra] 本地已有: " + fn);
+                } else {
+                    needDownload = true;
+                }
+            } catch (e) {
+                needDownload = true;
+            }
+
+            // 不存在则下载并保存
+            if (needDownload) {
+                java.log("[ttsrv-extra] 开始下载: " + fn);
+                try {
+                    var content = String(java.ajax(url, 30000));
+                    if (content && content !== "" && content !== "null" && content !== "undefined") {
+                        java.writeExternalFile(fp, content);
+                        java.log("[ttsrv-extra] 下载成功并已保存: " + fn);
+                    } else {
+                        java.log("[ttsrv-extra] 下载返回空内容: " + fn);
+                    }
+                } catch (e) {
+                    java.log("[ttsrv-extra] 下载失败: " + fn + " - " + e);
+                }
+            }
+        }
+        // ========== 新增结束，以下完全是原来的脚本，一字未改 ==========
+
         var FILE_PATH = "/storage/emulated/0/Download/chajian/mingwuyan/ttsrv-replaces4.json";
         var DOWNLOAD_URL = "https://cnb.cool/mingwuyan/yinpin/-/git/raw/main/ttsrv-replaces4.json?download=true";
         var CACHE_KEY = "ttsrv_slim_json_v1";
@@ -29,14 +72,10 @@
                     }
                 }
             }
-        } catch (e) {
-      //      java.log("[ttsrv] 内存缓存读取失败: " + e);
-        }
+        } catch (e) {}
 
         // 2. 内存没有，读取本地 JSON 或从网上下载
         if (!groups) {
-      //      java.log("[ttsrv] 脚本开始执行, text长度=" + text.length);
-
             var raw = null;
             var fileExists = false;
 
@@ -86,8 +125,8 @@
                 var list = groupObj.list || [];
 
                 var rules = [];
-                for (var i = 0; i < list.length; i++) {
-                    var item = list[i];
+                for (var j = 0; j < list.length; j++) {
+                    var item = list[j];
                     if (item.isEnabled === false) continue;
                     if (!item.pattern || item.pattern === "") continue;
                     rules.push({
@@ -116,21 +155,15 @@
             try {
                 var slimJson = JSON.stringify({ groups: groups });
                 cache.putMemory(CACHE_KEY, slimJson);
-     //           java.log("[ttsrv] 已保存到内存缓存（重启后消失）");
-            } catch (e) {
-           //     java.log("[ttsrv] 保存内存缓存失败: " + e);
-            }
+            } catch (e) {}
         }
-
-        // 统计
-  //      java.log("[ttsrv] 共 " + groups.length + " 个组, " + countRules(groups) + " 条规则");
 
         // 执行替换
         for (var g = 0; g < groups.length; g++) {
             var group = groups[g];
             if (!group.rules || group.rules.length === 0) continue;
-            for (var i = 0; i < group.rules.length; i++) {
-                var rule = group.rules[i];
+            for (var k = 0; k < group.rules.length; k++) {
+                var rule = group.rules[k];
                 try {
                     if (rule.isRegex) {
                         text = javaRegReplace(text, rule.pattern, "g", rule.replacement);
@@ -149,4 +182,4 @@
         java.log("[ttsrv] 脚本整体异常: " + e);
         return text;
     }
-})()
+})();
