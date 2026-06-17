@@ -1,3 +1,4 @@
+// 音效替换规则 v1.13
 (function() {
     try {
         var FILE_PATH = "/storage/emulated/0/Download/chajian/mingwuyan/ttsrv-replaces4.json";

@@ -1,4 +1,4 @@
-// ===================== 朗读脚本 v1.11：修复音效URL + 删除冗余对象2 + 情绪桥接覆盖全部路径 =====================
+// ===================== 朗读脚本 v1.13：修复括号发音人强制启用 + 配合引擎 v1.9 长文本切分 =====================
 var EXT_DIR = "/storage/emulated/0/Download/chajian/mingwuyan/";
 var CACHE_ROOT = "/storage/emulated/0/Download/chajian/xiaoshuo/";
 var KEY_FILE = EXT_DIR + "miyue.txt";
@@ -48,6 +48,9 @@ var SPECIAL_ROLES = [
   ['「」括号发音人', '特',   '特殊', '括号3'],
   ['『对话旁白』',   '特殊', '旁白', '括号4']
 ];
+
+// 强制启用的内置发音人标签（不受外部 jiaoseliebiao-list.json 过滤影响）
+var FORCE_ENABLED_VOICE_TAGS = ['括号1', '括号2', '括号3', '括号4'];
 
 var GENSHIN_CHARACTERS = (function () {
   var chars = {};
@@ -114,7 +117,7 @@ for (var key in GENSHIN_CHARACTERS) {
     if (GENSHIN_CHARACTERS.hasOwnProperty(key)) {
         var c = GENSHIN_CHARACTERS[key];
         var voice = c.voice;
-        if (enabledTags[voice]) {
+        if (enabledTags[voice] || FORCE_ENABLED_VOICE_TAGS.indexOf(voice) !== -1) {
             var ga = c.gender + c.age;
             if (!genderAgeToVoices[ga]) genderAgeToVoices[ga] = [];
             genderAgeToVoices[ga].push(voice);
