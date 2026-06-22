@@ -1,5 +1,45 @@
 # 待办事项（TODO）
 
+### 多角色朗读 v2.127 批量别名校验接入 processCharacter（参考 2.87 加速版）（2026-06-22）
+- **版本升级**: v2.126 → v2.127（朗读规则）
+- **参考文件**: `多角色朗读2.87【加速版+1】.json`
+- **改动内容**:
+  1. 新增全局 pending 状态：
+     - `pendingAliasNames`：存储未匹配本地角色的名字集合
+     - `pendingAliasContext`：存储批量别名校验所需的上下文（`contextHistory2`、`text2`、`next100Chars`）
+  2. 在 `CharacterManager.analyzeCharacter` 批量名字分析完成后，新增 unknownNames 收集逻辑：
+     - 遍历本次批量分析结果 `batchResult`，统计所有唯一名字
+     - 对未匹配本地角色记录的名字加入 `pendingAliasNames`
+     - 保存当前上下文到 `pendingAliasContext`
+  3. 在 `CharacterManager.processCharacter` 开头接入批量别名校验：
+     - 当 `bieming ≠ 0`、当前角色名不是"未知"、且 `pendingAliasNames` 非空时触发
+     - 一次性把 pending 中所有名字打包成一个 Prompt，调用 `concurrentApiRequest("aliasAnalyze", ...)`
+     - 多结果模式下使用已有的 `voteBatchAliasAnalyzeResult` 投票
+     - 将投票判定为别名的名字合并到对应主角色的 `aliases` 字段
+     - 记录正向别名边 `batch_alias_confirmed` 和远程观察日志 `batch_alias_merge_confirmed`
+  4. 复用现有并发/备用模型/超时机制：
+     - 直接使用 2.126 已有的 `concurrentApiRequest`，支持竞速、多结果等待、备用模型接力
+     - 超时使用 `ALIAS_ANALYZE_TIMEOUT`
+  5. 保留原有二阶段清洗逻辑：
+     - 批量校验只替代第一阶段的"是否是别名"判断
+     - `processCharacter` 后续原有的一对一 `checkAliasByApi` + `refineAliasGroupByApi` 仍作为兜底/补充
+- **影响**:
+  - 同一批对话中多个未匹配名字只需一次（或少数几次并发）API 调用即可全部校验，显著降低别名校验阶段 API 调用次数
+  - 批量校验命中后，后续 `processCharacter` 会直接从本地记录命中，减少重复 API 调用
+  - 原有的一对一二阶段清洗逻辑仍然保留，复杂别名场景仍有兜底
+  - 保留 v2.126 所有功能：情绪模块升级、表演指令、场景温度、旁白兜底等
+- **备份文件**:
+  - `多角色朗读2.126【情绪模块升级+表演指令+场景温度+旁白兜底】.json`
+- **当前文件**:
+  - `多角色朗读2.127【批量别名校验接入processCharacter】.json`
+- **JS 调阅文件同步**:
+  - `js/多角色朗读2.127【批量别名校验接入processCharacter】.js`
+- **注意事项**:
+  - `pendingAliasNames` / `pendingAliasContext` 是全局变量，每次 analyzeCharacter 会重置
+  - 批量别名校验在 `processCharacter` 首次遇到 pending 名字时触发，处理完后立即清空 pending
+  - 如果批量校验失败或返回空，原有的一对一别名校验仍会接管
+  - 该功能依赖 `bieming ≠ 0`（即别名校验开关开启），关闭时行为与 v2.126 完全一致
+
 ### 多角色朗读 v2.126 情绪模块升级（参考猫剪豆问 v1.0.4）（2026-06-22）
 - **版本升级**: v2.125 → v2.126（朗读规则）
 - **参考文件**: `new/(脚本)猫剪豆问（自然情绪版）v1.0.4.json`、`new/猫剪豆问（自然情绪版）v1.0.4.json`
@@ -1855,35 +1895,36 @@
 ## 会话摘要
 
 **日期**: 2026-06-22
-**当前版本**: 多角色朗读 **v2.126**
+**当前版本**: 多角色朗读 **v2.127**
 **目录结构规范**:
-- `多角色朗读2.126【情绪模块升级+表演指令+场景温度+旁白兜底】.json`（当前推荐主规则）
+- `多角色朗读2.127【批量别名校验接入processCharacter】.json`（当前推荐主规则）
+- `多角色朗读2.126【情绪模块升级+表演指令+场景温度+旁白兜底】.json`（v2.126 备份）
 - `多角色朗读2.125【参考2.87加速版优化+ES5兼容+别名缓存加速】.json`（v2.125 备份）
 - `多角色朗读2.124【章节缓存+进度指针+批量预分析+并发竞速+情绪模块完整移植+别名合并发音人轮询】.json`（v2.124 备份）
+- `js/多角色朗读2.127【批量别名校验接入processCharacter】.js`（v2.127 调阅）
 - `js/多角色朗读2.126【情绪模块升级+表演指令+场景温度+旁白兜底】.js`（v2.126 调阅）
 - `js/多角色朗读2.125【参考2.87加速版优化+ES5兼容+别名缓存加速】.js`（v2.125 调阅）
 - `js/多角色朗读2.124【章节缓存+进度指针+批量预分析+并发竞速+情绪模块完整移植+别名合并发音人轮询】.js`（v2.124 调阅）
 
 **已完成事项**:
-1. 用户要求根据脚本和引擎最新版本（猫剪豆问 v1.0.4）的情绪模块，更新优化主规则 v2.125
-2. 提取并对比 `new/(脚本)猫剪豆问（自然情绪版）v1.0.4.json` 与 `new/猫剪豆问（自然情绪版）v1.0.4.json` 的情绪模块
-3. 定位 2.124/2.125 情绪处理循环 bug：情绪处理代码在循环外部，仅作用于最后一个 item
-4. 复制 v2.125 为 v2.126 并同步更新 name / version / code 内部版本注释
-5. 补充情绪模块未定义常量：`JREAD_LAST_DIALOGUE_EMOTION_FILE`、`JREAD_DIALOGUE_EMOTION_INHERIT_MAX_AGE_MS`
-6. 扩展情绪映射表：新增恐惧/害怕 → fear、安慰 → comfort、广告/娱乐/新闻 等分类
-7. 增强本地情绪识别：过滤纯标点/空白对话
-8. 移植 `inferSceneMood` 场景温度推断和 `buildPerformancePrompt` 表演指令生成
-9. 支持 `[[emo:emotion|performancePrompt]]` 双段格式，旁白使用 `DEFAULT_NARRATION_EMOTION = "平静"` 兜底
-10. 修复剩余 ES6 箭头函数，保持 ES5 兼容
-11. 运行 `extract-js.js` 同步 `js/` 调阅文件
-12. 更新 `TODO.md` 变更记录和会话摘要
+1. 用户提示 `voteBatchAliasAnalyzeResult` 已移植但尚未完全接入 `processCharacter` 主流程
+2. 分析 2.87 加速版批量别名校验机制：通过 `pendingAliasNames` / `pendingAliasContext` 在 `analyzeCharacter` 收集未匹配名字，在 `processCharacter` 首次处理时一次性批量校验
+3. 复制 v2.126 为 v2.127 并同步更新 name / version / code 内部版本注释
+4. 新增全局 pending 变量：`pendingAliasNames`、`pendingAliasContext`
+5. 在 `CharacterManager.analyzeCharacter` 末尾新增 unknownNames 收集逻辑
+6. 在 `CharacterManager.processCharacter` 开头接入批量别名校验：构建批量 Prompt、调用 `concurrentApiRequest("aliasAnalyze", ...)`、多结果投票、合并别名
+7. 复用 2.126 已有的并发/竞速/备用模型/超时机制，不重复造轮子
+8. 保留原有的一对一二阶段清洗逻辑作为兜底
+9. 运行 `node --check` 语法检查通过
+10. 运行 `extract-js.js` 同步 `js/` 调阅文件
+11. 更新 `TODO.md` 变更记录和会话摘要
 
 **待完成**:
 - 执行 `git add . && git commit -m "..." && git push origin master` 推送远程仓库
 
 **注意事项**:
-- v2.126 只修改朗读规则脚本，未修改引擎；`[[emo:emotion|prompt]]` 的表演指令部分需配套引擎消费
-- 若当前引擎不解析 `|` 后的 prompt，可能出现朗读情绪标记或效果不明显的情况
-- 表演指令开关在脚本顶部常量区，可按需开启/关闭
-- v2.126 完整保留 v2.125 的加速参数、ES5 兼容、别名缓存加速等优化
+- v2.127 在 v2.126 情绪模块升级基础上新增批量别名校验
+- 批量校验只在 `bieming ≠ 0` 且 pending 非空时触发，关闭别名分析时行为与 v2.126 一致
+- 批量校验会修改本地角色记录的 `aliases` 字段，并通过 `saveRecords` 持久化
+- 原有的一对一 `checkAliasByApi` + `refineAliasGroupByApi` 仍保留，复杂场景仍有兜底
 
