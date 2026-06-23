@@ -1,5 +1,30 @@
 # 待办事项（TODO）
 
+### 合并原版完整音效规则到 ttsrv-replaces4.json（2026-06-23）
+- **问题背景**: 用户发现当前 `ttsrv-replaces4.json`（约 74 KB）与原版 `ttsrv-replaces4(3).json`（约 2.2 MB）大小差异过大
+- **排查结论**: 当前版本只保留了 4 个 group（音效前置2、至底恢复双引号、3-直接替换、最底拟声词），而原版有 9 个 group，缺失了置顶音效、18+音效后置、1-音效 后置（523 条）、去掉前面多余、2-音效 前置（282 条）、18+音效前置等大量规则
+- **改动内容**:
+  1. 以原版 `ttsrv-replaces4(3).json` 作为基础
+  2. 保留当前新增的 `音效前置2` group（21 条转场/敲门等规则）并插入到最前面
+  3. 将之前修复的 4 条规则覆盖到合并后的对应位置：
+     - `🤖系统文:③触发系统对话【】`（兼容 `【括号1】` 格式、添加 `(?m)` 和全角空格匹配）
+     - `😑🐦‍⬛人物无语“……”`（添加 `(?m)` 和全角空格匹配）
+     - `🤷🏻❓无语问号“？？？”`（添加 `(?m)` 和全角空格匹配）
+     - `🎯📖①章节转场(衔接标题)`（添加 `(?m)` 和全角空格匹配）
+  4. 备份旧版本为 `ttsrv-replaces4_备份_合并原版完整规则.json`
+- **影响**:
+  - 合并后 `ttsrv-replaces4.json` 达到约 2.2 MB，包含 10 个 group、903 条规则
+  - 之前修复的无语省略号、无语问号、章节转场、系统提示音仍然生效
+  - 大量原本缺失的音效（武器碰撞、法术、环境音、动物叫声等）恢复可用
+- **涉及文件**:
+  - `yinpin/ttsrv-replaces4.json`
+  - `new/新脚本/ttsrv-replaces4.json`
+  - `yinpin/ttsrv-replaces4_备份_合并原版完整规则.json`
+  - `new/新脚本/ttsrv-replaces4_备份_合并原版完整规则.json`
+- **注意事项**:
+  - 规则文件体积大增后，首次下载和加载可能略有延迟，但本地缓存后正常
+  - 由于新增规则在原版中经大量用户使用，整体稳定性较高；如出现新的误匹配，可根据具体文本调整对应规则
+
 ### 音效规则下载地址迁移到本项目仓库（2026-06-23）
 - **问题背景**: 用户希望把脚本中音效规则文件的下载地址从第三方仓库 `mingwuyan/yinpin` 改为当前项目仓库，避免远程仓库无写权限导致更新无法自动同步
 - **改动内容**:
@@ -2151,11 +2176,15 @@
 5. 多角色朗读 v2.129：基于 v2.126 保留 v2.128 情绪修复，回退 v2.127 批量别名校验，避免速度变慢
 6. 新增 `extract-js.js`，支持顶层 `.code` 朗读规则和子对象 `.code` 插件两种结构，并运行同步 `js/` 调阅文件
 7. 更新 `TODO.md` 变更记录和会话摘要
-8. 执行 `git add . && git commit -m "..." && git push origin master` 推送远程仓库（GitHub + cnb.cool 同步完成）
+8. 合并原版完整音效规则：发现当前 `ttsrv-replaces4.json` 仅 4 个 group，缺失原版大量规则；以原版 `ttsrv-replaces4(3).json` 为基础，保留新增 `音效前置2` group 和 4 条修复规则，合并为 10 个 group / 903 条规则
+9. 运行 `extract-js.js` 同步 `js/` 调阅文件
+10. 更新 `TODO.md` 变更记录和会话摘要
+11. 执行 `git add . && git commit -m "..." && git push origin master` 推送远程仓库（GitHub + cnb.cool 同步完成）
 
 **注意事项**:
 - 手机端如已缓存旧版 `ttsrv-replaces4.json`，建议删除 `/storage/emulated/0/Download/chajian/mingwuyan/ttsrv-replaces4.json` 后重启，让脚本从本项目重新下载
 - 当前 `BASE_URL` 仍为 `mingwuyan/yinpin`，仅 `ttsrv-replaces4.json` 主规则迁移到本项目；如后续 `ttsrv-replaces3.json` / `ttsrv-replaces5.json` 也需迁移，可同样修改 `BASE_URL`
 - v2.129 不含批量别名校验，别名校验行为与 v2.126 一致
 - v1.0.5 脚本需与 v1.0.5 引擎配套使用
+- 合并后 `ttsrv-replaces4.json` 体积约 2.2 MB，规则非常丰富；若发现某个音效误触发或漏触发，请提供具体文本以便定位
 
