@@ -6368,10 +6368,10 @@ function v2124_applyQuoteFix(text) {
 }
 
 var SpeechRuleJS = {
-  name: "多角色朗读2.124【情绪模块植入+称号可临时主名+旧主名自动入别名+修复别名丢失+同步shuming+别名合并发音人轮询+增强别名校验版v77+备用模型接力】",
+  name: "多角色朗读2.128【修复情绪标记偶发残留】",
   id: "mingwuyan",
   author: "命無言、萌新改",
-  version: 124,
+  version: 128,
   zdfp: 1,
   
   tags: (function() {
