@@ -1,5 +1,18 @@
 # 待办事项（TODO）
 
+### 音效规则下载地址迁移到本项目仓库（2026-06-23）
+- **问题背景**: 用户希望把脚本中音效规则文件的下载地址从第三方仓库 `mingwuyan/yinpin` 改为当前项目仓库，避免远程仓库无写权限导致更新无法自动同步
+- **改动内容**:
+  1. 修改 `new/新脚本/音效(替换规则)背景+.json` 中 `DOWNLOAD_URL`，从 `https://cnb.cool/mingwuyan/yinpin/-/git/raw/main/ttsrv-replaces4.json?download=true` 改为 `https://cnb.cool/misscafe.eec/ttsrv-speechRule/-/git/raw/master/yinpin/ttsrv-replaces4.json?download=true`
+  2. 保留 `BASE_URL = "https://cnb.cool/mingwuyan/yinpin/-/git/raw/main/"` 作为 ttsrv-replaces3/5 的下载源（这两个辅助文件仍在 `mingwuyan/yinpin`），仅把主规则 ttsrv-replaces4.json 迁移到本项目
+  3. 重新生成 JS 调阅文件 `js/new/新脚本/音效(替换规则)背景+_obj0.js`
+- **涉及文件**:
+  - `new/新脚本/音效(替换规则)背景+.json`
+  - `js/new/新脚本/音效(替换规则)背景+_obj0.js`
+  - `yinpin/ttsrv-replaces4.json`（已在项目根目录建立镜像）
+- **注意事项**:
+  - 手机端如已缓存旧规则，需删除 `/storage/emulated/0/Download/chajian/mingwuyan/ttsrv-replaces4.json` 让脚本重新下载，或手动用 `yinpin/ttsrv-replaces4.json` 覆盖
+
 ### 背景音效规则修复：无语省略号/问号、章节转场、系统提示音（2026-06-23）
 - **问题背景**: 用户反馈背景音效中 `“……”`、`“？？”` 类无语音效（如乌鸦叫）不再触发；切换章节的提示音效也不触发；【】系统提示音在脚本/引擎中也不触发
 - **排查结论**:
@@ -13,15 +26,14 @@
   4. 修复 `🤖系统文:③触发系统对话【】` pattern：添加 `(?m)` 和全角空格匹配，并同时兼容多角色朗读转换后的 `【括号1】内容` 格式；replacement 保留前导换行/标点
 - **影响**:
   - 整行无语省略号、无语问号、带缩进的章节标题、原始 `【系统提示】` 及转换后的 `【括号1】系统提示` 均可正常触发对应音效
-  - 需要把修复后的 `ttsrv-replaces4.json` 同步到远程仓库 `mingwuyan/yinpin` 才能生效（当前 git 凭证无该仓库写权限）
+  - 修复后的规则文件已同步到本项目仓库 `yinpin/ttsrv-replaces4.json`，无需再依赖 `mingwuyan/yinpin` 写权限
 - **涉及文件**:
   - `new/新脚本/ttsrv-replaces4.json`（本地完整版规则，已同步修复）
   - `new/新脚本/ttsrv-replaces4_备份_修复无语章节系统.json`（修复前备份）
-  - `yinpin/ttsrv-replaces4.json`（远程 `mingwuyan/yinpin` 镜像，已修复）
+  - `yinpin/ttsrv-replaces4.json`（项目仓库镜像，已修复）
   - `yinpin/ttsrv-replaces4_备份_修复无语章节系统.json`（镜像修复前备份）
 - **注意事项**:
-  - 由于无法直接推送 `mingwuyan/yinpin`，已在本项目根目录建立 `yinpin/` 工作副本；用户需使用有权限的账号手动 push 或上传该文件到远程
-  - 手机端也可直接覆盖 `/storage/emulated/0/Download/chajian/mingwuyan/ttsrv-replaces4.json` 立即生效
+  - 脚本已改用本项目仓库下载地址，但本地缓存仍可能优先于远程；建议删除手机本地缓存 `/storage/emulated/0/Download/chajian/mingwuyan/ttsrv-replaces4.json` 后重启，让脚本重新从本项目拉取最新规则
 
 ### 猫剪豆问（自然情绪版）v1.0.5 修复情绪桥接标记偶发残留被朗读（2026-06-23）
 - **版本升级**: v1.0.4 → v1.0.5（脚本 + 引擎）
@@ -2112,4 +2124,38 @@
 - 批量校验只在 `bieming ≠ 0` 且 pending 非空时触发，关闭别名分析时行为与 v2.126 一致
 - 批量校验会修改本地角色记录的 `aliases` 字段，并通过 `saveRecords` 持久化
 - 原有的一对一 `checkAliasByApi` + `refineAliasGroupByApi` 仍保留，复杂场景仍有兜底
+
+## 会话摘要
+
+**日期**: 2026-06-23
+**当前版本**:
+- 多角色朗读 **v2.129**
+- 猫剪豆问（自然情绪版）**v1.0.5**
+- 背景音效规则（`ttsrv-replaces4.json`）已修复并迁移到本项目仓库
+
+**目录结构规范**:
+- `多角色朗读2.129【基于126保留情绪修复回退127别名校验】.json`（当前推荐主规则）
+- `new/(脚本)猫剪豆问（自然情绪版）v1.0.5.json`（当前推荐脚本）
+- `new/猫剪豆问（自然情绪版）v1.0.5.json`（当前推荐引擎）
+- `new/新脚本/音效(替换规则)背景+.json`（音效加载脚本，已改下载地址）
+- `new/新脚本/ttsrv-replaces4.json`（本地完整音效替换规则）
+- `yinpin/ttsrv-replaces4.json`（项目仓库远程规则镜像）
+- `extract-js.js`（JS 提取脚本，支持朗读规则 + 插件两种结构）
+- 对应 `js/` 调阅文件已同步生成
+
+**已完成事项**:
+1. 修复背景音效规则：无语省略号 `……`、无语问号 `？？`、章节转场、系统提示音 `【】` 均因缺少 `(?m)` / 全角空格匹配 / 多角色朗读 `fx` 转换格式而失效，已统一修复
+2. 将修复后的 `ttsrv-replaces4.json` 同步到项目根目录 `yinpin/` 作为远程规则镜像
+3. 把 `new/新脚本/音效(替换规则)背景+.json` 中 `ttsrv-replaces4.json` 的下载地址从 `mingwuyan/yinpin` 改为当前项目仓库 `misscafe.eec/ttsrv-speechRule`
+4. 猫剪豆问 v1.0.5：修复情绪桥接标记 `[[emo:情绪|表演指令]]` 在脚本和引擎中偶发残留被朗读的问题
+5. 多角色朗读 v2.129：基于 v2.126 保留 v2.128 情绪修复，回退 v2.127 批量别名校验，避免速度变慢
+6. 新增 `extract-js.js`，支持顶层 `.code` 朗读规则和子对象 `.code` 插件两种结构，并运行同步 `js/` 调阅文件
+7. 更新 `TODO.md` 变更记录和会话摘要
+8. 执行 `git add . && git commit -m "..." && git push origin master` 推送远程仓库（GitHub + cnb.cool 同步完成）
+
+**注意事项**:
+- 手机端如已缓存旧版 `ttsrv-replaces4.json`，建议删除 `/storage/emulated/0/Download/chajian/mingwuyan/ttsrv-replaces4.json` 后重启，让脚本从本项目重新下载
+- 当前 `BASE_URL` 仍为 `mingwuyan/yinpin`，仅 `ttsrv-replaces4.json` 主规则迁移到本项目；如后续 `ttsrv-replaces3.json` / `ttsrv-replaces5.json` 也需迁移，可同样修改 `BASE_URL`
+- v2.129 不含批量别名校验，别名校验行为与 v2.126 一致
+- v1.0.5 脚本需与 v1.0.5 引擎配套使用
 
