@@ -1,4 +1,4 @@
-// ===================== 朗读脚本 v1.0.6（自然情绪版）：同步引擎括号跨行识别 + 脚本侧括号预处理 =====================
+// ===================== 朗读脚本 v1.0.8（自然情绪版）：修复换书后当前书记录不一致 =====================
 var EXT_DIR = "/storage/emulated/0/Download/chajian/mingwuyan/";
 var CACHE_ROOT = "/storage/emulated/0/Download/chajian/xiaoshuo/";
 var KEY_FILE = EXT_DIR + "miyue.txt";
@@ -163,6 +163,40 @@ function isArray(obj) { return Object.prototype.toString.call(obj) === "[object 
 function cleanDialogText(text) {
     return text.replace(/[\s　\u2000-\u200F\u2028-\u202F\uFEFF]/g, "").replace(/【\d+】/g, "").replace(/[“”‘’"']/g, "").replace(/[^一-龥。？！，、；：“”‘’（）【】《》…—·a-zA-Z0-9]/g, "").trim();
 }
+
+// ===================== 特殊括号预处理（v1.0.7）=====================
+// 将 【】「」『』 包裹的内容转换为带 <<括号X>> 标记的对话，避免被识别为旁白
+function preprocessSpecialBrackets(text) {
+    if (!text) return text;
+    // 【】 -> 括号1（保留纯数字序号如【01】，避免误伤对话序号标记）
+    text = text.replace(/【([^【】]*?)】/g, function(match, inner) {
+        if (/^\s*\d+\s*$/.test(inner)) return match;
+        return '“<<括号1>>' + inner + '”';
+    });
+    // 「」 -> 括号3
+    text = text.replace(/「([^「」]*?)」/g, '“<<括号3>>$1”');
+    // 『』 -> 括号4
+    text = text.replace(/『([^『』]*?)』/g, '“<<括号4>>$1”');
+    return text;
+}
+
+// 为特殊括号对话预填充发音人结果
+function prepopulateSpecialBracketResults(dialogs, finalCharResults) {
+    for (var i = 0; i < dialogs.length; i++) {
+        if (dialogs[i].isSpecialBracket) {
+            var specialTagMatch = String(dialogs[i].content).match(/^<<括号(\d+)>>/);
+            var tagNum = specialTagMatch ? specialTagMatch[1] : "1";
+            var specialVoice = "括号" + tagNum;
+            finalCharResults[padZero(i + 1, 2)] = {
+                name: "系统",
+                voiceDisplay: extractVoiceDisplay(specialVoice),
+                genderAge: "特殊特殊",
+                voiceNum: specialVoice
+            };
+        }
+    }
+}
+
 function isValidVoiceNum(num) { return ALL_VOICE_TAGS.indexOf(num) >= 0; }
 function extractVoiceDisplay(voiceNum) { return voiceNum || ""; }
 function getEffectiveVoice(record) { if (!record) return null; var v = record.voice; if (v && isValidVoiceNum(v)) return v; return null; }
@@ -395,37 +429,55 @@ function saveCharacter(name, genderAge, voiceNum, voice) {
 }
 
 // ===================== 书籍切换 =====================
+function normalizeBookName(name) {
+    return String(name || "").trim().replace(/[\\/:*?"<>|]/g, "_").substring(0, 50);
+}
 function getBookNameSafely() {
     var bookName = "";
     try {
         var dataStr = String(java.readExternalFile(DATA_FILE));
-        if (!dataStr || dataStr === "") return "";
-        var data = JSON.parse(dataStr);
-        if (!data || !data.bookName) return "";
-        bookName = data.bookName ? String(data.bookName).trim() : "";
-    } catch (e) { bookName = "未知书籍_" + new Date().getTime(); }
-    return bookName.replace(/[\\/:*?"<>|]/g, "_").substring(0, 50);
+        if (dataStr && dataStr !== "") {
+            var data = JSON.parse(dataStr);
+            if (data && data.bookName) {
+                bookName = String(data.bookName).trim();
+            }
+        }
+    } catch (e) {}
+    // 若 data.json 中没有书名，回退到 cunfang.txt 中保存的当前书
+    if (!bookName) {
+        try {
+            var saved = readCurrentBookName();
+            if (saved && saved !== "default_book") bookName = saved;
+        } catch (e) {}
+    }
+    if (!bookName) bookName = "未知书籍_" + new Date().getTime();
+    return normalizeBookName(bookName);
 }
 function readCurrentBookName() {
     try {
         var nameFile = EXT_DIR + "cunfang.txt";
         var rawBook = String(java.readExternalFile(nameFile));
         var bookStr = rawBook ? String(rawBook) : "";
-        if (bookStr && bookStr.charAt(0) === '"') { try { bookStr = JSON.parse(bookStr); } catch (e) {} }
+        // 兼容历史上被 JSON.stringify 保存的带引号内容
+        if (bookStr && bookStr.charAt(0) === '"') {
+            try { bookStr = JSON.parse(bookStr); } catch (e) {}
+        }
         var bookName = (typeof bookStr === "string" ? bookStr : "").trim();
-        return bookName || "default_book_" + new Date().getTime().toString().slice(-6);
-    } catch (e) { return "default_book_" + new Date().getTime().toString().slice(-6); }
+        return normalizeBookName(bookName) || "default_book";
+    } catch (e) { return "default_book"; }
 }
 function saveCurrentBookName(bookName) {
-    try { java.writeExternalFile(EXT_DIR + "cunfang.txt", (typeof bookName === "string" ? bookName : "").trim() || "default_book"); } catch (e) {}
+    try { java.writeExternalFile(EXT_DIR + "cunfang.txt", normalizeBookName(bookName) || "default_book"); } catch (e) {}
 }
 function handleBookSwitch() {
     var currBookName = getBookNameSafely();
-    var validCurrBook = currBookName || "default_book_" + new Date().getTime().toString().slice(-6);
+    var validCurrBook = currBookName || readCurrentBookName() || "default_book";
     var oldBookName = readCurrentBookName();
     addBookToList(validCurrBook);
+    log("【换书检测】当前书：" + validCurrBook + "，旧书：" + oldBookName);
     if (oldBookName === validCurrBook) return;
     IS_BOOK_SWITCHED = true;
+    log("【换书】" + oldBookName + " -> " + validCurrBook);
     var charMainPath = EXT_DIR + "characterRecords.json";
     var oldBackupPath = EXT_DIR + "shuming." + oldBookName + ".json";
     var newBackupPath = EXT_DIR + "shuming." + validCurrBook + ".json";
@@ -488,7 +540,8 @@ function extractDialogs(paragraph) {
         if (rightPos !== -1) { content = paragraph.substring(leftPos + 1, Math.min(rightPos, leftPos + 1 + 1000)); hasRightQuote = true; }
         else { content = paragraph.substring(leftPos + 1, Math.min(len, leftPos + 1 + 1000)); hasRightQuote = false; }
         if (content && content.length >= 1) {
-            dialogs.push({ content: content, index: leftPos, length: hasRightQuote ? content.length + 2 : content.length + 1, hasRightQuote: hasRightQuote });
+            var isSpecialBracket = /^<<括号\d+>>/.test(content);
+            dialogs.push({ content: content, index: leftPos, length: hasRightQuote ? content.length + 2 : content.length + 1, hasRightQuote: hasRightQuote, isSpecialBracket: isSpecialBracket });
         }
         idx = hasRightQuote ? rightPos + 1 : len;
     }
@@ -969,6 +1022,9 @@ function annotateText(paragraph, dialogs, charResults) {
       if (!info) continue;
       var d = dialogs[i];
 
+      // 跳过已由脚本预处理的 <<括号X>> 特殊对话，避免重复插入角色标记
+      if (d.isSpecialBracket) continue;
+
       if (info.name === "旁白") {
           // 旁白：去掉整个引号对（左右引号），只保留文字内容
           // d.index 是左引号的位置，d.length 是完整引号标记的长度（含左右引号）
@@ -1426,7 +1482,7 @@ var ENABLE_EMOTION_BRIDGE = 1;
 (function() {
 
 
-    var originalText = text;
+    var originalText = preprocessSpecialBrackets(text);
     var resultText = originalText;
 
 // ★ 只拦截“有右引号但无左引号”的特殊段落，其他情况（包括有左无右）交给后续正常流程
@@ -1435,7 +1491,7 @@ var ENABLE_EMOTION_BRIDGE = 1;
         if (specialResult) resultText = specialResult;
     }
 
-    if (resultText === text) {
+    if (resultText === originalText) {
         if (originalText && originalText.indexOf("“") > -1) handleBookSwitch();
         var dialogs = extractDialogs(originalText);
 
@@ -1450,6 +1506,7 @@ var ENABLE_EMOTION_BRIDGE = 1;
     var useProgress = progress && progress.bookName === bookName && !IS_BOOK_SWITCHED;
 
     var finalCharResults = {};
+    prepopulateSpecialBracketResults(dialogs, finalCharResults);
     var chapterTitle = null;
     var seqList = [];
     var location = null;
@@ -1477,6 +1534,7 @@ var ENABLE_EMOTION_BRIDGE = 1;
                 chapterTitle = location.chapterTitle;
                 seqList = location.seqList;
                 finalCharResults = {};
+                prepopulateSpecialBracketResults(dialogs, finalCharResults);
                 var allCachedAfterLocate = true;
                 for (var i = 0; i < dialogs.length; i++) {
                     var realSeq = seqList[i];
@@ -1588,6 +1646,7 @@ var ENABLE_EMOTION_BRIDGE = 1;
 
                     var tempAssignedVoices = {};
                     for (var i = 0; i < dialogs.length; i++) {
+                        if (dialogs[i].isSpecialBracket) continue;
                         var localSeq = padZero(i + 1, 2);
                         var aiInfo = analyzeResult[localSeq];
                         var charName = aiInfo ? aiInfo.name : "未知";
@@ -1624,12 +1683,14 @@ var ENABLE_EMOTION_BRIDGE = 1;
                     }
                 } else {
                     for (var i = 0; i < dialogs.length; i++) {
+                        if (dialogs[i].isSpecialBracket) continue;
                         var vn = getTargetVoiceNum("男男青年", null, []);
                         finalCharResults[padZero(i + 1, 2)] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn };
                     }
                 }
             } else {
                 for (var i = 0; i < dialogs.length; i++) {
+                    if (dialogs[i].isSpecialBracket) continue;
                     var localSeq = padZero(i + 1, 2);
                     var cached = finalCharResults[localSeq];
                     if (!cached) continue;
@@ -1662,12 +1723,14 @@ var ENABLE_EMOTION_BRIDGE = 1;
             }
         } else {
             for (var i = 0; i < dialogs.length; i++) {
+                if (dialogs[i].isSpecialBracket) continue;
                 var vn = getTargetVoiceNum("男男青年", null, []);
                 finalCharResults[padZero(i + 1, 2)] = { name: "群众", voiceDisplay: extractVoiceDisplay(vn), genderAge: "男男青年", voiceNum: vn };
             }
         }
     } else if (useProgress && finalCharResults && Object.keys(finalCharResults).length === dialogs.length) {
         for (var i = 0; i < dialogs.length; i++) {
+            if (dialogs[i].isSpecialBracket) continue;
             var localSeq = padZero(i + 1, 2);
             var cached = finalCharResults[localSeq];
             if (!cached) continue;
