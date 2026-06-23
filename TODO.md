@@ -2308,3 +2308,46 @@
 - 合并并批量修复后 `ttsrv-replaces4.json` 体积约 2.29 MB，规则非常丰富；若发现某个音效误触发或漏触发，请提供具体文本以便定位
 - 括号跨行识别修复后，若遇到不匹配括号把旁白误吞入对话，请提供具体文本进一步调整
 
+
+## 会话摘要（2026-06-23）
+
+**当前版本**:
+- 猫剪豆问脚本：`new/(脚本)猫剪豆问（自然情绪版）v1.0.8.json`
+- 猫剪豆问引擎：`new/猫剪豆问（自然情绪版）v1.0.6.json`（未改动，与 v1.0.8 脚本配套使用）
+- 多角色朗读规则：`多角色朗读2.129【基于126保留情绪修复回退127别名校验】.json`
+- 音效规则：`yinpin/ttsrv-replaces4.json` / `new/新脚本/ttsrv-replaces4.json`
+
+**本次完成事项**:
+1. 猫剪豆问 v1.0.7：修复脚本侧 `【...】`/`「...」`/`『...』` 被识别为旁白的问题，新增 `preprocessSpecialBrackets` 预处理和 `isSpecialBracket` 标记，使括号内容由 `括号1`/`括号3`/`括号4` 发音人朗读
+2. 猫剪豆问 v1.0.8：修复换书后当前书记录不一致的问题，统一 `normalizeBookName` 处理书名读写，`data.json` 无书名时回退 `cunfang.txt`，默认书籍使用固定 `"default_book"`，并增加换书检测日志
+3. 同步更新 `js/` 调阅文件：`js/new/(脚本)猫剪豆问（自然情绪版）v1.0.{7,8}_obj{0,1}.js`
+4. 更新 `TODO.md` 变更记录和会话摘要
+5. 执行 `git add . && git commit -m "..." && git push origin master` 推送远程仓库（GitHub + cnb.cool 同步完成）
+
+**主目录结构（相关）**:
+```
+C:/date/ttsrv-speechRule/
+├── new/
+│   ├── (脚本)猫剪豆问（自然情绪版）v1.0.8.json   <- 当前最新脚本
+│   ├── (脚本)猫剪豆问（自然情绪版）v1.0.7.json   <- 上一版本备份
+│   ├── (脚本)猫剪豆问（自然情绪版）v1.0.6.json   <- 再上一版本
+│   ├── 猫剪豆问（自然情绪版）v1.0.6.json         <- 当前引擎
+│   └── 新脚本/
+│       └── ttsrv-replaces4.json                   <- 合并+修复后的音效规则
+├── js/new/                                        <- JS 调阅文件
+│   ├── (脚本)猫剪豆问（自然情绪版）v1.0.8_obj0.js
+│   ├── (脚本)猫剪豆问（自然情绪版）v1.0.8_obj1.js
+│   ├── (脚本)猫剪豆问（自然情绪版）v1.0.7_obj0.js
+│   ├── (脚本)猫剪豆问（自然情绪版）v1.0.7_obj1.js
+│   └── ...
+├── yinpin/
+│   └── ttsrv-replaces4.json                       <- 项目仓库音效规则镜像
+├── TODO.md
+└── extract-js.js
+```
+
+**注意事项**:
+- v1.0.8 脚本需与 v1.0.6 引擎配套使用
+- 若换书后仍显示默认书籍，请检查 TTS Server 日志中的 `【换书检测】` / `【换书】` 输出，确认 `data.json` 是否正确传递了 `bookName`
+- 手机端如已缓存旧版 `ttsrv-replaces4.json`，建议删除 `/storage/emulated/0/Download/chajian/mingwuyan/ttsrv-replaces4.json` 后重启
+- 历史 `shuming.default_book_xxxx.json` 文件可手动清理，后续统一使用 `shuming.default_book.json`
