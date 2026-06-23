@@ -2,6 +2,7 @@
 // 支持两种结构：
 //   1. 朗读规则：顶层对象 { code: "..." }
 //   2. 插件：数组 [ { code: "..." }, { code: "..." } ]
+//   3. 引擎：顶层对象 { url: "@js:\n..." }
 var fs = require('fs');
 var path = require('path');
 
@@ -25,8 +26,13 @@ function extractCode(jsonPath, outDir) {
     var baseName = path.basename(jsonPath, '.json');
     var codes = [];
 
-    if (data && typeof data === 'object' && !Array.isArray(data) && data.code) {
-        codes.push({ index: null, code: data.code });
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+        if (data.code) {
+            codes.push({ index: null, code: data.code });
+        } else if (data.url && typeof data.url === 'string' && data.url.indexOf('@js:') === 0) {
+            var urlCode = data.url.substring(data.url.charAt(4) === '\n' ? 5 : 4);
+            codes.push({ index: null, code: urlCode });
+        }
     } else if (Array.isArray(data)) {
         for (var i = 0; i < data.length; i++) {
             if (data[i] && data[i].code) {
