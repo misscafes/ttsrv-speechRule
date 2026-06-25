@@ -1,0 +1,210 @@
+.class public final synthetic Lb50/o;
+.super Ljava/lang/Object;
+.source "r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949"
+
+# interfaces
+.implements Lyx/p;
+
+
+# instance fields
+.field public final synthetic X:Ljava/lang/String;
+
+.field public final synthetic Y:Lv3/q;
+
+.field public final synthetic Z:Lp40/a;
+
+.field public final synthetic i:Lp40/l0;
+
+.field public final synthetic n0:Ljava/lang/String;
+
+.field public final synthetic o0:Lp40/a;
+
+.field public final synthetic p0:Lp40/j0;
+
+.field public final synthetic q0:Lyx/p;
+
+.field public final synthetic r0:Ls1/u1;
+
+.field public final synthetic s0:Z
+
+.field public final synthetic t0:Z
+
+.field public final synthetic u0:I
+
+.field public final synthetic v0:I
+
+
+# direct methods
+.method public synthetic constructor <init>(Lp40/l0;Ljava/lang/String;Lv3/q;Lp40/a;Ljava/lang/String;Lp40/a;Lp40/j0;Lyx/p;Ls1/u1;ZZII)V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    iput-object p1, p0, Lb50/o;->i:Lp40/l0;
+
+    .line 5
+    .line 6
+    iput-object p2, p0, Lb50/o;->X:Ljava/lang/String;
+
+    .line 7
+    .line 8
+    iput-object p3, p0, Lb50/o;->Y:Lv3/q;
+
+    .line 9
+    .line 10
+    iput-object p4, p0, Lb50/o;->Z:Lp40/a;
+
+    .line 11
+    .line 12
+    iput-object p5, p0, Lb50/o;->n0:Ljava/lang/String;
+
+    .line 13
+    .line 14
+    iput-object p6, p0, Lb50/o;->o0:Lp40/a;
+
+    .line 15
+    .line 16
+    iput-object p7, p0, Lb50/o;->p0:Lp40/j0;
+
+    .line 17
+    .line 18
+    iput-object p8, p0, Lb50/o;->q0:Lyx/p;
+
+    .line 19
+    .line 20
+    iput-object p9, p0, Lb50/o;->r0:Ls1/u1;
+
+    .line 21
+    .line 22
+    iput-boolean p10, p0, Lb50/o;->s0:Z
+
+    .line 23
+    .line 24
+    iput-boolean p11, p0, Lb50/o;->t0:Z
+
+    .line 25
+    .line 26
+    iput p12, p0, Lb50/o;->u0:I
+
+    .line 27
+    .line 28
+    iput p13, p0, Lb50/o;->v0:I
+
+    .line 29
+    .line 30
+    return-void
+.end method
+
+
+# virtual methods
+.method public final invoke(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+    .locals 14
+
+    .line 1
+    move-object v11, p1
+
+    .line 2
+    check-cast v11, Le3/k0;
+
+    .line 3
+    .line 4
+    move-object/from16 v0, p2
+
+    .line 5
+    .line 6
+    check-cast v0, Ljava/lang/Integer;
+
+    .line 7
+    .line 8
+    invoke-virtual {v0}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
+
+    .line 9
+    .line 10
+    .line 11
+    iget v0, p0, Lb50/o;->u0:I
+
+    .line 12
+    .line 13
+    or-int/lit8 v0, v0, 0x1
+
+    .line 14
+    .line 15
+    invoke-static {v0}, Le3/q;->G(I)I
+
+    .line 16
+    .line 17
+    .line 18
+    move-result v12
+
+    .line 19
+    iget v0, p0, Lb50/o;->v0:I
+
+    .line 20
+    .line 21
+    invoke-static {v0}, Le3/q;->G(I)I
+
+    .line 22
+    .line 23
+    .line 24
+    move-result v13
+
+    .line 25
+    iget-object v0, p0, Lb50/o;->i:Lp40/l0;
+
+    .line 26
+    .line 27
+    iget-object v1, p0, Lb50/o;->X:Ljava/lang/String;
+
+    .line 28
+    .line 29
+    iget-object v2, p0, Lb50/o;->Y:Lv3/q;
+
+    .line 30
+    .line 31
+    iget-object v3, p0, Lb50/o;->Z:Lp40/a;
+
+    .line 32
+    .line 33
+    iget-object v4, p0, Lb50/o;->n0:Ljava/lang/String;
+
+    .line 34
+    .line 35
+    iget-object v5, p0, Lb50/o;->o0:Lp40/a;
+
+    .line 36
+    .line 37
+    iget-object v6, p0, Lb50/o;->p0:Lp40/j0;
+
+    .line 38
+    .line 39
+    iget-object v7, p0, Lb50/o;->q0:Lyx/p;
+
+    .line 40
+    .line 41
+    iget-object v8, p0, Lb50/o;->r0:Ls1/u1;
+
+    .line 42
+    .line 43
+    iget-boolean v9, p0, Lb50/o;->s0:Z
+
+    .line 44
+    .line 45
+    iget-boolean v10, p0, Lb50/o;->t0:Z
+
+    .line 46
+    .line 47
+    invoke-static/range {v0 .. v13}, Lb50/c;->h(Lp40/l0;Ljava/lang/String;Lv3/q;Lp40/a;Ljava/lang/String;Lp40/a;Lp40/j0;Lyx/p;Ls1/u1;ZZLe3/k0;II)V
+
+    .line 48
+    .line 49
+    .line 50
+    sget-object p0, Ljx/w;->a:Ljx/w;
+
+    .line 51
+    .line 52
+    return-object p0
+.end method

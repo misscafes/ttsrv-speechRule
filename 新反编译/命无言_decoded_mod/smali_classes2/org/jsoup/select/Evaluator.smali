@@ -1,0 +1,87 @@
+.class public abstract Lorg/jsoup/select/Evaluator;
+.super Ljava/lang/Object;
+.source "r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892"
+
+
+# annotations
+.annotation system Ldalvik/annotation/MemberClasses;
+    value = {
+        Lorg/jsoup/select/Evaluator$MatchText;,
+        Lorg/jsoup/select/Evaluator$MatchesWholeOwnText;,
+        Lorg/jsoup/select/Evaluator$MatchesWholeText;,
+        Lorg/jsoup/select/Evaluator$MatchesOwn;,
+        Lorg/jsoup/select/Evaluator$Matches;,
+        Lorg/jsoup/select/Evaluator$ContainsOwnText;,
+        Lorg/jsoup/select/Evaluator$ContainsData;,
+        Lorg/jsoup/select/Evaluator$ContainsWholeOwnText;,
+        Lorg/jsoup/select/Evaluator$ContainsWholeText;,
+        Lorg/jsoup/select/Evaluator$ContainsText;,
+        Lorg/jsoup/select/Evaluator$IndexEvaluator;,
+        Lorg/jsoup/select/Evaluator$IsEmpty;,
+        Lorg/jsoup/select/Evaluator$IsOnlyOfType;,
+        Lorg/jsoup/select/Evaluator$IsOnlyChild;,
+        Lorg/jsoup/select/Evaluator$IsRoot;,
+        Lorg/jsoup/select/Evaluator$IsFirstChild;,
+        Lorg/jsoup/select/Evaluator$IsNthLastOfType;,
+        Lorg/jsoup/select/Evaluator$IsNthOfType;,
+        Lorg/jsoup/select/Evaluator$IsNthLastChild;,
+        Lorg/jsoup/select/Evaluator$IsNthChild;,
+        Lorg/jsoup/select/Evaluator$CssNthEvaluator;,
+        Lorg/jsoup/select/Evaluator$IsLastOfType;,
+        Lorg/jsoup/select/Evaluator$IsFirstOfType;,
+        Lorg/jsoup/select/Evaluator$IsLastChild;,
+        Lorg/jsoup/select/Evaluator$IndexEquals;,
+        Lorg/jsoup/select/Evaluator$IndexGreaterThan;,
+        Lorg/jsoup/select/Evaluator$IndexLessThan;,
+        Lorg/jsoup/select/Evaluator$AllElements;,
+        Lorg/jsoup/select/Evaluator$AttributeKeyPair;,
+        Lorg/jsoup/select/Evaluator$AttributeWithValueMatching;,
+        Lorg/jsoup/select/Evaluator$AttributeWithValueContaining;,
+        Lorg/jsoup/select/Evaluator$AttributeWithValueEnding;,
+        Lorg/jsoup/select/Evaluator$AttributeWithValueStarting;,
+        Lorg/jsoup/select/Evaluator$AttributeWithValueNot;,
+        Lorg/jsoup/select/Evaluator$AttributeWithValue;,
+        Lorg/jsoup/select/Evaluator$AttributeStarting;,
+        Lorg/jsoup/select/Evaluator$Attribute;,
+        Lorg/jsoup/select/Evaluator$Class;,
+        Lorg/jsoup/select/Evaluator$Id;,
+        Lorg/jsoup/select/Evaluator$TagEndsWith;,
+        Lorg/jsoup/select/Evaluator$Tag;
+    }
+.end annotation
+
+
+# direct methods
+.method public constructor <init>()V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    return-void
+.end method
+
+
+# virtual methods
+.method public cost()I
+    .locals 1
+
+    .line 1
+    const/4 v0, 0x5
+
+    .line 2
+    return v0
+.end method
+
+.method public abstract matches(Lorg/jsoup/nodes/Element;Lorg/jsoup/nodes/Element;)Z
+.end method
+
+.method public reset()V
+    .locals 0
+
+    .line 1
+    return-void
+.end method

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/vw_bg" android:background="@color/background_menu" android:paddingLeft="16.0dp" android:paddingTop="12.0dp" android:paddingRight="16.0dp" android:paddingBottom="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="@color/primaryText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="下载背景音乐" />
+    <io.legado.app.ui.widget.text.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp" android:hint="仓库网址">
+        <io.legado.app.lib.theme.view.ThemeEditText android:textSize="15.0sp" android:id="@id/etUrl" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="https://cnb.cool/zhangsan33/maotxinxxx/-/tree/bgm/bgm" android:singleLine="true" />
+    </io.legado.app.ui.widget.text.TextInputLayout>
+    <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:id="@id/tv_progress" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:text="" />
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp">
+        <TextView android:textSize="15.0sp" android:textColor="@color/primaryText" android:gravity="center" android:id="@id/btnCancel" android:background="?android:selectableItemBackgroundBorderless" android:padding="10.0dp" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="取消" android:layout_weight="1.0" />
+        <View android:background="@color/divider" android:layout_width="1.0dp" android:layout_height="match_parent" />
+        <TextView android:textSize="15.0sp" android:textColor="@color/primaryText" android:gravity="center" android:id="@id/btnDownload" android:background="?android:selectableItemBackgroundBorderless" android:padding="10.0dp" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="确定" android:layout_weight="1.0" />
+    </LinearLayout>
+</LinearLayout>

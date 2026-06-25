@@ -1,0 +1,59 @@
+.class public final Lel/y2;
+.super Ljava/lang/Object;
+.source "r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892"
+
+# interfaces
+.implements Lo7/a;
+
+
+# instance fields
+.field public final a:Landroid/widget/FrameLayout;
+
+.field public final b:Landroidx/swiperefreshlayout/widget/SwipeRefreshLayout;
+
+.field public final c:Lio/legado/app/ui/widget/recycler/scroller/FastScrollRecyclerView;
+
+.field public final d:Landroid/widget/TextView;
+
+
+# direct methods
+.method public constructor <init>(Landroid/widget/FrameLayout;Landroidx/swiperefreshlayout/widget/SwipeRefreshLayout;Lio/legado/app/ui/widget/recycler/scroller/FastScrollRecyclerView;Landroid/widget/TextView;)V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    iput-object p1, p0, Lel/y2;->a:Landroid/widget/FrameLayout;
+
+    .line 5
+    .line 6
+    iput-object p2, p0, Lel/y2;->b:Landroidx/swiperefreshlayout/widget/SwipeRefreshLayout;
+
+    .line 7
+    .line 8
+    iput-object p3, p0, Lel/y2;->c:Lio/legado/app/ui/widget/recycler/scroller/FastScrollRecyclerView;
+
+    .line 9
+    .line 10
+    iput-object p4, p0, Lel/y2;->d:Landroid/widget/TextView;
+
+    .line 11
+    .line 12
+    return-void
+.end method
+
+
+# virtual methods
+.method public final getRoot()Landroid/view/View;
+    .locals 1
+
+    .line 1
+    iget-object v0, p0, Lel/y2;->a:Landroid/widget/FrameLayout;
+
+    .line 2
+    .line 3
+    return-object v0
+.end method

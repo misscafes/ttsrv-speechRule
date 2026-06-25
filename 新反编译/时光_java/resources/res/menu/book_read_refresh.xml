@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:icon="@drawable/ic_bubble_chart"
+        android:id="@+id/menu_refresh_dur"
+        android:title="@string/menu_refresh_dur"
+        app:showAsAction="never"/>
+    <item
+        android:icon="@drawable/ic_bubble_chart"
+        android:id="@+id/menu_refresh_after"
+        android:title="@string/menu_refresh_after"
+        app:showAsAction="never"/>
+    <item
+        android:icon="@drawable/ic_bubble_chart"
+        android:id="@+id/menu_refresh_all"
+        android:title="@string/menu_refresh_all"
+        app:showAsAction="never"/>
+</menu>

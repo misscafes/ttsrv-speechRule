@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="@drawable/bg_prefs_color" android:paddingLeft="16.0dp" android:paddingTop="10.0dp" android:paddingRight="16.0dp" android:paddingBottom="10.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="60.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:id="@id/preference_icon" android:paddingTop="1.0dp" android:visibility="visible" android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginRight="16.0dp" android:scaleType="fitCenter" />
+    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+        <TextView android:textSize="16.0sp" android:textColor="@color/primaryText" android:id="@id/preference_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/title" android:singleLine="true" />
+        <TextView android:textSize="14.0sp" android:textColor="@color/tv_text_summary" android:id="@id/preference_desc" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:text="@string/default1" />
+    </LinearLayout>
+    <FrameLayout android:gravity="right|center" android:layout_gravity="center" android:orientation="vertical" android:id="@id/preference_widget" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="8.0dp" android:layout_marginTop="8.0dp" android:layout_marginBottom="8.0dp" />
+</LinearLayout>

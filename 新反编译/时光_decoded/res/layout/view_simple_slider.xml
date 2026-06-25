@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:layout_gravity="center_vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="16.0dp">
+        <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="?android:textColorSecondary" android:ellipsize="end" android:id="@id/tvSeekTitleVertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/text" android:maxLines="1" android:layout_weight="1.0" />
+        <com.google.android.material.card.MaterialCardView android:layout_width="wrap_content" android:layout_height="wrap_content" app:cardBackgroundColor="?colorSecondaryContainer" app:cardCornerRadius="8.0dp" app:strokeWidth="0.0dp">
+            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="?colorSecondary" android:id="@id/tvSeekValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/text" android:layout_marginHorizontal="4.0dp" android:layout_marginVertical="2.0dp" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+    <com.google.android.material.slider.Slider android:id="@id/slider" android:layout_width="match_parent" android:layout_height="wrap_content" android:stepSize="1.0" android:valueFrom="0" android:valueTo="20" app:thumbColor="?colorSurface" app:thumbHeight="24.0dp" app:thumbStrokeColor="?colorSecondary" app:thumbStrokeWidth="4.0dp" app:thumbTrackGapSize="0.0dp" app:thumbWidth="24.0dp" app:tickColorActive="@android:color/transparent" app:tickColorInactive="@android:color/transparent" app:trackColorActive="?colorSecondary" app:trackColorInactive="?colorSurfaceContainerHighest" app:trackHeight="24.0dp" />
+</LinearLayout>

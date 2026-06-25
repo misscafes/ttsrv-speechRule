@@ -1,0 +1,42 @@
+package fu;
+
+import jx.w;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes3.dex */
+public final /* synthetic */ class f implements yx.a {
+    public final /* synthetic */ yx.l X;
+    public final /* synthetic */ String Y;
+
+    /* JADX INFO: renamed from: i, reason: collision with root package name */
+    public final /* synthetic */ int f9932i;
+
+    public /* synthetic */ f(yx.l lVar, String str, int i10) {
+        this.f9932i = i10;
+        this.X = lVar;
+        this.Y = str;
+    }
+
+    @Override // yx.a
+    public final Object invoke() {
+        int i10 = this.f9932i;
+        w wVar = w.f15819a;
+        String str = this.Y;
+        yx.l lVar = this.X;
+        switch (i10) {
+            case 0:
+                lVar.invoke(str);
+                break;
+            case 1:
+                lVar.invoke(str);
+                break;
+            case 2:
+                lVar.invoke(str);
+                break;
+            default:
+                lVar.invoke(new zt.c(vd.d.EMPTY, vd.d.EMPTY, str));
+                break;
+        }
+        return wVar;
+    }
+}

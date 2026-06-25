@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.google.android.material.appbar.MaterialToolbar android:id="@id/tool_bar" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <androidx.recyclerview.widget.RecyclerView android:id="@id/rv_path" android:paddingLeft="12.0dp" android:paddingRight="12.0dp" android:layout_width="match_parent" android:layout_height="24.0dp" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0.0dp" android:layout_weight="1.0">
+        <androidx.recyclerview.widget.RecyclerView android:id="@id/rv_file" android:layout_width="match_parent" android:layout_height="match_parent" />
+        <TextView android:gravity="center" android:id="@id/tv_empty" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent" />
+    </FrameLayout>
+    <com.google.android.material.button.MaterialButton android:gravity="center" android:id="@id/tv_ok" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="8.0dp" android:text="@string/ok" style="@style/Widget.Material3Expressive.Button.TonalButton" />
+</LinearLayout>

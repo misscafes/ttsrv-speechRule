@@ -1,0 +1,28 @@
+package ze;
+
+import com.bumptech.glide.load.ImageHeaderParser$ImageType;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes3.dex */
+public abstract /* synthetic */ class d {
+
+    /* JADX INFO: renamed from: a, reason: collision with root package name */
+    public static final /* synthetic */ int[] f38094a;
+
+    static {
+        int[] iArr = new int[ImageHeaderParser$ImageType.values().length];
+        f38094a = iArr;
+        try {
+            iArr[ImageHeaderParser$ImageType.WEBP.ordinal()] = 1;
+        } catch (NoSuchFieldError unused) {
+        }
+        try {
+            f38094a[ImageHeaderParser$ImageType.WEBP_A.ordinal()] = 2;
+        } catch (NoSuchFieldError unused2) {
+        }
+        try {
+            f38094a[ImageHeaderParser$ImageType.ANIMATED_WEBP.ordinal()] = 3;
+        } catch (NoSuchFieldError unused3) {
+        }
+    }
+}

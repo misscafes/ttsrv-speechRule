@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/root_view" android:background="@color/background_menu" android:paddingLeft="16.0dp" android:paddingTop="12.0dp" android:paddingRight="16.0dp" android:paddingBottom="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/primaryText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="AI智能切歌" />
+        <View android:layout_width="0.0dp" android:layout_height="1.0dp" android:layout_weight="1.0" />
+        <io.legado.app.lib.theme.view.ThemeSwitch android:id="@id/switchAI" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp">
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:gravity="center" android:id="@id/btnAIProvider" android:background="?android:selectableItemBackgroundBorderless" android:padding="10.0dp" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="AI提供商" android:layout_weight="1.0" android:layout_marginEnd="8.0dp" />
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:gravity="center" android:id="@id/btnAIPrompt" android:background="?android:selectableItemBackgroundBorderless" android:padding="10.0dp" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="AI提示词" android:layout_weight="1.0" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="8.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="分析字数：" />
+        <io.legado.app.lib.theme.view.ThemeSeekBar android:id="@id/seekAIInterval" android:layout_width="0.0dp" android:layout_height="wrap_content" android:max="90" android:progress="25" android:layout_weight="1.0" />
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:gravity="end" android:id="@id/tvAIIntervalValue" android:layout_width="60.0dp" android:layout_height="wrap_content" android:text="350字" />
+    </LinearLayout>
+</LinearLayout>

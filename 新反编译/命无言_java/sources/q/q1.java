@@ -1,0 +1,16 @@
+package q;
+
+import android.graphics.Rect;
+import android.widget.PopupWindow;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes.dex */
+public abstract class q1 {
+    public static void a(PopupWindow popupWindow, Rect rect) {
+        popupWindow.setEpicenterBounds(rect);
+    }
+
+    public static void b(PopupWindow popupWindow, boolean z4) {
+        popupWindow.setIsClippedToScreen(z4);
+    }
+}

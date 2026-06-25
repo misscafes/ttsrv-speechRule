@@ -1,0 +1,15 @@
+.class public final Lu00/f1;
+.super Lu00/r;
+.source "r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949"
+
+
+# virtual methods
+.method public final b()I
+    .locals 0
+
+    .line 1
+    const/4 p0, 0x6
+
+    .line 2
+    return p0
+.end method

@@ -1,0 +1,17 @@
+package df;
+
+import android.graphics.Bitmap;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes.dex */
+public interface b {
+    void a(int i10);
+
+    Bitmap i(int i10, int i11, Bitmap.Config config);
+
+    void k(Bitmap bitmap);
+
+    Bitmap r(int i10, int i11, Bitmap.Config config);
+
+    void s();
+}

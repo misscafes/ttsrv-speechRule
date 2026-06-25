@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView android:background="?colorSurface" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp" android:text="编辑配置" />
+        <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="显示名称" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" app:hintEnabled="false" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+            <com.google.android.material.textfield.TextInputEditText android:textSize="14.0sp" android:id="@id/et_display_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="请输入配置名称" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="所属分组" />
+        <Spinner android:id="@id/spinner_group" android:background="@drawable/bg_spinner" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="48.0dp" android:layout_marginBottom="12.0dp" />
+        <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="选择音色分类" />
+        <Spinner android:id="@id/spinner_category" android:background="@drawable/bg_spinner" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="48.0dp" android:layout_marginBottom="12.0dp" />
+        <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="选择发音人" />
+        <Spinner android:id="@id/spinner_voice" android:background="@drawable/bg_spinner" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="48.0dp" android:layout_marginBottom="12.0dp" />
+        <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="选择标签" />
+        <Spinner android:id="@id/spinner_tag" android:background="@drawable/bg_spinner" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="48.0dp" android:layout_marginBottom="12.0dp" />
+        <LinearLayout android:orientation="vertical" android:id="@id/ll_preset" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="选择高级音色预设提示词" />
+            <Spinner android:id="@id/spinner_preset" android:background="@drawable/bg_spinner" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="48.0dp" android:layout_marginBottom="12.0dp" />
+            <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="语音提示词（仅高级音色支持）" />
+            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" app:hintEnabled="false" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                <com.google.android.material.textfield.TextInputEditText android:textSize="14.0sp" android:gravity="top" android:id="@id/et_prompt" android:layout_width="match_parent" android:layout_height="wrap_content" android:minLines="4" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+        <LinearLayout android:orientation="vertical" android:id="@id/ll_emotion" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="情绪选择（仅情感音色支持）" />
+            <LinearLayout android:orientation="vertical" android:id="@id/ll_emotion_check" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" />
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginEnd="6.0dp">
+                <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="采样率" />
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" app:hintEnabled="false" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    <com.google.android.material.textfield.TextInputEditText android:textSize="14.0sp" android:id="@id/et_sample_rate" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginHorizontal="6.0dp">
+                <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="语速" />
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" app:hintEnabled="false" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    <com.google.android.material.textfield.TextInputEditText android:textSize="14.0sp" android:id="@id/et_speed" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberDecimal" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="6.0dp">
+                <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:text="音量" />
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" app:hintEnabled="false" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    <com.google.android.material.textfield.TextInputEditText android:textSize="14.0sp" android:id="@id/et_volume" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberDecimal" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

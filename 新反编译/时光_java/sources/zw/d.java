@@ -1,0 +1,27 @@
+package zw;
+
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.Map;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes4.dex */
+public abstract class d {
+
+    /* JADX INFO: renamed from: a, reason: collision with root package name */
+    public static final Map f38766a;
+
+    static {
+        Map map;
+        try {
+            Field declaredField = v10.b.class.getDeclaredField("a");
+            declaredField.setAccessible(true);
+            map = (Map) declaredField.get(null);
+        } catch (Throwable th2) {
+            Map map2 = Collections.EMPTY_MAP;
+            th2.printStackTrace();
+            map = map2;
+        }
+        f38766a = map;
+    }
+}

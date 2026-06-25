@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:id="@id/vw_bg" android:background="@drawable/shape_card_view" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar android:theme="?actionBarStyle" android:id="@id/tool_bar" android:background="@color/background_menu" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="3.0dp" android:elevation="5.0dp" app:displayHomeAsUp="false" app:fitStatusBar="false" app:popupTheme="@style/AppTheme.PopupOverlay" app:title="@string/server_config" app:titleTextAppearance="@style/ToolbarTitle" />
+        <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/til_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/name">
+            <io.legado.app.lib.theme.view.ThemeEditText android:id="@id/et_name" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        </io.legado.app.ui.widget.text.TextInputLayout>
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <io.legado.app.ui.widget.text.AccentTextView android:padding="6.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TYPE" />
+            <androidx.appcompat.widget.AppCompatSpinner android:theme="@style/Spinner" android:entries="@array/server_type" android:id="@id/sp_type" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+        <androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:overScrollMode="ifContentScrolls">
+            <com.google.android.flexbox.FlexboxLayout android:id="@id/flexbox" android:padding="3.0dp" android:clipToPadding="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" app:dividerDrawable="@drawable/shape_space_divider" app:flexDirection="row" app:flexWrap="wrap" app:showDivider="middle" />
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+</FrameLayout>

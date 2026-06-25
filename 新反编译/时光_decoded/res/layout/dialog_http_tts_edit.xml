@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:id="@id/vw_bg" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar android:theme="?actionBarStyle" android:id="@id/tool_bar" android:layout_width="match_parent" android:layout_height="wrap_content" app:title="@string/speak_engine" />
+        <androidx.core.widget.NestedScrollView android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:overScrollMode="ifContentScrolls">
+            <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/name">
+                    <com.google.android.material.textfield.TextInputEditText android:id="@id/tv_name" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="url">
+                    <io.legado.app.ui.widget.code.CodeView android:id="@id/tv_url" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Content-Type">
+                    <io.legado.app.ui.widget.code.CodeView android:id="@id/tv_content_type" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/concurrent_rate">
+                    <io.legado.app.ui.widget.code.CodeView android:id="@id/tv_concurrent_rate" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/login_url">
+                    <io.legado.app.ui.widget.code.CodeView android:id="@id/tv_login_url" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/login_ui">
+                    <io.legado.app.ui.widget.code.CodeView android:id="@id/tv_login_ui" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/login_check_js">
+                    <io.legado.app.ui.widget.code.CodeView android:id="@id/tv_login_check_js" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/source_http_header">
+                    <io.legado.app.ui.widget.code.CodeView android:id="@id/tv_headers" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+</FrameLayout>

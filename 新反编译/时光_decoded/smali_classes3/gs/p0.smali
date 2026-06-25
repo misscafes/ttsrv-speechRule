@@ -1,0 +1,190 @@
+.class public final synthetic Lgs/p0;
+.super Ljava/lang/Object;
+.source "r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949"
+
+# interfaces
+.implements Lyx/a;
+
+
+# instance fields
+.field public final synthetic X:Lyx/a;
+
+.field public final synthetic Y:Le3/e1;
+
+.field public final synthetic Z:Le3/e1;
+
+.field public final synthetic i:I
+
+.field public final synthetic n0:Le3/e1;
+
+
+# direct methods
+.method public synthetic constructor <init>(Lyx/a;Le3/e1;Le3/e1;Le3/e1;I)V
+    .locals 0
+
+    .line 1
+    iput p5, p0, Lgs/p0;->i:I
+
+    .line 2
+    .line 3
+    iput-object p1, p0, Lgs/p0;->X:Lyx/a;
+
+    .line 4
+    .line 5
+    iput-object p2, p0, Lgs/p0;->Y:Le3/e1;
+
+    .line 6
+    .line 7
+    iput-object p3, p0, Lgs/p0;->Z:Le3/e1;
+
+    .line 8
+    .line 9
+    iput-object p4, p0, Lgs/p0;->n0:Le3/e1;
+
+    .line 10
+    .line 11
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 12
+    .line 13
+    .line 14
+    return-void
+.end method
+
+
+# virtual methods
+.method public final invoke()Ljava/lang/Object;
+    .locals 5
+
+    .line 1
+    iget v0, p0, Lgs/p0;->i:I
+
+    .line 2
+    .line 3
+    sget-object v1, Ljx/w;->a:Ljx/w;
+
+    .line 4
+    .line 5
+    iget-object v2, p0, Lgs/p0;->n0:Le3/e1;
+
+    .line 6
+    .line 7
+    iget-object v3, p0, Lgs/p0;->Z:Le3/e1;
+
+    .line 8
+    .line 9
+    iget-object v4, p0, Lgs/p0;->Y:Le3/e1;
+
+    .line 10
+    .line 11
+    iget-object p0, p0, Lgs/p0;->X:Lyx/a;
+
+    .line 12
+    .line 13
+    packed-switch v0, :pswitch_data_0
+
+    .line 14
+    .line 15
+    .line 16
+    invoke-interface {p0}, Lyx/a;->invoke()Ljava/lang/Object;
+
+    .line 17
+    .line 18
+    .line 19
+    invoke-interface {v4}, Le3/w2;->getValue()Ljava/lang/Object;
+
+    .line 20
+    .line 21
+    .line 22
+    move-result-object p0
+
+    .line 23
+    check-cast p0, Lgs/t1;
+
+    .line 24
+    .line 25
+    iget-object p0, p0, Lgs/t1;->p:Lgs/f;
+
+    .line 26
+    .line 27
+    iget-object p0, p0, Lgs/f;->h:Ljava/lang/String;
+
+    .line 28
+    .line 29
+    invoke-interface {v3, p0}, Le3/e1;->setValue(Ljava/lang/Object;)V
+
+    .line 30
+    .line 31
+    .line 32
+    sget-object p0, Ljava/lang/Boolean;->TRUE:Ljava/lang/Boolean;
+
+    .line 33
+    .line 34
+    invoke-interface {v2, p0}, Le3/e1;->setValue(Ljava/lang/Object;)V
+
+    .line 35
+    .line 36
+    .line 37
+    return-object v1
+
+    .line 38
+    :pswitch_0
+    invoke-interface {p0}, Lyx/a;->invoke()Ljava/lang/Object;
+
+    .line 39
+    .line 40
+    .line 41
+    invoke-interface {v4}, Le3/w2;->getValue()Ljava/lang/Object;
+
+    .line 42
+    .line 43
+    .line 44
+    move-result-object p0
+
+    .line 45
+    check-cast p0, Lgs/t1;
+
+    .line 46
+    .line 47
+    iget-object p0, p0, Lgs/t1;->p:Lgs/f;
+
+    .line 48
+    .line 49
+    iget-object p0, p0, Lgs/f;->i:Ljava/lang/String;
+
+    .line 50
+    .line 51
+    if-nez p0, :cond_0
+
+    .line 52
+    .line 53
+    const-string p0, ""
+
+    .line 54
+    .line 55
+    :cond_0
+    invoke-interface {v3, p0}, Le3/e1;->setValue(Ljava/lang/Object;)V
+
+    .line 56
+    .line 57
+    .line 58
+    sget-object p0, Ljava/lang/Boolean;->TRUE:Ljava/lang/Boolean;
+
+    .line 59
+    .line 60
+    invoke-interface {v2, p0}, Le3/e1;->setValue(Ljava/lang/Object;)V
+
+    .line 61
+    .line 62
+    .line 63
+    return-object v1
+
+    .line 64
+    nop
+
+    .line 65
+    :pswitch_data_0
+    .packed-switch 0x0
+        :pswitch_0
+    .end packed-switch
+.end method

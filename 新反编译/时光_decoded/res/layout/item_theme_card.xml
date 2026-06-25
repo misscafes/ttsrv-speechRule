@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_horizontal" android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="12.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.google.android.material.card.MaterialCardView android:id="@id/cardView" android:focusable="true" android:clickable="true" android:layout_width="112.0dp" android:layout_height="200.0dp" android:layout_marginBottom="8.0dp" android:checkable="true" app:cardBackgroundColor="#000000" app:cardCornerRadius="20.0dp" app:strokeWidth="4.0dp">
+        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent">
+            <com.google.android.material.card.MaterialCardView android:id="@id/cv_title" android:layout_width="64.0dp" android:layout_height="16.0dp" android:layout_margin="12.0dp" app:cardBackgroundColor="#ff0000" app:cardCornerRadius="8.0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:strokeWidth="0.0dp" />
+            <com.google.android.material.card.MaterialCardView android:id="@id/cv_book" android:layout_width="56.0dp" android:layout_height="80.0dp" android:layout_marginTop="8.0dp" app:cardBackgroundColor="#ffff00" app:cardCornerRadius="8.0dp" app:layout_constraintStart_toStartOf="@id/cv_title" app:layout_constraintTop_toBottomOf="@id/cv_title" app:strokeWidth="0.0dp" />
+            <com.google.android.material.card.MaterialCardView android:id="@id/cv_pin" android:layout_width="20.0dp" android:layout_height="12.0dp" android:layout_margin="4.0dp" app:cardBackgroundColor="#0000ff" app:cardCornerRadius="4.0dp" app:layout_constraintEnd_toEndOf="@id/cv_book" app:layout_constraintTop_toTopOf="@id/cv_book" app:strokeWidth="0.0dp" />
+            <com.google.android.material.card.MaterialCardView android:id="@id/cv_bottom" android:layout_width="match_parent" android:layout_height="32.0dp" android:layout_margin="4.0dp" app:cardBackgroundColor="#ffff00" app:cardCornerRadius="0.0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:strokeWidth="0.0dp">
+                <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent">
+                    <com.google.android.material.card.MaterialCardView android:id="@id/left_circle" android:layout_width="20.0dp" android:layout_height="20.0dp" android:layout_marginStart="8.0dp" app:cardBackgroundColor="#000000" app:cardCornerRadius="24.0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:strokeWidth="0.0dp" />
+                    <com.google.android.material.card.MaterialCardView android:id="@id/right_rect" android:layout_width="62.0dp" android:layout_height="16.0dp" android:layout_marginEnd="8.0dp" app:cardBackgroundColor="#000000" app:cardCornerRadius="8.0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" app:strokeWidth="0.0dp" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+    <TextView android:textSize="14.0sp" android:id="@id/themeLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+</LinearLayout>

@@ -1,0 +1,78 @@
+.class public interface abstract Lorg/eclipse/tm4e/core/grammar/IGrammar;
+.super Ljava/lang/Object;
+.source "r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892"
+
+
+# virtual methods
+.method public abstract getFileTypes()Ljava/util/Collection;
+    .annotation system Ldalvik/annotation/Signature;
+        value = {
+            "()",
+            "Ljava/util/Collection<",
+            "Ljava/lang/String;",
+            ">;"
+        }
+    .end annotation
+.end method
+
+.method public abstract getName()Ljava/lang/String;
+.end method
+
+.method public abstract getScopeName()Ljava/lang/String;
+.end method
+
+.method public abstract tokenizeLine(Ljava/lang/String;)Lorg/eclipse/tm4e/core/grammar/ITokenizeLineResult;
+    .annotation system Ldalvik/annotation/Signature;
+        value = {
+            "(",
+            "Ljava/lang/String;",
+            ")",
+            "Lorg/eclipse/tm4e/core/grammar/ITokenizeLineResult<",
+            "[",
+            "Lorg/eclipse/tm4e/core/grammar/IToken;",
+            ">;"
+        }
+    .end annotation
+.end method
+
+.method public abstract tokenizeLine(Ljava/lang/String;Lorg/eclipse/tm4e/core/grammar/IStateStack;Ljava/time/Duration;)Lorg/eclipse/tm4e/core/grammar/ITokenizeLineResult;
+    .annotation system Ldalvik/annotation/Signature;
+        value = {
+            "(",
+            "Ljava/lang/String;",
+            "Lorg/eclipse/tm4e/core/grammar/IStateStack;",
+            "Ljava/time/Duration;",
+            ")",
+            "Lorg/eclipse/tm4e/core/grammar/ITokenizeLineResult<",
+            "[",
+            "Lorg/eclipse/tm4e/core/grammar/IToken;",
+            ">;"
+        }
+    .end annotation
+.end method
+
+.method public abstract tokenizeLine2(Ljava/lang/String;)Lorg/eclipse/tm4e/core/grammar/ITokenizeLineResult;
+    .annotation system Ldalvik/annotation/Signature;
+        value = {
+            "(",
+            "Ljava/lang/String;",
+            ")",
+            "Lorg/eclipse/tm4e/core/grammar/ITokenizeLineResult<",
+            "[I>;"
+        }
+    .end annotation
+.end method
+
+.method public abstract tokenizeLine2(Ljava/lang/String;Lorg/eclipse/tm4e/core/grammar/IStateStack;Ljava/time/Duration;)Lorg/eclipse/tm4e/core/grammar/ITokenizeLineResult;
+    .annotation system Ldalvik/annotation/Signature;
+        value = {
+            "(",
+            "Ljava/lang/String;",
+            "Lorg/eclipse/tm4e/core/grammar/IStateStack;",
+            "Ljava/time/Duration;",
+            ")",
+            "Lorg/eclipse/tm4e/core/grammar/ITokenizeLineResult<",
+            "[I>;"
+        }
+    .end annotation
+.end method

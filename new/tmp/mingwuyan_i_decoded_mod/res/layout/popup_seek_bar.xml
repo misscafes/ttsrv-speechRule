@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_horizontal" android:orientation="vertical" android:background="@drawable/shape_card_view" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textColor="@color/secondaryText" android:id="@id/tv_seek_value" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    <io.legado.app.lib.theme.view.ThemeSeekBar android:id="@id/seek_bar" android:layout_width="match_parent" android:layout_height="wrap_content" />
+</LinearLayout>

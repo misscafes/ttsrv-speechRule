@@ -1,0 +1,158 @@
+package ur;
+
+import android.app.Application;
+import android.net.Uri;
+import io.legado.app.data.entities.HttpTTS;
+import io.legado.app.exception.NoStackTraceException;
+import io.legato.kazusa.xtmd.R;
+import java.util.ArrayList;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes3.dex */
+public final class s0 extends op.r {
+    public final e8.k0 Z;
+
+    /* JADX INFO: renamed from: n0, reason: collision with root package name */
+    public final e8.k0 f29931n0;
+
+    /* JADX INFO: renamed from: o0, reason: collision with root package name */
+    public final ArrayList f29932o0;
+    public final ArrayList p0;
+
+    /* JADX INFO: renamed from: q0, reason: collision with root package name */
+    public final ArrayList f29933q0;
+
+    /* JADX WARN: 'super' call moved to the top of the method (can break code semantics) */
+    public s0(Application application) {
+        super(application);
+        application.getClass();
+        this.Z = new e8.k0();
+        this.f29931n0 = new e8.k0();
+        this.f29932o0 = new ArrayList();
+        this.p0 = new ArrayList();
+        this.f29933q0 = new ArrayList();
+    }
+
+    public final int h() {
+        ArrayList arrayList = this.f29933q0;
+        int size = arrayList.size();
+        int i10 = 0;
+        int i11 = 0;
+        while (i11 < size) {
+            Object obj = arrayList.get(i11);
+            i11++;
+            if (((Boolean) obj).booleanValue()) {
+                i10++;
+            }
+        }
+        return i10;
+    }
+
+    public final Object i(String str, qx.c cVar) throws NoStackTraceException {
+        boolean zS0 = cy.a.s0(str);
+        ArrayList arrayList = this.f29932o0;
+        jx.w wVar = jx.w.f15819a;
+        if (zS0) {
+            Object objM23fromJsonIoAF18A = HttpTTS.Companion.m23fromJsonIoAF18A(str);
+            lb.w.j0(objM23fromJsonIoAF18A);
+            arrayList.add((HttpTTS) objM23fromJsonIoAF18A);
+            return wVar;
+        }
+        if (cy.a.r0(str)) {
+            Object objM24fromJsonArrayIoAF18A = HttpTTS.Companion.m24fromJsonArrayIoAF18A(str);
+            lb.w.j0(objM24fromJsonArrayIoAF18A);
+            arrayList.addAll((ArrayList) objM24fromJsonArrayIoAF18A);
+            return wVar;
+        }
+        boolean zM0 = cy.a.m0(str);
+        px.a aVar = px.a.f24450i;
+        if (zM0) {
+            Object objJ = j(str, cVar);
+            if (objJ == aVar) {
+                return objJ;
+            }
+        } else {
+            if (!cy.a.u0(str)) {
+                String string = g().getString(R.string.wrong_format);
+                string.getClass();
+                throw new NoStackTraceException(string);
+            }
+            Object objI = i(jw.w0.p(n40.a.d(), Uri.parse(str)), cVar);
+            if (objI == aVar) {
+                return objI;
+            }
+        }
+        return wVar;
+    }
+
+    /* JADX WARN: Code restructure failed: missing block: B:20:0x005c, code lost:
+    
+        if (i(r8, r0) == r5) goto L21;
+     */
+    /* JADX WARN: Removed duplicated region for block: B:7:0x0013  */
+    /*
+        Code decompiled incorrectly, please refer to instructions dump.
+        To view partially-correct add '--show-bad-code' argument
+    */
+    public final java.lang.Object j(java.lang.String r8, qx.c r9) {
+        /*
+            r7 = this;
+            boolean r0 = r9 instanceof ur.r0
+            if (r0 == 0) goto L13
+            r0 = r9
+            ur.r0 r0 = (ur.r0) r0
+            int r1 = r0.Y
+            r2 = -2147483648(0xffffffff80000000, float:-0.0)
+            r3 = r1 & r2
+            if (r3 == 0) goto L13
+            int r1 = r1 - r2
+            r0.Y = r1
+            goto L18
+        L13:
+            ur.r0 r0 = new ur.r0
+            r0.<init>(r7, r9)
+        L18:
+            java.lang.Object r9 = r0.f29925i
+            int r1 = r0.Y
+            r2 = 0
+            r3 = 2
+            r4 = 1
+            px.a r5 = px.a.f24450i
+            if (r1 == 0) goto L35
+            if (r1 == r4) goto L31
+            if (r1 != r3) goto L2b
+            lb.w.j0(r9)
+            goto L5f
+        L2b:
+            java.lang.String r7 = "call to 'resume' before 'invoke' with coroutine"
+            ge.c.C(r7)
+            return r2
+        L31:
+            lb.w.j0(r9)
+            goto L4c
+        L35:
+            lb.w.j0(r9)
+            okhttp3.OkHttpClient r9 = oq.q.c()
+            sp.b2 r1 = new sp.b2
+            r6 = 12
+            r1.<init>(r8, r6)
+            r0.Y = r4
+            java.lang.Object r9 = oq.j0.d(r9, r1, r0)
+            if (r9 != r5) goto L4c
+            goto L5e
+        L4c:
+            okhttp3.ResponseBody r9 = (okhttp3.ResponseBody) r9
+            okhttp3.ResponseBody r8 = oq.j0.b(r9)
+            java.lang.String r8 = oq.j0.h(r8, r2)
+            r0.Y = r3
+            java.lang.Object r7 = r7.i(r8, r0)
+            if (r7 != r5) goto L5f
+        L5e:
+            return r5
+        L5f:
+            jx.w r7 = jx.w.f15819a
+            return r7
+        */
+        throw new UnsupportedOperationException("Method not decompiled: ur.s0.j(java.lang.String, qx.c):java.lang.Object");
+    }
+}

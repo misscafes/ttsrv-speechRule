@@ -1,0 +1,824 @@
+.class public Lcn/hutool/crypto/asymmetric/Sign;
+.super Lcn/hutool/crypto/asymmetric/BaseAsymmetric;
+.source "r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949"
+
+
+# annotations
+.annotation system Ldalvik/annotation/Signature;
+    value = {
+        "Lcn/hutool/crypto/asymmetric/BaseAsymmetric<",
+        "Lcn/hutool/crypto/asymmetric/Sign;",
+        ">;"
+    }
+.end annotation
+
+
+# static fields
+.field private static final serialVersionUID:J = 0x1L
+
+
+# instance fields
+.field protected signature:Ljava/security/Signature;
+
+
+# direct methods
+.method public constructor <init>(Lcn/hutool/crypto/asymmetric/SignAlgorithm;)V
+    .locals 1
+
+    const/4 v0, 0x0
+
+    .line 18
+    invoke-direct {p0, p1, v0, v0}, Lcn/hutool/crypto/asymmetric/Sign;-><init>(Lcn/hutool/crypto/asymmetric/SignAlgorithm;[B[B)V
+
+    return-void
+.end method
+
+.method public constructor <init>(Lcn/hutool/crypto/asymmetric/SignAlgorithm;Ljava/lang/String;Ljava/lang/String;)V
+    .locals 0
+
+    .line 1
+    invoke-virtual {p1}, Lcn/hutool/crypto/asymmetric/SignAlgorithm;->getValue()Ljava/lang/String;
+
+    .line 2
+    .line 3
+    .line 4
+    move-result-object p1
+
+    .line 5
+    invoke-static {p2}, Lcn/hutool/crypto/SecureUtil;->decode(Ljava/lang/String;)[B
+
+    .line 6
+    .line 7
+    .line 8
+    move-result-object p2
+
+    .line 9
+    invoke-static {p3}, Lcn/hutool/crypto/SecureUtil;->decode(Ljava/lang/String;)[B
+
+    .line 10
+    .line 11
+    .line 12
+    move-result-object p3
+
+    .line 13
+    invoke-direct {p0, p1, p2, p3}, Lcn/hutool/crypto/asymmetric/Sign;-><init>(Ljava/lang/String;[B[B)V
+
+    .line 14
+    .line 15
+    .line 16
+    return-void
+.end method
+
+.method public constructor <init>(Lcn/hutool/crypto/asymmetric/SignAlgorithm;Ljava/security/KeyPair;)V
+    .locals 0
+
+    .line 20
+    invoke-virtual {p1}, Lcn/hutool/crypto/asymmetric/SignAlgorithm;->getValue()Ljava/lang/String;
+
+    move-result-object p1
+
+    invoke-direct {p0, p1, p2}, Lcn/hutool/crypto/asymmetric/Sign;-><init>(Ljava/lang/String;Ljava/security/KeyPair;)V
+
+    return-void
+.end method
+
+.method public constructor <init>(Lcn/hutool/crypto/asymmetric/SignAlgorithm;Ljava/security/PrivateKey;Ljava/security/PublicKey;)V
+    .locals 0
+
+    .line 21
+    invoke-virtual {p1}, Lcn/hutool/crypto/asymmetric/SignAlgorithm;->getValue()Ljava/lang/String;
+
+    move-result-object p1
+
+    invoke-direct {p0, p1, p2, p3}, Lcn/hutool/crypto/asymmetric/Sign;-><init>(Ljava/lang/String;Ljava/security/PrivateKey;Ljava/security/PublicKey;)V
+
+    return-void
+.end method
+
+.method public constructor <init>(Lcn/hutool/crypto/asymmetric/SignAlgorithm;[B[B)V
+    .locals 0
+
+    .line 19
+    invoke-virtual {p1}, Lcn/hutool/crypto/asymmetric/SignAlgorithm;->getValue()Ljava/lang/String;
+
+    move-result-object p1
+
+    invoke-direct {p0, p1, p2, p3}, Lcn/hutool/crypto/asymmetric/Sign;-><init>(Ljava/lang/String;[B[B)V
+
+    return-void
+.end method
+
+.method public constructor <init>(Ljava/lang/String;)V
+    .locals 1
+
+    const/4 v0, 0x0
+
+    .line 17
+    invoke-direct {p0, p1, v0, v0}, Lcn/hutool/crypto/asymmetric/Sign;-><init>(Ljava/lang/String;[B[B)V
+
+    return-void
+.end method
+
+.method public constructor <init>(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+    .locals 0
+
+    .line 22
+    invoke-static {p2}, Lcn/hutool/core/codec/Base64;->decode(Ljava/lang/CharSequence;)[B
+
+    move-result-object p2
+
+    invoke-static {p3}, Lcn/hutool/core/codec/Base64;->decode(Ljava/lang/CharSequence;)[B
+
+    move-result-object p3
+
+    invoke-direct {p0, p1, p2, p3}, Lcn/hutool/crypto/asymmetric/Sign;-><init>(Ljava/lang/String;[B[B)V
+
+    return-void
+.end method
+
+.method public constructor <init>(Ljava/lang/String;Ljava/security/KeyPair;)V
+    .locals 1
+
+    .line 26
+    invoke-virtual {p2}, Ljava/security/KeyPair;->getPrivate()Ljava/security/PrivateKey;
+
+    move-result-object v0
+
+    invoke-virtual {p2}, Ljava/security/KeyPair;->getPublic()Ljava/security/PublicKey;
+
+    move-result-object p2
+
+    invoke-direct {p0, p1, v0, p2}, Lcn/hutool/crypto/asymmetric/Sign;-><init>(Ljava/lang/String;Ljava/security/PrivateKey;Ljava/security/PublicKey;)V
+
+    return-void
+.end method
+
+.method public constructor <init>(Ljava/lang/String;Ljava/security/PrivateKey;Ljava/security/PublicKey;)V
+    .locals 0
+
+    .line 27
+    invoke-direct {p0, p1, p2, p3}, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;-><init>(Ljava/lang/String;Ljava/security/PrivateKey;Ljava/security/PublicKey;)V
+
+    return-void
+.end method
+
+.method public constructor <init>(Ljava/lang/String;[B[B)V
+    .locals 0
+
+    .line 23
+    invoke-static {p1, p2}, Lcn/hutool/crypto/SecureUtil;->generatePrivateKey(Ljava/lang/String;[B)Ljava/security/PrivateKey;
+
+    move-result-object p2
+
+    .line 24
+    invoke-static {p1, p3}, Lcn/hutool/crypto/SecureUtil;->generatePublicKey(Ljava/lang/String;[B)Ljava/security/PublicKey;
+
+    move-result-object p3
+
+    .line 25
+    invoke-direct {p0, p1, p2, p3}, Lcn/hutool/crypto/asymmetric/Sign;-><init>(Ljava/lang/String;Ljava/security/PrivateKey;Ljava/security/PublicKey;)V
+
+    return-void
+.end method
+
+
+# virtual methods
+.method public digestHex(Ljava/io/InputStream;I)Ljava/lang/String;
+    .locals 0
+
+    .line 1
+    invoke-virtual {p0, p1, p2}, Lcn/hutool/crypto/asymmetric/Sign;->sign(Ljava/io/InputStream;I)[B
+
+    .line 2
+    .line 3
+    .line 4
+    move-result-object p0
+
+    .line 5
+    invoke-static {p0}, Lcn/hutool/core/util/HexUtil;->encodeHexStr([B)Ljava/lang/String;
+
+    .line 6
+    .line 7
+    .line 8
+    move-result-object p0
+
+    .line 9
+    return-object p0
+.end method
+
+.method public getSignature()Ljava/security/Signature;
+    .locals 0
+
+    .line 1
+    iget-object p0, p0, Lcn/hutool/crypto/asymmetric/Sign;->signature:Ljava/security/Signature;
+
+    .line 2
+    .line 3
+    return-object p0
+.end method
+
+.method public bridge synthetic init(Ljava/lang/String;Ljava/security/PrivateKey;Ljava/security/PublicKey;)Lcn/hutool/crypto/asymmetric/BaseAsymmetric;
+    .locals 0
+
+    .line 11
+    invoke-virtual {p0, p1, p2, p3}, Lcn/hutool/crypto/asymmetric/Sign;->init(Ljava/lang/String;Ljava/security/PrivateKey;Ljava/security/PublicKey;)Lcn/hutool/crypto/asymmetric/Sign;
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method public init(Ljava/lang/String;Ljava/security/PrivateKey;Ljava/security/PublicKey;)Lcn/hutool/crypto/asymmetric/Sign;
+    .locals 1
+
+    .line 1
+    invoke-static {p1}, Lcn/hutool/crypto/SecureUtil;->createSignature(Ljava/lang/String;)Ljava/security/Signature;
+
+    .line 2
+    .line 3
+    .line 4
+    move-result-object v0
+
+    .line 5
+    iput-object v0, p0, Lcn/hutool/crypto/asymmetric/Sign;->signature:Ljava/security/Signature;
+
+    .line 6
+    .line 7
+    invoke-super {p0, p1, p2, p3}, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;->init(Ljava/lang/String;Ljava/security/PrivateKey;Ljava/security/PublicKey;)Lcn/hutool/crypto/asymmetric/BaseAsymmetric;
+
+    .line 8
+    .line 9
+    .line 10
+    return-object p0
+.end method
+
+.method public setCertificate(Ljava/security/cert/Certificate;)Lcn/hutool/crypto/asymmetric/Sign;
+    .locals 3
+
+    .line 1
+    instance-of v0, p1, Ljava/security/cert/X509Certificate;
+
+    .line 2
+    .line 3
+    if-eqz v0, :cond_1
+
+    .line 4
+    .line 5
+    move-object v0, p1
+
+    .line 6
+    check-cast v0, Ljava/security/cert/X509Certificate;
+
+    .line 7
+    .line 8
+    invoke-interface {v0}, Ljava/security/cert/X509Extension;->getCriticalExtensionOIDs()Ljava/util/Set;
+
+    .line 9
+    .line 10
+    .line 11
+    move-result-object v1
+
+    .line 12
+    move-object v2, v1
+
+    .line 13
+    check-cast v2, Ljava/util/Set;
+
+    .line 14
+    .line 15
+    invoke-static {v2}, Lfh/a;->K(Ljava/util/Collection;)Z
+
+    .line 16
+    .line 17
+    .line 18
+    move-result v2
+
+    .line 19
+    if-nez v2, :cond_1
+
+    .line 20
+    .line 21
+    const-string v2, "2.5.29.15"
+
+    .line 22
+    .line 23
+    invoke-interface {v1, v2}, Ljava/util/Set;->contains(Ljava/lang/Object;)Z
+
+    .line 24
+    .line 25
+    .line 26
+    move-result v1
+
+    .line 27
+    if-eqz v1, :cond_1
+
+    .line 28
+    .line 29
+    invoke-virtual {v0}, Ljava/security/cert/X509Certificate;->getKeyUsage()[Z
+
+    .line 30
+    .line 31
+    .line 32
+    move-result-object v0
+
+    .line 33
+    if-eqz v0, :cond_1
+
+    .line 34
+    .line 35
+    const/4 v1, 0x0
+
+    .line 36
+    aget-boolean v0, v0, v1
+
+    .line 37
+    .line 38
+    if-eqz v0, :cond_0
+
+    .line 39
+    .line 40
+    goto :goto_0
+
+    .line 41
+    :cond_0
+    new-instance p0, Lcn/hutool/crypto/CryptoException;
+
+    .line 42
+    .line 43
+    const-string p1, "Wrong key usage"
+
+    .line 44
+    .line 45
+    invoke-direct {p0, p1}, Lcn/hutool/crypto/CryptoException;-><init>(Ljava/lang/String;)V
+
+    .line 46
+    .line 47
+    .line 48
+    throw p0
+
+    .line 49
+    :cond_1
+    :goto_0
+    invoke-virtual {p1}, Ljava/security/cert/Certificate;->getPublicKey()Ljava/security/PublicKey;
+
+    .line 50
+    .line 51
+    .line 52
+    move-result-object p1
+
+    .line 53
+    iput-object p1, p0, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;->publicKey:Ljava/security/PublicKey;
+
+    .line 54
+    .line 55
+    return-object p0
+.end method
+
+.method public setParameter(Ljava/security/spec/AlgorithmParameterSpec;)Lcn/hutool/crypto/asymmetric/Sign;
+    .locals 1
+
+    .line 1
+    :try_start_0
+    iget-object v0, p0, Lcn/hutool/crypto/asymmetric/Sign;->signature:Ljava/security/Signature;
+
+    .line 2
+    .line 3
+    invoke-virtual {v0, p1}, Ljava/security/Signature;->setParameter(Ljava/security/spec/AlgorithmParameterSpec;)V
+    :try_end_0
+    .catch Ljava/security/InvalidAlgorithmParameterException; {:try_start_0 .. :try_end_0} :catch_0
+
+    .line 4
+    .line 5
+    .line 6
+    return-object p0
+
+    .line 7
+    :catch_0
+    move-exception p0
+
+    .line 8
+    new-instance p1, Lcn/hutool/crypto/CryptoException;
+
+    .line 9
+    .line 10
+    invoke-direct {p1, p0}, Lcn/hutool/crypto/CryptoException;-><init>(Ljava/lang/Throwable;)V
+
+    .line 11
+    .line 12
+    .line 13
+    throw p1
+.end method
+
+.method public setSignature(Ljava/security/Signature;)Lcn/hutool/crypto/asymmetric/Sign;
+    .locals 0
+
+    .line 1
+    iput-object p1, p0, Lcn/hutool/crypto/asymmetric/Sign;->signature:Ljava/security/Signature;
+
+    .line 2
+    .line 3
+    return-object p0
+.end method
+
+.method public sign(Ljava/io/InputStream;)[B
+    .locals 1
+
+    const/16 v0, 0x2000
+
+    .line 73
+    invoke-virtual {p0, p1, v0}, Lcn/hutool/crypto/asymmetric/Sign;->sign(Ljava/io/InputStream;I)[B
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method public sign(Ljava/io/InputStream;I)[B
+    .locals 5
+
+    .line 1
+    const/4 v0, 0x1
+
+    .line 2
+    if-ge p2, v0, :cond_0
+
+    .line 3
+    .line 4
+    const/16 p2, 0x2000
+
+    .line 5
+    .line 6
+    :cond_0
+    new-array v0, p2, [B
+
+    .line 7
+    .line 8
+    iget-object v1, p0, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;->lock:Ljava/util/concurrent/locks/Lock;
+
+    .line 9
+    .line 10
+    invoke-interface {v1}, Ljava/util/concurrent/locks/Lock;->lock()V
+
+    .line 11
+    .line 12
+    .line 13
+    :try_start_0
+    iget-object v1, p0, Lcn/hutool/crypto/asymmetric/Sign;->signature:Ljava/security/Signature;
+
+    .line 14
+    .line 15
+    iget-object v2, p0, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;->privateKey:Ljava/security/PrivateKey;
+
+    .line 16
+    .line 17
+    invoke-virtual {v1, v2}, Ljava/security/Signature;->initSign(Ljava/security/PrivateKey;)V
+    :try_end_0
+    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_1
+    .catchall {:try_start_0 .. :try_end_0} :catchall_0
+
+    .line 18
+    .line 19
+    .line 20
+    const/4 v1, 0x0
+
+    .line 21
+    :try_start_1
+    invoke-virtual {p1, v0, v1, p2}, Ljava/io/InputStream;->read([BII)I
+
+    .line 22
+    .line 23
+    .line 24
+    move-result v2
+    :try_end_1
+    .catch Ljava/lang/Exception; {:try_start_1 .. :try_end_1} :catch_0
+    .catchall {:try_start_1 .. :try_end_1} :catchall_0
+
+    .line 25
+    :goto_0
+    iget-object v3, p0, Lcn/hutool/crypto/asymmetric/Sign;->signature:Ljava/security/Signature;
+
+    .line 26
+    .line 27
+    const/4 v4, -0x1
+
+    .line 28
+    if-le v2, v4, :cond_1
+
+    .line 29
+    .line 30
+    :try_start_2
+    invoke-virtual {v3, v0, v1, v2}, Ljava/security/Signature;->update([BII)V
+
+    .line 31
+    .line 32
+    .line 33
+    invoke-virtual {p1, v0, v1, p2}, Ljava/io/InputStream;->read([BII)I
+
+    .line 34
+    .line 35
+    .line 36
+    move-result v2
+
+    .line 37
+    goto :goto_0
+
+    .line 38
+    :catchall_0
+    move-exception p1
+
+    .line 39
+    goto :goto_2
+
+    .line 40
+    :catch_0
+    move-exception p1
+
+    .line 41
+    goto :goto_1
+
+    .line 42
+    :cond_1
+    invoke-virtual {v3}, Ljava/security/Signature;->sign()[B
+
+    .line 43
+    .line 44
+    .line 45
+    move-result-object p1
+    :try_end_2
+    .catch Ljava/lang/Exception; {:try_start_2 .. :try_end_2} :catch_0
+    .catchall {:try_start_2 .. :try_end_2} :catchall_0
+
+    .line 46
+    iget-object p0, p0, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;->lock:Ljava/util/concurrent/locks/Lock;
+
+    .line 47
+    .line 48
+    invoke-interface {p0}, Ljava/util/concurrent/locks/Lock;->unlock()V
+
+    .line 49
+    .line 50
+    .line 51
+    return-object p1
+
+    .line 52
+    :goto_1
+    :try_start_3
+    new-instance p2, Lcn/hutool/crypto/CryptoException;
+
+    .line 53
+    .line 54
+    invoke-direct {p2, p1}, Lcn/hutool/crypto/CryptoException;-><init>(Ljava/lang/Throwable;)V
+
+    .line 55
+    .line 56
+    .line 57
+    throw p2
+    :try_end_3
+    .catch Ljava/lang/Exception; {:try_start_3 .. :try_end_3} :catch_1
+    .catchall {:try_start_3 .. :try_end_3} :catchall_0
+
+    .line 58
+    :catch_1
+    move-exception p1
+
+    .line 59
+    :try_start_4
+    new-instance p2, Lcn/hutool/crypto/CryptoException;
+
+    .line 60
+    .line 61
+    invoke-direct {p2, p1}, Lcn/hutool/crypto/CryptoException;-><init>(Ljava/lang/Throwable;)V
+
+    .line 62
+    .line 63
+    .line 64
+    throw p2
+    :try_end_4
+    .catchall {:try_start_4 .. :try_end_4} :catchall_0
+
+    .line 65
+    :goto_2
+    iget-object p0, p0, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;->lock:Ljava/util/concurrent/locks/Lock;
+
+    .line 66
+    .line 67
+    invoke-interface {p0}, Ljava/util/concurrent/locks/Lock;->unlock()V
+
+    .line 68
+    .line 69
+    .line 70
+    throw p1
+.end method
+
+.method public sign(Ljava/lang/String;)[B
+    .locals 1
+
+    .line 71
+    sget-object v0, Lcn/hutool/core/util/CharsetUtil;->CHARSET_UTF_8:Ljava/nio/charset/Charset;
+
+    invoke-virtual {p0, p1, v0}, Lcn/hutool/crypto/asymmetric/Sign;->sign(Ljava/lang/String;Ljava/nio/charset/Charset;)[B
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method public sign(Ljava/lang/String;Ljava/nio/charset/Charset;)[B
+    .locals 0
+
+    .line 74
+    invoke-static {p1, p2}, Lvd/d;->bytes(Ljava/lang/CharSequence;Ljava/nio/charset/Charset;)[B
+
+    move-result-object p1
+
+    invoke-virtual {p0, p1}, Lcn/hutool/crypto/asymmetric/Sign;->sign([B)[B
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method public sign([B)[B
+    .locals 1
+
+    .line 72
+    new-instance v0, Ljava/io/ByteArrayInputStream;
+
+    invoke-direct {v0, p1}, Ljava/io/ByteArrayInputStream;-><init>([B)V
+
+    const/4 p1, -0x1
+
+    invoke-virtual {p0, v0, p1}, Lcn/hutool/crypto/asymmetric/Sign;->sign(Ljava/io/InputStream;I)[B
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method public signHex(Ljava/io/InputStream;)Ljava/lang/String;
+    .locals 0
+
+    .line 12
+    invoke-virtual {p0, p1}, Lcn/hutool/crypto/asymmetric/Sign;->sign(Ljava/io/InputStream;)[B
+
+    move-result-object p0
+
+    invoke-static {p0}, Lcn/hutool/core/util/HexUtil;->encodeHexStr([B)Ljava/lang/String;
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method public signHex(Ljava/lang/String;)Ljava/lang/String;
+    .locals 1
+
+    .line 10
+    sget-object v0, Lcn/hutool/core/util/CharsetUtil;->CHARSET_UTF_8:Ljava/nio/charset/Charset;
+
+    invoke-virtual {p0, p1, v0}, Lcn/hutool/crypto/asymmetric/Sign;->signHex(Ljava/lang/String;Ljava/nio/charset/Charset;)Ljava/lang/String;
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method public signHex(Ljava/lang/String;Ljava/nio/charset/Charset;)Ljava/lang/String;
+    .locals 0
+
+    .line 1
+    invoke-virtual {p0, p1, p2}, Lcn/hutool/crypto/asymmetric/Sign;->sign(Ljava/lang/String;Ljava/nio/charset/Charset;)[B
+
+    .line 2
+    .line 3
+    .line 4
+    move-result-object p0
+
+    .line 5
+    invoke-static {p0}, Lcn/hutool/core/util/HexUtil;->encodeHexStr([B)Ljava/lang/String;
+
+    .line 6
+    .line 7
+    .line 8
+    move-result-object p0
+
+    .line 9
+    return-object p0
+.end method
+
+.method public signHex([B)Ljava/lang/String;
+    .locals 0
+
+    .line 11
+    invoke-virtual {p0, p1}, Lcn/hutool/crypto/asymmetric/Sign;->sign([B)[B
+
+    move-result-object p0
+
+    invoke-static {p0}, Lcn/hutool/core/util/HexUtil;->encodeHexStr([B)Ljava/lang/String;
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method public verify([B[B)Z
+    .locals 2
+
+    .line 1
+    iget-object v0, p0, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;->lock:Ljava/util/concurrent/locks/Lock;
+
+    .line 2
+    .line 3
+    invoke-interface {v0}, Ljava/util/concurrent/locks/Lock;->lock()V
+
+    .line 4
+    .line 5
+    .line 6
+    :try_start_0
+    iget-object v0, p0, Lcn/hutool/crypto/asymmetric/Sign;->signature:Ljava/security/Signature;
+
+    .line 7
+    .line 8
+    iget-object v1, p0, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;->publicKey:Ljava/security/PublicKey;
+
+    .line 9
+    .line 10
+    invoke-virtual {v0, v1}, Ljava/security/Signature;->initVerify(Ljava/security/PublicKey;)V
+
+    .line 11
+    .line 12
+    .line 13
+    iget-object v0, p0, Lcn/hutool/crypto/asymmetric/Sign;->signature:Ljava/security/Signature;
+
+    .line 14
+    .line 15
+    invoke-virtual {v0, p1}, Ljava/security/Signature;->update([B)V
+
+    .line 16
+    .line 17
+    .line 18
+    iget-object p1, p0, Lcn/hutool/crypto/asymmetric/Sign;->signature:Ljava/security/Signature;
+
+    .line 19
+    .line 20
+    invoke-virtual {p1, p2}, Ljava/security/Signature;->verify([B)Z
+
+    .line 21
+    .line 22
+    .line 23
+    move-result p1
+    :try_end_0
+    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
+    .catchall {:try_start_0 .. :try_end_0} :catchall_0
+
+    .line 24
+    iget-object p0, p0, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;->lock:Ljava/util/concurrent/locks/Lock;
+
+    .line 25
+    .line 26
+    invoke-interface {p0}, Ljava/util/concurrent/locks/Lock;->unlock()V
+
+    .line 27
+    .line 28
+    .line 29
+    return p1
+
+    .line 30
+    :catchall_0
+    move-exception p1
+
+    .line 31
+    goto :goto_0
+
+    .line 32
+    :catch_0
+    move-exception p1
+
+    .line 33
+    :try_start_1
+    new-instance p2, Lcn/hutool/crypto/CryptoException;
+
+    .line 34
+    .line 35
+    invoke-direct {p2, p1}, Lcn/hutool/crypto/CryptoException;-><init>(Ljava/lang/Throwable;)V
+
+    .line 36
+    .line 37
+    .line 38
+    throw p2
+    :try_end_1
+    .catchall {:try_start_1 .. :try_end_1} :catchall_0
+
+    .line 39
+    :goto_0
+    iget-object p0, p0, Lcn/hutool/crypto/asymmetric/BaseAsymmetric;->lock:Ljava/util/concurrent/locks/Lock;
+
+    .line 40
+    .line 41
+    invoke-interface {p0}, Ljava/util/concurrent/locks/Lock;->unlock()V
+
+    .line 42
+    .line 43
+    .line 44
+    throw p1
+.end method

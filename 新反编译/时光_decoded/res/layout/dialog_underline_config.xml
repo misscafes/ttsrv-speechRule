@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="16.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:gravity="center" android:orientation="vertical" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp">
+        <com.google.android.material.bottomsheet.BottomSheetDragHandleView android:layout_gravity="center_horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0.0dp" android:paddingVertical="8.0dp" />
+        <TextView android:textSize="18.0sp" android:textStyle="bold" android:id="@id/bottom_sheet_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/text_underline" android:layout_marginVertical="8.0dp" />
+    </LinearLayout>
+    <com.google.android.material.button.MaterialButtonGroup android:gravity="center" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" android:layout_marginHorizontal="16.0dp">
+        <com.google.android.material.button.MaterialButton android:id="@id/sw_dottedline" android:focusable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true" app:icon="@drawable/ic_dottedline" style="@style/Widget.Material3Expressive.Button.IconButton.Tonal" />
+        <com.google.android.material.button.MaterialButton android:id="@id/sw_wavyline" android:focusable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true" app:icon="@drawable/ic_wavyline" style="@style/Widget.Material3Expressive.Button.IconButton.Tonal" />
+        <com.google.android.material.button.MaterialButton android:id="@id/sw_underline_extend" android:focusable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checkable="true" app:icon="@drawable/ic_swap_horiz" style="@style/Widget.Material3Expressive.Button.IconButton.Tonal" />
+        <io.legado.app.ui.widget.AccentColorButton android:id="@id/btnUnderlineColor" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/underline_color" style="@style/Widget.Material3Expressive.Button.OutlinedButton" />
+    </com.google.android.material.button.MaterialButtonGroup>
+    <LinearLayout android:gravity="bottom" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <io.legado.app.ui.widget.SimpleSliderView android:id="@id/btn_underline_height" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginEnd="32.0dp" app:max="20" app:title="@string/underline_height" />
+        <io.legado.app.ui.widget.SimpleSliderView android:id="@id/btn_underline_padding" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" app:max="20" app:title="@string/underline_padding" />
+    </LinearLayout>
+    <TextView android:textSize="14.0sp" android:textStyle="bold" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/text_dottedline" android:layout_marginHorizontal="16.0dp" android:layout_marginVertical="8.0dp" />
+    <LinearLayout android:gravity="bottom" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <io.legado.app.ui.widget.SimpleSliderView android:id="@id/btn_dotted_line_black" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginEnd="32.0dp" app:max="20" app:title="@string/dotted_line_black" />
+        <io.legado.app.ui.widget.SimpleSliderView android:id="@id/btn_dotted_line_while" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" app:max="20" app:title="@string/dotted_line_while" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBox android:textSize="16.0sp" android:id="@id/cb_name" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" />
+    <Switch android:id="@id/swt_enabled" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    <ImageView android:id="@id/iv_edit" android:padding="8.0dp" android:layout_width="40.0dp" android:layout_height="40.0dp" android:src="@drawable/ic_edit" android:contentDescription="编辑" />
+    <ImageView android:id="@id/iv_menu_more" android:padding="8.0dp" android:layout_width="40.0dp" android:layout_height="40.0dp" android:src="@drawable/ic_more_vert" android:contentDescription="更多" />
+</LinearLayout>

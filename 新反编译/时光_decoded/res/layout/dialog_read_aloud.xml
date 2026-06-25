@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:id="@id/root_layout" android:fitsSystemWindows="false" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ImageView android:id="@id/iv_bg" android:visibility="invisible" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:contentDescription="@null" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    <View android:id="@id/v_bg_mask" android:background="?colorSecondaryContainer" android:visibility="invisible" android:layout_width="match_parent" android:layout_height="match_parent" android:alpha="0.55" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    <View android:id="@id/v_bg_gradient" android:background="@drawable/bg_gradient_aloud" android:visibility="invisible" android:layout_width="match_parent" android:layout_height="0.0dp" app:layout_constraintBottom_toTopOf="@id/bottom_container" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout android:gravity="center" android:layout_gravity="center_horizontal" android:orientation="horizontal" android:id="@id/tab_bar" android:layout_width="wrap_content" android:layout_height="36.0dp" android:layout_marginTop="4.0dp" android:layout_marginBottom="4.0dp" android:baselineAligned="false" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
+        <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="#de000000" android:ellipsize="end" android:gravity="center" android:id="@id/tab_playback" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="match_parent" android:text="朗读播放" android:singleLine="true" android:includeFontPadding="false" android:paddingHorizontal="14.0dp" />
+        <View android:layout_gravity="center_vertical" android:id="@id/tab_divider" android:background="#de000000" android:layout_width="1.0dp" android:layout_height="22.0dp" android:alpha="0.25" android:layout_marginHorizontal="14.0dp" />
+        <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="#de000000" android:ellipsize="end" android:gravity="center" android:id="@id/tab_settings" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="match_parent" android:text="朗读设置" android:singleLine="true" android:includeFontPadding="false" android:paddingHorizontal="14.0dp" />
+    </LinearLayout>
+    <androidx.constraintlayout.widget.ConstraintLayout android:id="@id/playback_page" android:visibility="visible" android:layout_width="match_parent" android:layout_height="0.0dp" app:layout_constraintBottom_toTopOf="@id/bottom_container" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/tab_bar">
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/top_container" android:paddingTop="12.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
+            <com.google.android.material.imageview.ShapeableImageView android:id="@id/iv_cover" android:background="?colorSurfaceContainerHigh" android:layout_width="214.0dp" android:layout_height="278.0dp" android:scaleType="centerCrop" app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Rounded12" />
+            <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:ellipsize="end" android:gravity="center" android:id="@id/tv_book_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:maxLines="1" />
+            <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:ellipsize="end" android:gravity="center" android:id="@id/tv_chapter_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4.0dp" android:maxLines="1" />
+        </LinearLayout>
+        <FrameLayout android:id="@id/subtitle_container" android:layout_width="match_parent" android:layout_height="0.0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/top_container">
+            <ScrollView android:id="@id/scroll_view" android:scrollbars="none" android:clipChildren="false" android:clipToPadding="false" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="false" android:paddingVertical="32.0dp">
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/subtitle_lines" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp" />
+            </ScrollView>
+        </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.constraintlayout.widget.Barrier android:id="@id/page_barrier" android:layout_width="wrap_content" android:layout_height="wrap_content" app:barrierDirection="bottom" app:constraint_referenced_ids="playback_page,settings_page" />
+    <LinearLayout android:orientation="vertical" android:id="@id/bottom_container" android:background="?colorSurface" android:paddingTop="10.0dp" android:paddingBottom="16.0dp" android:clipChildren="false" android:clipToPadding="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="24.0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/page_barrier">
+        <LinearLayout android:orientation="vertical" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <LinearLayout android:gravity="center" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/tv_pre" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="48.0dp" android:layout_weight="1.0">
+                    <TextView android:textSize="12.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/previous_chapter" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/iv_play_prev" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="48.0dp" android:layout_weight="1.0" android:contentDescription="@string/prev_sentence">
+                    <ImageView android:layout_width="28.0dp" android:layout_height="28.0dp" android:src="@drawable/ic_skip_previous" android:contentDescription="@string/prev_sentence" app:tint="?colorOnSurface" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/iv_play_pause" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="48.0dp" android:layout_weight="1.0" android:contentDescription="@string/audio_play">
+                    <ImageView android:id="@id/iv_play_pause_icon" android:layout_width="28.0dp" android:layout_height="28.0dp" android:src="@drawable/ic_play" android:contentDescription="@string/audio_play" app:tint="?colorOnSurface" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/iv_stop" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="48.0dp" android:layout_weight="1.0" android:contentDescription="@string/stop">
+                    <ImageView android:layout_width="28.0dp" android:layout_height="28.0dp" android:src="@drawable/ic_stop_black_24dp" android:contentDescription="@string/stop" app:tint="?colorOnSurface" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/iv_play_next" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="48.0dp" android:layout_weight="1.0" android:contentDescription="@string/next_sentence">
+                    <ImageView android:layout_width="28.0dp" android:layout_height="28.0dp" android:src="@drawable/ic_skip_next" android:contentDescription="@string/next_sentence" app:tint="?colorOnSurface" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/tv_next" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="48.0dp" android:layout_weight="1.0">
+                    <TextView android:textSize="12.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/next_chapter" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout android:orientation="vertical" android:background="@drawable/bg_listen_section_card" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp">
+            <LinearLayout android:gravity="center" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:baselineAligned="false">
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/ll_catalog" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:contentDescription="@string/chapter_list">
+                    <ImageView android:id="@id/iv_catalog" android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_toc" android:contentDescription="@string/chapter_list" app:tint="?colorOnSurfaceVariant" />
+                    <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:text="@string/chapter_list" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/ll_main_menu" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:contentDescription="@string/read_aloud">
+                    <ImageView android:id="@id/iv_main_menu" android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_menu" android:contentDescription="@string/read_aloud" app:tint="?colorOnSurfaceVariant" />
+                    <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:text="菜单" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/ll_day_night" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+                    <ImageView android:id="@id/iv_day_night" android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_brightness" android:contentDescription="主题" app:tint="?colorOnSurfaceVariant" />
+                    <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:text="主题" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/ll_setting" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:contentDescription="@string/setting">
+                    <ImageView android:id="@id/iv_setting" android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_settings" android:contentDescription="@string/setting" app:tint="?colorOnSurfaceVariant" />
+                    <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:text="@string/setting" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+    <ScrollView android:id="@id/settings_page" android:visibility="gone" android:layout_width="match_parent" android:layout_height="0.0dp" android:fillViewport="true" app:layout_constraintBottom_toTopOf="@id/bottom_container" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/tab_bar">
+        <LinearLayout android:orientation="vertical" android:paddingTop="16.0dp" android:paddingBottom="32.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="24.0dp">
+            <LinearLayout android:orientation="vertical" android:background="@drawable/bg_listen_section_card" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp">
+                <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:gravity="center_vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="声音设置" android:drawablePadding="8.0dp" android:drawableStart="@drawable/ic_volume_up" android:drawableTint="?colorPrimary" />
+                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_bgm_setting" android:background="@drawable/bg_listen_tool_card" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="54.0dp" android:layout_marginTop="10.0dp" android:paddingHorizontal="14.0dp">
+                    <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_music_note" app:tint="?colorPrimary" />
+                    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="12.0dp">
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="背景音乐" />
+                        <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tv_bgm_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="营造更好的听书氛围" />
+                    </LinearLayout>
+                    <io.legado.app.lib.theme.view.ThemeSwitch android:id="@id/switch_bgm_enable" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="背景音乐" android:scaleX="0.62" android:scaleY="0.62" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_cover_setting" android:background="@drawable/bg_listen_tool_card" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="54.0dp" android:layout_marginTop="8.0dp" android:paddingHorizontal="14.0dp">
+                    <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_image" app:tint="?colorPrimary" />
+                    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="12.0dp">
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="封面设定" />
+                        <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tv_cover_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="朗读页面封面图尺寸设置" />
+                    </LinearLayout>
+                    <io.legado.app.lib.theme.view.ThemeSwitch android:id="@id/switch_show_cover" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="封面显示" android:scaleX="0.62" android:scaleY="0.62" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_select_carousel_folder" android:background="@drawable/bg_listen_tool_card" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="54.0dp" android:layout_marginTop="8.0dp" android:paddingHorizontal="14.0dp">
+                    <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_image" app:tint="?colorPrimary" />
+                    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="12.0dp">
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/select_carousel_folder" />
+                        <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tv_carousel_folder_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="@string/select_carousel_folder_summary" />
+                    </LinearLayout>
+                    <io.legado.app.lib.theme.view.ThemeSwitch android:id="@id/switch_carousel_enable" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="轮播开关" android:scaleX="0.62" android:scaleY="0.62" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_font_size" android:background="@drawable/bg_listen_tool_card" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="54.0dp" android:layout_marginTop="8.0dp" android:paddingHorizontal="14.0dp">
+                    <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_title_font" app:tint="?colorPrimary" />
+                    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="12.0dp">
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="字体大小" />
+                        <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tv_font_size_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="朗读字幕字体大小设置" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="22.0dp" android:layout_height="22.0dp" android:src="@drawable/ic_arrow_right" app:tint="?colorPrimary" />
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:orientation="vertical" android:background="@drawable/bg_listen_section_card" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp">
+                <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:gravity="center_vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="朗读设置" android:drawablePadding="8.0dp" android:drawableStart="@drawable/ic_tts_engine" />
+                <LinearLayout android:orientation="vertical" android:background="@drawable/bg_listen_tool_card" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp">
+                    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:baselineAligned="false">
+                        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_tts_engine" android:background="@drawable/bg_listen_section_card" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginEnd="6.0dp" android:paddingHorizontal="12.0dp" android:paddingVertical="12.0dp">
+                            <ImageView android:layout_width="26.0dp" android:layout_height="26.0dp" android:src="@drawable/ic_tts_engine" app:tint="?colorPrimary" />
+                            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="10.0dp">
+                                <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:ellipsize="end" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="发音引擎" android:maxLines="1" />
+                                <TextView android:textSize="10.0sp" android:textColor="?colorOnSurfaceVariant" android:ellipsize="end" android:id="@id/tv_tts_engine_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:maxLines="1" />
+                            </LinearLayout>
+                        </LinearLayout>
+                        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_key_manage" android:background="@drawable/bg_listen_section_card" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="6.0dp" android:paddingHorizontal="12.0dp" android:paddingVertical="12.0dp">
+                            <ImageView android:layout_width="26.0dp" android:layout_height="26.0dp" android:src="@drawable/ic_settings" app:tint="?colorPrimary" />
+                            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="10.0dp">
+                                <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:ellipsize="end" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="配置模型" android:maxLines="1" />
+                                <TextView android:textSize="10.0sp" android:textColor="?colorOnSurfaceVariant" android:ellipsize="end" android:id="@id/tv_key_manage_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="管理密钥与恢复配置" android:maxLines="1" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:baselineAligned="false">
+                        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_config_list" android:background="@drawable/bg_listen_section_card" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginEnd="6.0dp" android:paddingHorizontal="12.0dp" android:paddingVertical="12.0dp">
+                            <ImageView android:layout_width="26.0dp" android:layout_height="26.0dp" android:src="@drawable/ic_folder_open" app:tint="?colorPrimary" />
+                            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="10.0dp">
+                                <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:ellipsize="end" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="配置管理" android:maxLines="1" />
+                                <TextView android:textSize="10.0sp" android:textColor="?colorOnSurfaceVariant" android:ellipsize="end" android:id="@id/tv_config_list_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="添加或修改发音人" android:maxLines="1" />
+                            </LinearLayout>
+                        </LinearLayout>
+                        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_character_manager" android:background="@drawable/bg_listen_section_card" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="6.0dp" android:paddingHorizontal="12.0dp" android:paddingVertical="12.0dp">
+                            <ImageView android:layout_width="26.0dp" android:layout_height="26.0dp" android:src="@drawable/ic_groups" app:tint="?colorPrimary" />
+                            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="10.0dp">
+                                <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:ellipsize="end" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="演员列表" android:maxLines="1" />
+                                <TextView android:textSize="10.0sp" android:textColor="?colorOnSurfaceVariant" android:ellipsize="end" android:id="@id/tv_character_manager_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="角色管理与密钥管理" android:maxLines="1" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp">
+                        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_tts_audio_log" android:background="@drawable/bg_listen_section_card" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginEnd="6.0dp" android:paddingHorizontal="12.0dp" android:paddingVertical="12.0dp">
+                            <ImageView android:layout_width="26.0dp" android:layout_height="26.0dp" android:src="@drawable/ic_history" app:tint="?colorPrimary" />
+                            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="10.0dp">
+                                <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:ellipsize="end" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="缓存日志" android:maxLines="1" />
+                                <TextView android:textSize="10.0sp" android:textColor="?colorOnSurfaceVariant" android:ellipsize="end" android:id="@id/tv_tts_audio_log_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="查看音频请求与响应日志" android:maxLines="1" />
+                            </LinearLayout>
+                        </LinearLayout>
+                        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_sound_effect_config" android:background="@drawable/bg_listen_section_card" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="6.0dp" android:paddingHorizontal="12.0dp" android:paddingVertical="12.0dp">
+                            <ImageView android:layout_width="26.0dp" android:layout_height="26.0dp" android:src="@drawable/ic_volume_up" app:tint="?colorPrimary" />
+                            <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="10.0dp">
+                                <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:ellipsize="end" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="音效设置" android:maxLines="1" />
+                                <TextView android:textSize="10.0sp" android:textColor="?colorOnSurfaceVariant" android:ellipsize="end" android:id="@id/tv_sound_effect_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="配置朗读音效替换与音量" android:maxLines="1" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:orientation="vertical" android:background="@drawable/bg_listen_section_card" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp">
+                <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:gravity="center_vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="参数设置" android:drawablePadding="8.0dp" android:drawableStart="@drawable/ic_cfg_other" />
+                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_timer" android:background="@drawable/bg_listen_tool_card" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="54.0dp" android:layout_marginTop="10.0dp" android:paddingHorizontal="14.0dp">
+                    <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_time_add_24dp" app:tint="?colorPrimary" />
+                    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="12.0dp">
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="朗读定时" />
+                        <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tv_timer_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="朗读定时设置" />
+                    </LinearLayout>
+                    <io.legado.app.lib.theme.view.ThemeSwitch android:id="@id/switch_timer_lock" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="朗读定时" android:scaleX="0.62" android:scaleY="0.62" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_speed_setting" android:background="@drawable/bg_listen_tool_card" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="54.0dp" android:layout_marginTop="8.0dp" android:paddingHorizontal="14.0dp">
+                    <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_speed" app:tint="?colorPrimary" />
+                    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="12.0dp">
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="朗读语速" />
+                        <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tv_speed_setting_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="朗读语速调节" />
+                    </LinearLayout>
+                    <io.legado.app.lib.theme.view.ThemeSwitch android:id="@id/switch_speed_follow_sys" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="跟随系统语速" android:scaleX="0.62" android:scaleY="0.62" />
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:orientation="vertical" android:background="@drawable/bg_listen_section_card" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp">
+                <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:gravity="center_vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="缓存管理" android:drawablePadding="8.0dp" android:drawableStart="@drawable/ic_download" />
+                <LinearLayout android:orientation="vertical" android:background="@drawable/bg_listen_tool_card" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp">
+                    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <TextView android:textSize="12.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="缓存目录" android:layout_marginEnd="8.0dp" />
+                        <TextView android:textSize="13.0sp" android:textColor="?colorOnSurface" android:ellipsize="start" android:id="@id/tv_cache_dir" android:layout_width="0.0dp" android:layout_height="wrap_content" android:maxLines="1" android:layout_weight="1.0" />
+                    </LinearLayout>
+                    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp">
+                        <TextView android:textSize="12.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="缓存文件数" android:layout_marginEnd="8.0dp" />
+                        <TextView android:textSize="13.0sp" android:textColor="?colorOnSurface" android:id="@id/tv_cache_file_count" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" />
+                    </LinearLayout>
+                    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp">
+                        <TextView android:textSize="12.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="缓存总大小" android:layout_marginEnd="8.0dp" />
+                        <TextView android:textSize="13.0sp" android:textColor="?colorOnSurface" android:id="@id/tv_cache_size" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" />
+                    </LinearLayout>
+                    <TextView android:textSize="11.0sp" android:textColor="?colorPrimary" android:gravity="center" android:id="@id/tv_download_progress" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" />
+                    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp">
+                        <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@id/btn_clear_cache" android:background="@drawable/bg_listen_section_card" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_weight="1.0" android:layout_marginEnd="6.0dp">
+                            <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="管理缓存" />
+                        </LinearLayout>
+                        <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@id/btn_start_cache" android:background="@drawable/bg_listen_section_card" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_weight="1.0" android:layout_marginStart="6.0dp">
+                            <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="开始缓存" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:orientation="vertical" android:background="@drawable/bg_listen_section_card" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dp">
+                <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:gravity="center_vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="清理设置" android:drawablePadding="8.0dp" android:drawableStart="@drawable/ic_clear_all" />
+                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_cache_clean_time" android:background="@drawable/bg_listen_tool_card" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="54.0dp" android:layout_marginTop="10.0dp" android:paddingHorizontal="14.0dp">
+                    <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_timer_black_24dp" android:layout_marginEnd="10.0dp" app:tint="?colorPrimary" />
+                    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="缓存保留时间" />
+                        <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tv_cache_clean_time_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="22.0dp" android:layout_height="22.0dp" android:src="@drawable/ic_arrow_right" app:tint="?colorPrimary" />
+                </LinearLayout>
+                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_preload_num" android:background="@drawable/bg_listen_tool_card" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="54.0dp" android:layout_marginTop="8.0dp" android:paddingHorizontal="14.0dp">
+                    <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_chapter_list" android:layout_marginEnd="10.0dp" app:tint="?colorPrimary" />
+                    <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+                        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="预加载数量" />
+                        <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tv_preload_num_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="22.0dp" android:layout_height="22.0dp" android:src="@drawable/ic_arrow_right" app:tint="?colorPrimary" />
+                </LinearLayout>
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="48.0dp" />
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

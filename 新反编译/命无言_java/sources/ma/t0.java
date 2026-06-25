@@ -1,0 +1,28 @@
+package ma;
+
+import java.util.HashSet;
+import java.util.Set;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes.dex */
+public interface t0 {
+    Set a();
+
+    String b();
+
+    void f(HashSet hashSet);
+
+    Set g();
+
+    void h(HashSet hashSet);
+
+    void i(String str);
+
+    void j(HashSet hashSet);
+
+    void k(HashSet hashSet);
+
+    Set m();
+
+    Set n();
+}

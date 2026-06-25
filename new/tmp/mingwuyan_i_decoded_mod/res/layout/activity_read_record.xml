@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <io.legado.app.ui.widget.TitleBar android:id="@id/title_bar" android:layout_width="match_parent" android:layout_height="wrap_content" app:contentLayout="@layout/view_search" app:title="@string/read_record" />
+    <androidx.constraintlayout.widget.ConstraintLayout android:paddingLeft="10.0dp" android:paddingRight="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textColor="@color/primaryText" android:id="@id/tv_book_name" android:padding="6.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:singleLine="true" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toLeftOf="@id/tv_remove" app:layout_constraintTop_toTopOf="parent" />
+        <TextView android:textColor="@color/secondaryText" android:id="@id/tv_reading_time" android:padding="6.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:singleLine="true" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toLeftOf="@id/tv_remove" app:layout_constraintTop_toBottomOf="@id/tv_book_name" />
+        <TextView android:textColor="@color/primaryText" android:id="@id/tv_remove" android:background="?selectableItemBackground" android:padding="6.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/clear" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.recyclerview.widget.RecyclerView android:id="@id/recycler_view" android:clipToPadding="false" android:layout_width="match_parent" android:layout_height="match_parent" app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+</LinearLayout>

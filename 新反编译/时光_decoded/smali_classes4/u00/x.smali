@@ -1,0 +1,164 @@
+.class public final Lu00/x;
+.super Ljava/lang/Object;
+.source "r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949"
+
+
+# instance fields
+.field public final a:[Lu00/w;
+
+.field public final b:I
+
+
+# direct methods
+.method public constructor <init>([Lu00/w;)V
+    .locals 4
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    iput-object p1, p0, Lu00/x;->a:[Lu00/w;
+
+    .line 5
+    .line 6
+    array-length v0, p1
+
+    .line 7
+    const/4 v1, 0x0
+
+    .line 8
+    move v2, v1
+
+    .line 9
+    :goto_0
+    if-ge v1, v0, :cond_0
+
+    .line 10
+    .line 11
+    aget-object v3, p1, v1
+
+    .line 12
+    .line 13
+    invoke-static {v2, v3}, Ld0/c;->R(ILjava/lang/Object;)I
+
+    .line 14
+    .line 15
+    .line 16
+    move-result v2
+
+    .line 17
+    add-int/lit8 v1, v1, 0x1
+
+    .line 18
+    .line 19
+    goto :goto_0
+
+    .line 20
+    :cond_0
+    array-length p1, p1
+
+    .line 21
+    invoke-static {v2, p1}, Ld0/c;->x(II)I
+
+    .line 22
+    .line 23
+    .line 24
+    move-result p1
+
+    .line 25
+    iput p1, p0, Lu00/x;->b:I
+
+    .line 26
+    .line 27
+    return-void
+.end method
+
+
+# virtual methods
+.method public final equals(Ljava/lang/Object;)Z
+    .locals 2
+
+    .line 1
+    if-ne p1, p0, :cond_0
+
+    .line 2
+    .line 3
+    goto :goto_0
+
+    .line 4
+    :cond_0
+    instance-of v0, p1, Lu00/x;
+
+    .line 5
+    .line 6
+    if-nez v0, :cond_1
+
+    .line 7
+    .line 8
+    goto :goto_1
+
+    .line 9
+    :cond_1
+    check-cast p1, Lu00/x;
+
+    .line 10
+    .line 11
+    iget v0, p0, Lu00/x;->b:I
+
+    .line 12
+    .line 13
+    iget v1, p1, Lu00/x;->b:I
+
+    .line 14
+    .line 15
+    if-ne v0, v1, :cond_2
+
+    .line 16
+    .line 17
+    iget-object p0, p0, Lu00/x;->a:[Lu00/w;
+
+    .line 18
+    .line 19
+    iget-object p1, p1, Lu00/x;->a:[Lu00/w;
+
+    .line 20
+    .line 21
+    invoke-static {p0, p1}, Ljava/util/Arrays;->equals([Ljava/lang/Object;[Ljava/lang/Object;)Z
+
+    .line 22
+    .line 23
+    .line 24
+    move-result p0
+
+    .line 25
+    if-eqz p0, :cond_2
+
+    .line 26
+    .line 27
+    :goto_0
+    const/4 p0, 0x1
+
+    .line 28
+    return p0
+
+    .line 29
+    :cond_2
+    :goto_1
+    const/4 p0, 0x0
+
+    .line 30
+    return p0
+.end method
+
+.method public final hashCode()I
+    .locals 0
+
+    .line 1
+    iget p0, p0, Lu00/x;->b:I
+
+    .line 2
+    .line 3
+    return p0
+.end method

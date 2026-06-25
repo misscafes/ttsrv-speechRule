@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_width="66.0dp" android:layout_height="66.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:layout_gravity="center" android:id="@id/ivGlowRing" android:visibility="visible" android:layout_width="66.0dp" android:layout_height="66.0dp" android:src="@drawable/read_aloud_glow_ring" />
+    <io.legado.app.ui.widget.image.CircleImageView android:layout_gravity="center" android:id="@id/ivCover" android:layout_width="48.0dp" android:layout_height="48.0dp" android:src="@drawable/image_float_cover_default" />
+</FrameLayout>

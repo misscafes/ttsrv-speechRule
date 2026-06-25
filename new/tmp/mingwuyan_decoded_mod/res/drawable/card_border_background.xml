@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape android:shape="rectangle"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/card_bg_water" />
+    <stroke android:width="0.8000001dp" android:color="@color/card_border_water" />
+    <corners android:radius="12.0dp" />
+</shape>

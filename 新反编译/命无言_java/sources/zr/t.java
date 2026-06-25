@@ -1,0 +1,26 @@
+package zr;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes2.dex */
+public final class t extends cr.c {
+    public int A;
+
+    /* JADX INFO: renamed from: i, reason: collision with root package name */
+    public /* synthetic */ Object f29662i;
+
+    /* JADX INFO: renamed from: v, reason: collision with root package name */
+    public final /* synthetic */ bn.t f29663v;
+
+    /* JADX WARN: 'super' call moved to the top of the method (can break code semantics) */
+    public t(bn.t tVar, ar.d dVar) {
+        super(dVar);
+        this.f29663v = tVar;
+    }
+
+    @Override // cr.a
+    public final Object invokeSuspend(Object obj) {
+        this.f29662i = obj;
+        this.A |= Integer.MIN_VALUE;
+        return this.f29663v.d(null, this);
+    }
+}

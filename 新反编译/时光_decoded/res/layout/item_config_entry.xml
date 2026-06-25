@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="0.0dp" android:layout_marginVertical="2.0dp" app:cardBackgroundColor="?colorSurfaceContainerLow" app:cardCornerRadius="12.0dp" app:cardElevation="1.0dp" app:strokeColor="?colorOutlineVariant" app:strokeWidth="1.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="8.0dp" android:paddingVertical="10.0dp">
+        <CheckBox android:id="@id/cb_enable" android:padding="2.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="0.0dp" android:minHeight="0.0dp" android:layout_marginEnd="4.0dp" />
+        <LinearLayout android:orientation="vertical" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
+            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:id="@id/tv_name" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" />
+                <com.google.android.material.button.MaterialButton android:textSize="13.0sp" android:id="@id/btn_edit" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0.0dp" android:text="编辑" android:insetTop="4.0dp" android:insetBottom="4.0dp" android:layout_marginEnd="4.0dp" android:paddingHorizontal="12.0dp" android:paddingVertical="0.0dp" style="@style/Widget.Material3.Button.TonalButton" />
+                <ImageView android:id="@id/iv_more" android:padding="4.0dp" android:layout_width="28.0dp" android:layout_height="28.0dp" android:src="@drawable/ic_more_vert" app:tint="?colorOnSurfaceVariant" />
+            </LinearLayout>
+            <TextView android:textSize="12.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tv_tag" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" />
+            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dp">
+                <TextView android:textSize="12.0sp" android:textColor="?colorOnSurface" android:id="@id/tv_voice" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                <TextView android:textSize="12.0sp" android:textColor="?colorPrimary" android:id="@id/tv_emotion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6.0dp" />
+            </LinearLayout>
+            <TextView android:textSize="11.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tv_params" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

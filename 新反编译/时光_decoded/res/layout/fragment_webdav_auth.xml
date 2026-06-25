@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" android:hint="@string/web_dav_url" style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView android:id="@id/editUrl" android:layout_width="match_parent" android:layout_height="wrap_content" android:completionThreshold="1" android:inputType="textUri" android:imeOptions="actionDone" />
+    </com.google.android.material.textfield.TextInputLayout>
+    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" android:hint="@string/web_dav_account" style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense">
+        <com.google.android.material.textfield.TextInputEditText android:id="@id/editAccount" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/set_local_password" />
+    </com.google.android.material.textfield.TextInputLayout>
+    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" android:hint="@string/web_dav_pw" app:endIconMode="password_toggle" style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense">
+        <com.google.android.material.textfield.TextInputEditText android:id="@id/editPassword" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/set_local_password" />
+    </com.google.android.material.textfield.TextInputLayout>
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginEnd="8.0dp">
+            <com.google.android.material.button.MaterialButton android:id="@id/btnRestore" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/restore" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" style="@style/Widget.Material3Expressive.Button.OutlinedButton" />
+            <com.google.android.material.loadingindicator.LoadingIndicator android:id="@id/progressRestore" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <com.google.android.material.button.MaterialButton android:id="@id/btnCheck" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/action_save" android:layout_weight="1.0" android:layout_marginStart="8.0dp" style="@style/Widget.Material3Expressive.Button.TonalButton" />
+    </LinearLayout>
+    <TextView android:textSize="12.0sp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:text="@string/set_local_password_summary" />
+    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/set_local_password" style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense">
+        <com.google.android.material.textfield.TextInputEditText android:id="@id/etPassword" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    </com.google.android.material.textfield.TextInputLayout>
+</LinearLayout>

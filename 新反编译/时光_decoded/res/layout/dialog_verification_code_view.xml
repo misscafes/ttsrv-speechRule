@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.appcompat.widget.Toolbar android:theme="?actionBarStyle" android:id="@id/tool_bar" android:layout_width="match_parent" android:layout_height="wrap_content" android:elevation="5.0dp" app:title="@string/input_verification_code" />
+    <androidx.appcompat.widget.AppCompatImageView android:id="@id/verification_code_image_view" android:background="?selectableItemBackgroundBorderless" android:layout_width="match_parent" android:layout_height="100.0dp" android:scaleType="fitCenter" android:layout_marginHorizontal="16.0dp" />
+    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="16.0dp">
+        <com.google.android.material.textfield.TextInputEditText android:id="@id/verification_code" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/verification_code" />
+    </com.google.android.material.textfield.TextInputLayout>
+</LinearLayout>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:overScrollMode="ifContentScrolls"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <com.google.android.material.textfield.TextInputLayout android:id="@id/layout_1" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_1" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout android:id="@id/layout_2" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_2" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

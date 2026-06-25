@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <io.legado.app.lib.prefs.Preference android:title="@string/contributors" android:key="contributors" android:summary="@string/contributors_summary" app:iconSpaceReserved="false" />
+    <io.legado.app.lib.prefs.Preference android:title="@string/update_log" android:key="update_log" app:allowDividerAbove="false" app:allowDividerBelow="false" app:iconSpaceReserved="false" />
+    <io.legado.app.lib.prefs.Preference android:title="@string/check_update" android:key="check_update" app:allowDividerAbove="false" app:allowDividerBelow="false" app:iconSpaceReserved="false" />
+    <io.legado.app.lib.prefs.PreferenceCategory android:title="@string/other" app:allowDividerAbove="true" app:allowDividerBelow="false" app:iconSpaceReserved="false" app:layout="@layout/view_preference_category">
+        <io.legado.app.lib.prefs.Preference android:title="@string/crash_log" android:key="crashLog" app:iconSpaceReserved="false" />
+        <io.legado.app.lib.prefs.Preference android:title="@string/save_log" android:key="saveLog" app:iconSpaceReserved="false" />
+        <io.legado.app.lib.prefs.Preference android:title="@string/create_heap_dump" android:key="createHeapDump" app:iconSpaceReserved="false" />
+        <io.legado.app.lib.prefs.Preference android:title="@string/privacy_policy" android:key="privacyPolicy" app:iconSpaceReserved="false" />
+        <io.legado.app.lib.prefs.Preference android:title="@string/license" android:key="license" app:iconSpaceReserved="false" />
+        <io.legado.app.lib.prefs.Preference android:title="@string/disclaimer" android:key="disclaimer" app:iconSpaceReserved="false" />
+    </io.legado.app.lib.prefs.PreferenceCategory>
+</androidx.preference.PreferenceScreen>

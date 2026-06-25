@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center" android:id="@id/ll_style" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.google.android.material.card.MaterialCardView android:id="@id/cd_style" android:layout_width="48.0dp" android:layout_height="36.0dp" android:layout_margin="4.0dp" android:foreground="?android:selectableItemBackground" app:cardCornerRadius="8.0dp" app:strokeColor="?colorOutlineVariant" app:strokeWidth="2.0dp">
+        <ImageView android:id="@id/iv_style" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" />
+        <TextView android:textStyle="bold" android:gravity="center" android:id="@id/tv_style" android:layout_width="match_parent" android:layout_height="match_parent" android:text="@string/text" android:singleLine="true" android:autoSizeTextType="uniform" android:autoSizeStepGranularity="1.0sp" android:autoSizeMinTextSize="6.0sp" android:paddingHorizontal="4.0dp" android:autoSizeMaxTextSize="10.0sp" />
+    </com.google.android.material.card.MaterialCardView>
+</LinearLayout>

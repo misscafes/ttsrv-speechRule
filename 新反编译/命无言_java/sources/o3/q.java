@@ -1,0 +1,19 @@
+package o3;
+
+import java.util.ArrayList;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes.dex */
+public final class q implements Comparable {
+
+    /* JADX INFO: renamed from: v, reason: collision with root package name */
+    public long f18308v = -9223372036854775807L;
+
+    /* JADX INFO: renamed from: i, reason: collision with root package name */
+    public final ArrayList f18307i = new ArrayList();
+
+    @Override // java.lang.Comparable
+    public final int compareTo(Object obj) {
+        return Long.compare(this.f18308v, ((q) obj).f18308v);
+    }
+}

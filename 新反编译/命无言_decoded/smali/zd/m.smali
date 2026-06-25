@@ -1,0 +1,28 @@
+.class public final Lzd/m;
+.super Ljava/lang/Object;
+.source "r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892"
+
+# interfaces
+.implements Lq2/b;
+
+
+# instance fields
+.field public final synthetic a:Lcom/google/android/material/navigation/NavigationView;
+
+
+# direct methods
+.method public constructor <init>(Lcom/google/android/material/navigation/NavigationView;)V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    iput-object p1, p0, Lzd/m;->a:Lcom/google/android/material/navigation/NavigationView;
+
+    .line 5
+    .line 6
+    return-void
+.end method

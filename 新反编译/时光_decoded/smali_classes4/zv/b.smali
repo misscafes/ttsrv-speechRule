@@ -1,0 +1,145 @@
+.class public final synthetic Lzv/b;
+.super Ljava/lang/Object;
+.source "r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949"
+
+# interfaces
+.implements Lyx/a;
+
+
+# instance fields
+.field public final synthetic X:Lio/legado/app/ui/widget/dialog/BottomWebViewDialog;
+
+.field public final synthetic i:I
+
+
+# direct methods
+.method public synthetic constructor <init>(Lio/legado/app/ui/widget/dialog/BottomWebViewDialog;I)V
+    .locals 0
+
+    .line 1
+    iput p2, p0, Lzv/b;->i:I
+
+    .line 2
+    .line 3
+    iput-object p1, p0, Lzv/b;->X:Lio/legado/app/ui/widget/dialog/BottomWebViewDialog;
+
+    .line 4
+    .line 5
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 6
+    .line 7
+    .line 8
+    return-void
+.end method
+
+
+# virtual methods
+.method public final invoke()Ljava/lang/Object;
+    .locals 2
+
+    .line 1
+    iget v0, p0, Lzv/b;->i:I
+
+    .line 2
+    .line 3
+    const/4 v1, 0x0
+
+    .line 4
+    iget-object p0, p0, Lzv/b;->X:Lio/legado/app/ui/widget/dialog/BottomWebViewDialog;
+
+    .line 5
+    .line 6
+    packed-switch v0, :pswitch_data_0
+
+    .line 7
+    .line 8
+    .line 9
+    sget-object v0, Lio/legado/app/ui/widget/dialog/BottomWebViewDialog;->L1:[Lgy/e;
+
+    .line 10
+    .line 11
+    invoke-virtual {p0}, Lz7/x;->o()Landroid/content/res/Resources;
+
+    .line 12
+    .line 13
+    .line 14
+    move-result-object p0
+
+    .line 15
+    invoke-virtual {p0}, Landroid/content/res/Resources;->getDisplayMetrics()Landroid/util/DisplayMetrics;
+
+    .line 16
+    .line 17
+    .line 18
+    move-result-object p0
+
+    .line 19
+    return-object p0
+
+    .line 20
+    :pswitch_0
+    sget-object v0, Lio/legado/app/ui/widget/dialog/BottomWebViewDialog;->L1:[Lgy/e;
+
+    .line 21
+    .line 22
+    invoke-virtual {p0}, Lio/legado/app/ui/widget/dialog/BottomWebViewDialog;->n0()Landroid/view/View;
+
+    .line 23
+    .line 24
+    .line 25
+    move-result-object p0
+
+    .line 26
+    if-eqz p0, :cond_0
+
+    .line 27
+    .line 28
+    invoke-static {p0}, Lcom/google/android/material/bottomsheet/BottomSheetBehavior;->E(Landroid/view/View;)Lcom/google/android/material/bottomsheet/BottomSheetBehavior;
+
+    .line 29
+    .line 30
+    .line 31
+    move-result-object v1
+
+    .line 32
+    :cond_0
+    return-object v1
+
+    .line 33
+    :pswitch_1
+    sget-object v0, Lio/legado/app/ui/widget/dialog/BottomWebViewDialog;->L1:[Lgy/e;
+
+    .line 34
+    .line 35
+    iget-object p0, p0, Lz7/p;->t1:Landroid/app/Dialog;
+
+    .line 36
+    .line 37
+    if-eqz p0, :cond_1
+
+    .line 38
+    .line 39
+    const v0, 0x7f0901bb
+
+    .line 40
+    .line 41
+    .line 42
+    invoke-virtual {p0, v0}, Landroid/app/Dialog;->findViewById(I)Landroid/view/View;
+
+    .line 43
+    .line 44
+    .line 45
+    move-result-object v1
+
+    .line 46
+    :cond_1
+    return-object v1
+
+    .line 47
+    :pswitch_data_0
+    .packed-switch 0x0
+        :pswitch_1
+        :pswitch_0
+    .end packed-switch
+.end method

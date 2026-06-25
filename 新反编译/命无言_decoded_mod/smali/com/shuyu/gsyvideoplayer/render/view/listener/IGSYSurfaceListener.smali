@@ -1,0 +1,17 @@
+.class public interface abstract Lcom/shuyu/gsyvideoplayer/render/view/listener/IGSYSurfaceListener;
+.super Ljava/lang/Object;
+.source "r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892"
+
+
+# virtual methods
+.method public abstract onSurfaceAvailable(Landroid/view/Surface;)V
+.end method
+
+.method public abstract onSurfaceDestroyed(Landroid/view/Surface;)Z
+.end method
+
+.method public abstract onSurfaceSizeChanged(Landroid/view/Surface;II)V
+.end method
+
+.method public abstract onSurfaceUpdated(Landroid/view/Surface;)V
+.end method

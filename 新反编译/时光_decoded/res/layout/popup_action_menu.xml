@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" app:cardBackgroundColor="?colorSurfaceContainer" app:strokeWidth="0.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:padding="8.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:animateLayoutChanges="true">
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <androidx.recyclerview.widget.RecyclerView android:layout_gravity="center" android:orientation="horizontal" android:id="@id/recycler_view" android:layout_width="wrap_content" android:layout_height="wrap_content" app:flexDirection="row" app:flexWrap="wrap" app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager" />
+            <androidx.appcompat.widget.AppCompatImageView android:id="@id/iv_menu_more" android:background="?selectableItemBackgroundBorderless" android:visibility="gone" android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_more_vert" android:contentDescription="@string/more_menu" />
+        </LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView android:layout_gravity="center" android:orientation="vertical" android:id="@id/recycler_view_more" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

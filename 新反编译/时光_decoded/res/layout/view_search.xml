@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.SearchView android:id="@id/search_view" android:focusable="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:layout_marginBottom="8.0dp" android:imeOptions="actionSearch" app:defaultQueryHint="搜索" app:iconifiedByDefault="false" app:queryBackground="@null" app:searchIcon="@null" app:submitBackground="@null"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" />

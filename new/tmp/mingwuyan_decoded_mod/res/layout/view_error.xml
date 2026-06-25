@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_horizontal" android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.appcompat.widget.AppCompatImageView android:id="@id/iv_error_image" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    <androidx.appcompat.widget.AppCompatTextView android:id="@id/tv_error_message" android:paddingTop="16.0dp" android:paddingBottom="16.0dp" style="@style/Style.Text.Primary.Normal" />
+    <androidx.appcompat.widget.AppCompatButton android:id="@id/btn_error_retry" android:layout_width="match_parent" android:layout_height="wrap_content" android:minWidth="96.0dp" android:text="@string/dynamic_click_retry" android:backgroundTint="@color/accent" />
+</LinearLayout>

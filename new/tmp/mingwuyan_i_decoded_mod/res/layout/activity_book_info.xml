@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ImageView android:id="@id/bg_book" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:contentDescription="@string/bg_image" app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout android:orientation="vertical" android:id="@id/vw_bg" android:background="#50000000" android:layout_width="match_parent" android:layout_height="match_parent">
+        <io.legado.app.ui.widget.TitleBar android:id="@id/title_bar" android:layout_width="match_parent" android:layout_height="wrap_content" app:layout_constraintTop_toTopOf="parent" app:themeMode="dark" app:title="@string/book_info" />
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@id/refresh_layout" android:layout_width="match_parent" android:layout_height="0.0dp" android:layout_weight="1.0">
+            <io.legado.app.ui.widget.NoChildScrollNestedScrollView android:scrollbarStyle="outsideOverlay" android:id="@id/scroll_view" android:padding="0.0dp" android:focusable="true" android:fitsSystemWindows="false" android:scrollbars="vertical" android:layout_width="match_parent" android:layout_height="0.0dp" android:fillViewport="true" android:layout_weight="1.0">
+                <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="0.0dp">
+                    <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp">
+                        <io.legado.app.ui.widget.image.ArcView android:id="@id/arc_view" android:layout_width="match_parent" android:layout_height="78.0dp" android:layout_marginTop="90.0dp" app:arcDirectionTop="true" app:arcHeight="36.0dp" app:bgColor="@color/background" />
+                        <androidx.cardview.widget.CardView android:id="@id/iv_cover_c" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="3.0dp" android:layout_centerHorizontal="true" app:cardCornerRadius="5.0dp" app:cardElevation="8.0dp">
+                            <io.legado.app.ui.widget.image.CoverImageView android:id="@id/iv_cover" android:layout_width="110.0dp" android:layout_height="160.0dp" android:src="@drawable/image_cover_default" android:scaleType="centerCrop" android:contentDescription="@string/img_cover" />
+                        </androidx.cardview.widget.CardView>
+                    </RelativeLayout>
+                    <LinearLayout android:orientation="vertical" android:id="@id/ll_info" android:background="@color/background" android:paddingLeft="8.0dp" android:paddingRight="8.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="match_parent">
+                        <LinearLayout android:orientation="vertical" android:paddingLeft="10.0dp" android:paddingTop="8.0dp" android:paddingRight="10.0dp" android:paddingBottom="3.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                            <HorizontalScrollView android:layout_gravity="center" android:scrollbars="none" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp">
+                                <TextView android:textSize="18.0sp" android:textColor="@color/primaryText" android:id="@id/tv_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/book_name" android:singleLine="true" android:includeFontPadding="false" />
+                            </HorizontalScrollView>
+                            <HorizontalScrollView android:layout_gravity="center" android:scrollbars="none" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dp">
+                                <io.legado.app.ui.widget.LabelsBar android:id="@id/lb_kind" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                            </HorizontalScrollView>
+                        </LinearLayout>
+                        <LinearLayout android:orientation="vertical" android:paddingLeft="8.0dp" android:paddingRight="8.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="3.0dp" android:paddingBottom="3.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                                <ImageView android:paddingRight="2.0dp" android:layout_width="18.0sp" android:layout_height="18.0sp" android:src="@drawable/ic_author" android:contentDescription="@string/author" app:tint="@color/tv_text_summary" />
+                                <TextView android:textSize="13.0sp" android:textColor="@color/tv_text_summary" android:ellipsize="end" android:id="@id/tv_author" android:paddingRight="6.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/author" android:singleLine="true" android:includeFontPadding="false" android:layout_weight="1.0" />
+                            </LinearLayout>
+                            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="3.0dp" android:paddingBottom="3.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                                <ImageView android:id="@id/iv_web" android:paddingRight="2.0dp" android:layout_width="18.0sp" android:layout_height="18.0sp" android:src="@drawable/ic_web_outline" android:contentDescription="@string/origin_format" app:tint="@color/tv_text_summary" />
+                                <TextView android:textSize="13.0sp" android:textColor="@color/tv_text_summary" android:ellipsize="end" android:id="@id/tv_origin" android:paddingRight="6.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:singleLine="true" android:includeFontPadding="false" android:layout_weight="1.0" />
+                                <io.legado.app.ui.widget.text.AccentBgTextView android:textSize="13.0sp" android:id="@id/tv_change_source" android:paddingLeft="5.0dp" android:paddingRight="5.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/change_origin" android:layout_marginStart="8.0dp" app:radius="2.0dp" />
+                            </LinearLayout>
+                            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="3.0dp" android:paddingBottom="3.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                                <ImageView android:id="@id/ic_book_last" android:paddingRight="2.0dp" android:layout_width="18.0sp" android:layout_height="18.0sp" android:src="@drawable/ic_book_last" android:contentDescription="@string/read_dur_progress" app:tint="@color/tv_text_summary" />
+                                <TextView android:textSize="13.0sp" android:textColor="@color/tv_text_summary" android:ellipsize="end" android:id="@id/tv_lasted" android:paddingRight="6.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:singleLine="true" android:includeFontPadding="false" android:layout_weight="1.0" />
+                            </LinearLayout>
+                            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="3.0dp" android:paddingBottom="3.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                                <ImageView android:paddingRight="2.0dp" android:layout_width="18.0sp" android:layout_height="18.0sp" android:src="@drawable/ic_groups" android:contentDescription="@string/read_dur_progress" app:tint="@color/tv_text_summary" />
+                                <TextView android:textSize="13.0sp" android:textColor="@color/tv_text_summary" android:ellipsize="end" android:id="@id/tv_group" android:paddingRight="6.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:singleLine="true" android:includeFontPadding="false" android:layout_weight="1.0" />
+                                <io.legado.app.ui.widget.text.AccentBgTextView android:textSize="13.0sp" android:id="@id/tv_change_group" android:paddingLeft="5.0dp" android:paddingRight="5.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/change_group" android:layout_marginStart="8.0dp" app:radius="2.0dp" />
+                            </LinearLayout>
+                            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_toc" android:paddingTop="3.0dp" android:paddingBottom="3.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+                                <ImageView android:paddingRight="2.0dp" android:layout_width="18.0sp" android:layout_height="18.0sp" android:src="@drawable/ic_folder_open" android:contentDescription="@string/read_dur_progress" app:tint="@color/tv_text_summary" />
+                                <TextView android:textSize="13.0sp" android:textColor="@color/tv_text_summary" android:ellipsize="end" android:id="@id/tv_toc" android:paddingRight="6.0dp" android:layout_width="0.0dp" android:layout_height="wrap_content" android:singleLine="true" android:includeFontPadding="false" android:layout_weight="1.0" />
+                                <io.legado.app.ui.widget.text.AccentBgTextView android:textSize="13.0sp" android:id="@id/tv_toc_view" android:paddingLeft="5.0dp" android:paddingRight="5.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/view_toc" android:layout_marginStart="8.0dp" app:radius="2.0dp" />
+                            </LinearLayout>
+                        </LinearLayout>
+                        <io.legado.app.ui.widget.text.ScrollTextView android:textSize="14.0sp" android:textColor="@color/secondaryText" android:id="@id/tv_intro" android:paddingBottom="8.0dp" android:focusable="true" android:visibility="visible" android:clickable="true" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:minHeight="48.0dp" android:text="@string/book_intro" android:textIsSelectable="true" android:paddingStart="8.0dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </io.legado.app.ui.widget.NoChildScrollNestedScrollView>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        <View android:background="@color/bg_divider_line" android:layout_width="match_parent" android:layout_height="1.0px" />
+        <LinearLayout android:orientation="horizontal" android:id="@id/fl_action" android:background="@color/background_menu" android:layout_width="match_parent" android:layout_height="wrap_content" app:layout_constraintBottom_toBottomOf="parent">
+            <TextView android:textSize="15.0sp" android:textColor="@color/primaryText" android:gravity="center" android:id="@id/tv_shelf" android:background="?selectableItemBackground" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="50.0dp" android:text="@string/remove_from_bookshelf" android:includeFontPadding="false" android:layout_weight="1.0" />
+            <io.legado.app.ui.widget.text.AccentBgTextView android:textSize="15.0sp" android:gravity="center" android:id="@id/tv_read" android:layout_width="0.0dp" android:layout_height="50.0dp" android:text="@string/reading" android:includeFontPadding="false" android:layout_weight="1.0" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,20 @@
+package au;
+
+import okio.ByteString;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes2.dex */
+public final class f {
+
+    /* JADX INFO: renamed from: a, reason: collision with root package name */
+    public final int f1968a;
+
+    /* JADX INFO: renamed from: b, reason: collision with root package name */
+    public final ByteString f1969b;
+
+    public f(ByteString byteString, int i10) {
+        mr.i.e(byteString, "data");
+        this.f1968a = i10;
+        this.f1969b = byteString;
+    }
+}

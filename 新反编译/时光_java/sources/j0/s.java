@@ -1,0 +1,23 @@
+package j0;
+
+import android.hardware.camera2.CaptureResult;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes3.dex */
+public interface s {
+    g2 a();
+
+    int b();
+
+    long c();
+
+    r f();
+
+    p i();
+
+    default CaptureResult k() {
+        return null;
+    }
+
+    q l();
+}

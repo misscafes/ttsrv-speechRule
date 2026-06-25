@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.appcompat.widget.Toolbar android:theme="?actionBarStyle" android:id="@id/tool_bar" android:layout_width="match_parent" android:layout_height="wrap_content" app:contentInsetStartWithNavigation="0.0dp" app:displayHomeAsUp="false" app:fitStatusBar="false" />
+    <com.google.android.material.progressindicator.LinearProgressIndicator android:id="@id/refresh_progress_bar" android:visibility="invisible" android:layout_width="match_parent" android:layout_height="wrap_content" android:indeterminate="true" app:layout_constraintTop_toBottomOf="@id/tool_bar" app:waveAmplitude="2.0dp" app:waveSpeed="24.0dp" app:wavelength="32.0dp" />
+    <LinearLayout android:orientation="horizontal" android:id="@id/ll_info" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16.0dp" android:layout_marginVertical="4.0dp">
+        <com.google.android.material.card.MaterialCardView android:layout_width="wrap_content" android:layout_height="wrap_content" android:scaleType="centerCrop" app:cardBackgroundColor="?colorTertiaryContainer" app:cardCornerRadius="4.0dp" app:strokeWidth="0.0dp">
+            <TextView android:textSize="11.0sp" android:textStyle="bold" android:textColor="?colorTertiary" android:id="@id/tv_progress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/text" android:paddingHorizontal="4.0dp" android:paddingVertical="2.0dp" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView android:layout_width="wrap_content" android:layout_height="wrap_content" android:scaleType="centerCrop" android:layout_marginStart="4.0dp" app:cardBackgroundColor="?colorPrimary" app:cardCornerRadius="4.0dp" app:strokeWidth="0.0dp">
+            <TextView android:textSize="11.0sp" android:textStyle="bold" android:textColor="?colorOnPrimary" android:id="@id/tv_result" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/text" android:paddingHorizontal="4.0dp" android:paddingVertical="2.0dp" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+    <io.legado.app.ui.widget.EmptyMessageView android:layout_gravity="center" android:id="@id/tv_empty_msg" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" app:messageText="还没有源！" />
+    <androidx.recyclerview.widget.RecyclerView android:id="@id/recycler_view" android:layout_width="match_parent" android:layout_height="wrap_content" app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_bottom_bar" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp" android:paddingVertical="8.0dp">
+        <TextView android:textSize="12.0sp" android:textStyle="bold" android:ellipsize="end" android:gravity="center_vertical" android:id="@id/tv_dur" android:background="?selectableItemBackgroundBorderless" android:layout_width="0.0dp" android:layout_height="match_parent" android:text="@string/text" android:singleLine="true" android:layout_weight="1.0" />
+        <com.google.android.material.button.MaterialButtonGroup android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <com.google.android.material.button.MaterialButton android:id="@id/iv_top" android:layout_width="40.0dp" android:layout_height="40.0dp" android:contentDescription="@string/go_to_top" android:tooltipText="@string/go_to_top" app:icon="@drawable/ic_arrow_drop_up" app:iconGravity="textStart" style="@style/Widget.Material3Expressive.Button.IconButton.Tonal" />
+            <com.google.android.material.button.MaterialButton android:id="@id/iv_bottom" android:layout_width="40.0dp" android:layout_height="40.0dp" android:contentDescription="@string/go_to_bottom" android:tooltipText="@string/go_to_bottom" app:icon="@drawable/ic_arrow_drop_down" app:iconGravity="textStart" style="@style/Widget.Material3Expressive.Button.IconButton.Tonal" />
+        </com.google.android.material.button.MaterialButtonGroup>
+    </LinearLayout>
+</LinearLayout>

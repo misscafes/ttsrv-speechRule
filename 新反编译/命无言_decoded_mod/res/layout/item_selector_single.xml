@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="horizontal" android:padding="4.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <io.legado.app.ui.widget.text.AccentTextView android:id="@id/sp_name" android:padding="3.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/book_type" />
+    <androidx.appcompat.widget.AppCompatSpinner android:theme="@style/Spinner" android:gravity="center" android:id="@id/sp_type" android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_weight="1.0" />
+</LinearLayout>

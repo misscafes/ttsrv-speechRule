@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:gravity="center"
+    android:id="@+id/ll_style"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cd_style"
+        android:layout_width="48dp"
+        android:layout_height="36dp"
+        android:layout_margin="4dp"
+        android:foreground="?android:attr/selectableItemBackground"
+        app:cardCornerRadius="8dp"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="2dp">
+        <ImageView
+            android:id="@+id/iv_style"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"/>
+        <TextView
+            android:textStyle="bold"
+            android:gravity="center"
+            android:id="@+id/tv_style"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@string/text"
+            android:singleLine="true"
+            android:autoSizeTextType="uniform"
+            android:autoSizeStepGranularity="1sp"
+            android:autoSizeMinTextSize="6sp"
+            android:paddingHorizontal="4dp"
+            android:autoSizeMaxTextSize="10sp"/>
+    </com.google.android.material.card.MaterialCardView>
+</LinearLayout>

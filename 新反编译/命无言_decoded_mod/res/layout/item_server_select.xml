@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="@color/background" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <io.legado.app.lib.theme.view.ThemeRadioButton android:textColor="@color/primaryText" android:layout_gravity="center" android:id="@id/rb_server" android:layout_width="0.0dp" android:layout_height="wrap_content" android:singleLine="true" android:layout_weight="1.0" />
+    <androidx.appcompat.widget.AppCompatImageView android:layout_gravity="center" android:id="@id/iv_edit" android:background="?android:selectableItemBackgroundBorderless" android:padding="6.0dp" android:layout_width="36.0dp" android:layout_height="36.0dp" android:src="@drawable/ic_edit" android:tint="@color/primaryText" android:contentDescription="@string/edit" />
+    <androidx.appcompat.widget.AppCompatImageView android:id="@id/iv_delete" android:background="?selectableItemBackgroundBorderless" android:padding="6.0dp" android:layout_width="36.0dp" android:layout_height="36.0dp" android:src="@drawable/ic_outline_delete" android:tint="@color/primaryText" android:contentDescription="@string/delete" />
+</LinearLayout>

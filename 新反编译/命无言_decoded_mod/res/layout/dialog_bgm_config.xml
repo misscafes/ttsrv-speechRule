@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/root_view" android:background="@color/background_menu" android:paddingLeft="16.0dp" android:paddingTop="12.0dp" android:paddingRight="16.0dp" android:paddingBottom="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/primaryText" android:id="@id/tv_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="背景音乐设置" />
+        <Space android:layout_width="0.0dp" android:layout_height="1.0dp" android:layout_weight="1.0" />
+        <io.legado.app.lib.theme.view.ThemeSwitch android:id="@id/switch_bgm" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp">
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="音效替换" />
+        <Space android:layout_width="0.0dp" android:layout_height="1.0dp" android:layout_weight="1.0" />
+        <Spinner android:textColor="@color/primaryText" android:id="@id/spinner_sound_effect" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp">
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="音效偏移字数" />
+        <Space android:layout_width="0.0dp" android:layout_height="1.0dp" android:layout_weight="1.0" />
+        <EditText android:textSize="14.0sp" android:textColor="@color/primaryText" android:gravity="end" android:id="@id/et_sound_effect_offset" android:layout_width="80.0dp" android:layout_height="wrap_content" android:text="5" android:inputType="number" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:id="@id/tv_sound_effect_vol_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="音效音量" />
+        <io.legado.app.lib.theme.view.ThemeSeekBar android:id="@id/seek_sound_effect_volume" android:layout_width="0.0dp" android:layout_height="wrap_content" android:max="100" android:layout_weight="1.0" />
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:gravity="end" android:id="@id/tv_sound_effect_volume_value" android:layout_width="40.0dp" android:layout_height="wrap_content" android:text="80%" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:id="@id/tv_path_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="文件夹：" />
+        <TextView android:textSize="12.0sp" android:textColor="@color/primaryText" android:ellipsize="middle" android:id="@id/tv_path" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="未选择" android:singleLine="true" android:layout_weight="1.0" android:alpha="0.7" />
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:id="@id/btn_select_folder" android:background="?android:selectableItemBackgroundBorderless" android:padding="8.0dp" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="选择目录" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingTop="8.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:id="@id/tv_vol_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="音量" />
+        <io.legado.app.lib.theme.view.ThemeSeekBar android:id="@id/seek_volume" android:layout_width="0.0dp" android:layout_height="wrap_content" android:max="100" android:layout_weight="1.0" />
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:gravity="end" android:id="@id/tv_volume_value" android:layout_width="40.0dp" android:layout_height="wrap_content" android:text="30%" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center" android:orientation="horizontal" android:paddingTop="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <ImageView android:id="@id/iv_prev" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="32.0dp" android:layout_height="32.0dp" android:src="@drawable/ic_skip_previous" android:layout_marginEnd="24.0dp" app:tint="@color/primaryText" />
+        <ImageView android:id="@id/iv_play_pause" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="42.0dp" android:layout_height="42.0dp" android:src="@drawable/ic_play_24dp" app:tint="@color/primaryText" />
+        <ImageView android:id="@id/iv_next" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="32.0dp" android:layout_height="32.0dp" android:src="@drawable/ic_skip_next" android:layout_marginStart="24.0dp" app:tint="@color/primaryText" />
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp">
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:gravity="center" android:id="@id/btn_ai_image" android:background="?android:selectableItemBackgroundBorderless" android:padding="12.0dp" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="AI 生图" android:layout_weight="1.0" />
+        <View android:background="@color/divider" android:layout_width="1.0dp" android:layout_height="match_parent" />
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:gravity="center" android:id="@id/btn_ai_config" android:background="?android:selectableItemBackgroundBorderless" android:padding="12.0dp" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="AI 切歌" android:layout_weight="1.0" />
+        <View android:background="@color/divider" android:layout_width="1.0dp" android:layout_height="match_parent" />
+        <TextView android:textSize="14.0sp" android:textColor="@color/primaryText" android:gravity="center" android:id="@id/btn_download_bgm" android:background="?android:selectableItemBackgroundBorderless" android:padding="12.0dp" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="下载背景音乐" android:layout_weight="1.0" />
+    </LinearLayout>
+</LinearLayout>

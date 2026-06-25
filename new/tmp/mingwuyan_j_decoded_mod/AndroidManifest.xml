@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:compileSdkVersion="36" android:compileSdkVersionCodename="16" package="com.legado.app.release.j" platformBuildVersionCode="36" platformBuildVersionName="16">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="*"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:mimeType="*/*" android:scheme="*"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+        <package android:name="com.google.android.gms.policy_cast_dynamite"/>
+    </queries>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.FLASHLIGHT"/>
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION"/>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID"/>
+    <uses-permission android:name="com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE"/>
+    <permission android:name="com.legado.app.release.j.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSIONwx" android:protectionLevel="signature"/>
+    <uses-permission android:name="com.legado.app.release.j.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSIONwx"/>
+    <application android:allowBackup="true" android:appComponentFactory="androidx.core.app.CoreComponentFactory" android:extractNativeLibs="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:name="io.legado.app.App" android:networkSecurityConfig="@xml/network_security_config" android:requestLegacyExternalStorage="true" android:supportsRtl="true" android:theme="@style/AppTheme.Light">
+        <activity android:exported="true" android:name="io.legado.app.ui.welcome.WelcomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:enabled="false" android:exported="true" android:icon="@mipmap/launcher1" android:name="io.legado.app.ui.welcome.Launcher1">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:enabled="false" android:exported="true" android:icon="@mipmap/launcher2" android:name="io.legado.app.ui.welcome.Launcher2">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:enabled="false" android:exported="true" android:icon="@mipmap/launcher3" android:name="io.legado.app.ui.welcome.Launcher3">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:enabled="false" android:exported="true" android:icon="@mipmap/launcher4" android:name="io.legado.app.ui.welcome.Launcher4">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:enabled="false" android:exported="true" android:icon="@mipmap/launcher5" android:name="io.legado.app.ui.welcome.Launcher5">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:enabled="false" android:exported="true" android:icon="@mipmap/launcher6" android:name="io.legado.app.ui.welcome.Launcher6">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:alwaysRetainTaskState="true" android:configChanges="locale|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" android:exported="true" android:launchMode="singleTask" android:name="io.legado.app.ui.main.MainActivity"/>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:exported="true" android:launchMode="singleTask" android:name="io.legado.app.ui.book.read.ReadBookActivity">
+            <intent-filter>
+                <action android:name="com.samsung.android.support.REMOTE_ACTION"/>
+            </intent-filter>
+            <meta-data android:name="com.samsung.android.support.REMOTE_ACTION" android:resource="@xml/spen_remote_actions"/>
+        </activity>
+        <activity android:exported="false" android:launchMode="singleTask" android:name="io.legado.app.ui.book.manga.ReadMangaActivity">
+            <intent-filter>
+                <action android:name="com.samsung.android.support.REMOTE_ACTION"/>
+            </intent-filter>
+            <meta-data android:name="com.samsung.android.support.REMOTE_ACTION" android:resource="@xml/spen_remote_actions"/>
+        </activity>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.info.BookInfoActivity"/>
+        <activity android:launchMode="singleTask" android:name="io.legado.app.ui.book.info.edit.BookInfoEditActivity"/>
+        <activity android:launchMode="singleTask" android:name="io.legado.app.ui.book.audio.AudioPlayActivity"/>
+        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" android:launchMode="singleTask" android:name="io.legado.app.ui.video.VideoPlayerActivity"/>
+        <activity android:name="io.legado.app.lib.permission.PermissionActivity" android:theme="@style/Activity.Permission"/>
+        <activity android:launchMode="singleTask" android:name="io.legado.app.ui.qrcode.QrCodeActivity"/>
+        <activity android:launchMode="singleTask" android:name="io.legado.app.ui.rss.subscription.RuleSubActivity"/>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:launchMode="singleTask" android:name="io.legado.app.ui.book.source.edit.BookSourceEditActivity" android:windowSoftInputMode="stateHidden|adjustResize"/>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:launchMode="singleTask" android:name="io.legado.app.ui.rss.source.edit.RssSourceEditActivity" android:windowSoftInputMode="stateHidden|adjustResize"/>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:launchMode="singleTask" android:name="io.legado.app.ui.replace.edit.ReplaceEditActivity" android:windowSoftInputMode="stateHidden|adjustResize"/>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:launchMode="singleTask" android:name="io.legado.app.ui.code.CodeEditActivity" android:windowSoftInputMode="stateHidden|adjustResize"/>
+        <activity android:launchMode="standard" android:name="io.legado.app.ui.config.ConfigActivity"/>
+        <activity android:launchMode="standard" android:name="io.legado.app.ui.book.search.SearchActivity"/>
+        <activity android:launchMode="singleTask" android:name="io.legado.app.ui.about.AboutActivity" android:screenOrientation="behind"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.source.manage.BookSourceActivity" android:screenOrientation="behind"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.rss.source.manage.RssSourceActivity" android:screenOrientation="behind"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.toc.rule.TxtTocRuleActivity" android:screenOrientation="behind"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.replace.ReplaceRuleActivity" android:screenOrientation="behind"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.tts.script.TtsScriptActivity" android:screenOrientation="behind"/>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:launchMode="singleTask" android:name="io.legado.app.ui.tts.script.TtsScriptEditActivity" android:windowSoftInputMode="stateHidden|adjustResize"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.manage.BookshelfManageActivity" android:screenOrientation="behind"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.source.debug.BookSourceDebugActivity" android:screenOrientation="behind"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.toc.TocActivity" android:screenOrientation="behind"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.searchContent.SearchContentActivity" android:screenOrientation="behind"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.rss.article.RssSortActivity"/>
+        <activity android:configChanges="orientation|screenSize" android:hardwareAccelerated="true" android:launchMode="singleTop" android:name="io.legado.app.ui.rss.read.ReadRssActivity"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.import.local.ImportBookActivity"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.import.remote.RemoteBookActivity"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.explore.ExploreShowActivity"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.rss.source.debug.RssSourceDebugActivity"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.rss.favorites.RssFavoritesActivity"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.bookmark.AllBookmarkActivity"/>
+        <activity android:launchMode="singleTop" android:name="io.legado.app.ui.book.cache.CacheActivity"/>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:launchMode="standard" android:name="io.legado.app.ui.browser.WebViewActivity"/>
+        <activity android:configChanges="orientation|screenSize" android:hardwareAccelerated="true" android:name="io.legado.app.ui.login.SourceLoginActivity" android:theme="@style/AppTheme.Transparent"/>
+        <activity android:configChanges="orientation|screenSize" android:hardwareAccelerated="true" android:name="io.legado.app.ui.about.ReadRecordActivity"/>
+        <activity android:configChanges="orientation|screenSize" android:hardwareAccelerated="true" android:name="io.legado.app.ui.dict.rule.DictRuleActivity"/>
+        <activity android:configChanges="orientation|screenSize" android:hardwareAccelerated="true" android:name="io.legado.app.ui.file.FileManageActivity"/>
+        <activity android:configChanges="orientation|screenSize" android:hardwareAccelerated="true" android:name="io.legado.app.ui.file.HandleFileActivity" android:theme="@style/AppTheme.Transparent"/>
+        <activity android:exported="true" android:label="@string/receiving_shared_label" android:name="io.legado.app.receiver.SharedReceiverActivity" android:theme="@style/AppTheme.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+        </activity>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:exported="true" android:name="io.legado.app.ui.association.OnLineImportActivity" android:theme="@style/AppTheme.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="legado"/>
+                <data android:scheme="yuedu"/>
+            </intent-filter>
+        </activity>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:name="io.legado.app.ui.association.VerificationCodeActivity" android:theme="@style/AppTheme.Transparent"/>
+        <activity android:configChanges="locale|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:name="io.legado.app.ui.association.OpenUrlConfirmActivity" android:theme="@style/AppTheme.Transparent"/>
+        <activity android:exported="true" android:launchMode="singleTop" android:name="io.legado.app.ui.association.FileAssociationActivity" android:theme="@style/AppTheme.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="app"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="text/plain"/>
+                <data android:mimeType="application/json"/>
+                <data android:mimeType="application/epub+zip"/>
+                <data android:mimeType="application/pdf"/>
+                <data android:mimeType="application/mobi"/>
+                <data android:mimeType="application/x-mobipocket-ebook"/>
+                <data android:mimeType="application/azw"/>
+                <data android:mimeType="application/azw3"/>
+                <data android:mimeType="application/x-mobi8-ebook"/>
+                <data android:mimeType="application/octet-stream"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:host="*"/>
+                <data android:scheme="app"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="*/*"/>
+                <data android:pathAdvancedPattern=".*\\.[tT][xX][tT]"/>
+                <data android:pathPattern=".*\\.txt"/>
+                <data android:pathPattern=".*\\.TXT"/>
+                <data android:pathAdvancedPattern=".*\\.[jJ][sS][oO][nN]"/>
+                <data android:pathPattern=".*\\.json"/>
+                <data android:pathPattern=".*\\.JSON"/>
+                <data android:pathAdvancedPattern=".*\\.[eE][pP][uU][bB]"/>
+                <data android:pathPattern=".*\\.epub"/>
+                <data android:pathPattern=".*\\.EPUB"/>
+                <data android:pathAdvancedPattern=".*\\.[pP][dD][fF]"/>
+                <data android:pathPattern=".*\\.pdf"/>
+                <data android:pathPattern=".*\\.PDF"/>
+                <data android:pathAdvancedPattern=".*\\.[mM][oO][bB][iI]"/>
+                <data android:pathPattern=".*\\.mobi"/>
+                <data android:pathPattern=".*\\.MOBI"/>
+                <data android:pathAdvancedPattern=".*\\.[aA][zZ][wW]"/>
+                <data android:pathPattern=".*\\.azw"/>
+                <data android:pathPattern=".*\\.AZW"/>
+                <data android:pathAdvancedPattern=".*\\.[aA][zZ][wW]3"/>
+                <data android:pathPattern=".*\\.azw3"/>
+                <data android:pathPattern=".*\\.AZW3"/>
+                <data android:pathAdvancedPattern=".*\\.[zZ][iI][pP]"/>
+                <data android:pathPattern=".*\\.zip"/>
+                <data android:pathPattern=".*\\.ZIP"/>
+                <data android:pathAdvancedPattern=".*\\.[rR][aA][rR]"/>
+                <data android:pathPattern=".*\\.rar"/>
+                <data android:pathPattern=".*\\.RAR"/>
+                <data android:pathAdvancedPattern=".*\\.7[zZ]"/>
+                <data android:pathPattern=".*\\.7z"/>
+                <data android:pathPattern=".*\\.7Z"/>
+            </intent-filter>
+        </activity>
+        <service android:foregroundServiceType="dataSync" android:name="io.legado.app.service.CheckSourceService"/>
+        <service android:foregroundServiceType="dataSync" android:name="io.legado.app.service.CacheBookService"/>
+        <service android:foregroundServiceType="dataSync" android:name="io.legado.app.service.ExportBookService"/>
+        <service android:foregroundServiceType="dataSync" android:name="io.legado.app.service.WebService"/>
+        <service android:exported="true" android:foregroundServiceType="dataSync" android:icon="@drawable/ic_web_service_noti" android:label="legado Web Service" android:name="io.legado.app.service.WebTileService" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
+        <service android:foregroundServiceType="mediaPlayback" android:name="io.legado.app.service.TTSReadAloudService"/>
+        <service android:foregroundServiceType="mediaPlayback" android:name="io.legado.app.service.HttpReadAloudService"/>
+        <service android:foregroundServiceType="mediaPlayback" android:name="io.legado.app.service.AudioPlayService"/>
+        <service android:foregroundServiceType="mediaPlayback" android:name="io.legado.app.service.VideoPlayService"/>
+        <service android:foregroundServiceType="mediaPlayback" android:name="io.legado.app.service.ReadAloudFloatService"/>
+        <service android:foregroundServiceType="dataSync" android:name="io.legado.app.service.DownloadService"/>
+        <receiver android:exported="true" android:name="io.legado.app.receiver.MediaButtonReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON"/>
+            </intent-filter>
+        </receiver>
+        <provider android:authorities="com.legado.app.release.j.readerProvider" android:enabled="true" android:exported="true" android:name="io.legado.app.api.ReaderProvider"/>
+        <provider android:authorities="com.legado.app.release.j.fileProvider" android:exported="false" android:grantUriPermissions="true" android:name="androidx.core.content.FileProvider">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/>
+        </provider>
+        <meta-data android:name="channel" android:value="app"/>
+        <service android:directBootAware="true" android:exported="false" android:name="androidx.room.MultiInstanceInvalidationService"/>
+        <receiver android:exported="false" android:name="com.google.android.gms.cast.framework.media.MediaIntentReceiver"/>
+        <service android:exported="false" android:name="com.google.android.gms.cast.framework.ReconnectionService"/>
+        <service android:directBootAware="true" android:exported="false" android:name="com.google.firebase.components.ComponentDiscoveryService">
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.perf.FirebasePerfKtxRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.perf.FirebasePerfRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.remoteconfig.FirebaseRemoteConfigKtxRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.remoteconfig.RemoteConfigRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.sessions.FirebaseSessionsRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.analytics.connector.internal.AnalyticsConnectorRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsKtxRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.ktx.FirebaseCommonLegacyRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.FirebaseCommonKtxRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.abt.component.AbtRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.datatransport.TransportRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+        </service>
+        <service android:enabled="false" android:exported="false" android:name="androidx.camera.core.impl.MetadataHolderService">
+            <meta-data android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER" android:value="androidx.camera.camera2.Camera2Config$DefaultProvider"/>
+        </service>
+        <meta-data android:name="com.bumptech.glide.integration.okhttp3.OkHttpGlideModule" android:value="GlideModule"/>
+        <activity android:exported="false" android:name="com.google.android.gms.common.api.GoogleApiActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+        <service android:enabled="true" android:exported="false" android:name="com.google.firebase.sessions.SessionLifecycleService"/>
+        <property android:name="android.adservices.AD_SERVICES_CONFIG" android:resource="@xml/ga_ad_services_config"/>
+        <provider android:authorities="com.legado.app.release.j.firebaseinitprovider" android:directBootAware="true" android:exported="false" android:initOrder="100" android:name="com.google.firebase.provider.FirebaseInitProvider"/>
+        <receiver android:enabled="true" android:exported="false" android:name="com.google.android.gms.measurement.AppMeasurementReceiver"/>
+        <service android:enabled="true" android:exported="false" android:name="com.google.android.gms.measurement.AppMeasurementService"/>
+        <service android:enabled="true" android:exported="false" android:name="com.google.android.gms.measurement.AppMeasurementJobService" android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version"/>
+        <provider android:authorities="com.legado.app.release.j.androidx-startup" android:directBootAware="true" android:exported="false" android:name="androidx.startup.InitializationProvider">
+            <meta-data android:name="androidx.emoji2.text.EmojiCompatInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="androidx.lifecycle.ProcessLifecycleInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="com.king.logx.initialize.LogXInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="okhttp3.internal.platform.PlatformInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="splitties.init.AppCtxInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="androidx.profileinstaller.ProfileInstallerInitializer" android:value="androidx.startup"/>
+        </provider>
+        <uses-library android:name="android.ext.adservices" android:required="false"/>
+        <uses-library android:name="androidx.window.extensions" android:required="false"/>
+        <uses-library android:name="androidx.window.sidecar" android:required="false"/>
+        <service android:exported="false" android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery">
+            <meta-data android:name="backend:com.google.android.datatransport.cct.CctBackendFactory" android:value="cct"/>
+        </service>
+        <receiver android:directBootAware="false" android:enabled="true" android:exported="true" android:name="androidx.profileinstaller.ProfileInstallReceiver" android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.SKIP_FILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION"/>
+            </intent-filter>
+        </receiver>
+        <service android:exported="false" android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService" android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <receiver android:exported="false" android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"/>
+    </application>
+</manifest>

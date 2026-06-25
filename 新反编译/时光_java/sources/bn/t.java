@@ -1,0 +1,12 @@
+package bn;
+
+import com.jayway.jsonpath.Predicate;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes3.dex */
+public final class t implements a {
+    @Override // bn.a
+    public final boolean a(d0 d0Var, d0 d0Var2, Predicate.PredicateContext predicateContext) {
+        return d0Var2.b().f3127i == d0Var.p(predicateContext);
+    }
+}

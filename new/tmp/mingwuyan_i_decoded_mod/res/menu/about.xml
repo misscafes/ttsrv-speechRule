@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:icon="@drawable/ic_share" android:id="@id/menu_share_it" android:title="@string/share" app:showAsAction="always" />
+    <item android:icon="@drawable/ic_scoring" android:id="@id/menu_scoring" android:title="@string/scoring" app:showAsAction="always" />
+</menu>

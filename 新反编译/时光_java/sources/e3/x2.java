@@ -1,0 +1,10 @@
+package e3;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes.dex */
+public final class x2 extends v1 {
+    @Override // e3.v1
+    public final w1 a(Object obj) {
+        return new w1(this, obj, obj == null, null, false);
+    }
+}

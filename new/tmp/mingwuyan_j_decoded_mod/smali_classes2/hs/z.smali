@@ -1,0 +1,23 @@
+.class public interface abstract Lhs/z;
+.super Ljava/lang/Object;
+.source "r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892"
+
+
+# virtual methods
+.method public abstract a()J
+.end method
+
+.method public abstract c()Z
+.end method
+
+.method public abstract getContext()Landroid/content/Context;
+.end method
+
+.method public abstract getViewHeight()I
+.end method
+
+.method public abstract getViewWidth()I
+.end method
+
+.method public abstract isHardwareAccelerated()Z
+.end method

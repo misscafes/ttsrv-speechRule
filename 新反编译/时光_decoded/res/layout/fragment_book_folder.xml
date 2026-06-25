@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <TextView android:textSize="14.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/welcome_book_folder_tip" />
+    <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp" app:cardBackgroundColor="?colorSurfaceContainerLow" app:cardCornerRadius="16.0dp" app:cardElevation="0.0dp" app:strokeColor="?colorOutlineVariant" app:strokeWidth="1.0dp">
+        <LinearLayout android:orientation="vertical" android:padding="14.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textStyle="bold" android:textColor="?colorOnSurface" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/select_book_folder" />
+            <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:id="@id/tvFolderPath" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:maxLines="3" />
+            <com.google.android.material.button.MaterialButton android:id="@id/btnSelectFolder" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12.0dp" android:text="@string/select_folder" style="@style/Widget.Material3Expressive.Button.OutlinedButton" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</LinearLayout>

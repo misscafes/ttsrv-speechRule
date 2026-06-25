@@ -1,0 +1,20 @@
+package q7;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes3.dex */
+public final class y {
+    public static x a(Object obj, Object obj2) {
+        x xVarB = (x) obj;
+        x xVar = (x) obj2;
+        if (!xVar.isEmpty()) {
+            if (!xVarB.f25073i) {
+                xVarB = xVarB.b();
+            }
+            xVarB.a();
+            if (!xVar.isEmpty()) {
+                xVarB.putAll(xVar);
+            }
+        }
+        return xVarB;
+    }
+}

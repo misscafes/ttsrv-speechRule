@@ -1,0 +1,21 @@
+package mc;
+
+import java.lang.reflect.Field;
+import java.security.PrivilegedExceptionAction;
+import sun.misc.Unsafe;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes.dex */
+public final class h6 implements PrivilegedExceptionAction {
+    @Override // java.security.PrivilegedExceptionAction
+    public final /* bridge */ /* synthetic */ Object run() throws IllegalAccessException {
+        for (Field field : Unsafe.class.getDeclaredFields()) {
+            field.setAccessible(true);
+            Object obj = field.get(null);
+            if (Unsafe.class.isInstance(obj)) {
+                return (Unsafe) Unsafe.class.cast(obj);
+            }
+        }
+        return null;
+    }
+}

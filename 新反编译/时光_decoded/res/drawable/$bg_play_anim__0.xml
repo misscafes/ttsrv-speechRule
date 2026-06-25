@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:name="vector" android:height="94.0dp" android:width="94.0dp" android:viewportWidth="94.0" android:viewportHeight="94.0"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt">
+    <group android:name="group" android:pivotX="47.0" android:pivotY="47.0">
+        <path android:name="flower" android:fillColor="#000000" android:pathData="M 47 0.849 C 34.765 0.849 23.018 5.715 14.367 14.367 C 5.715 23.018 0.849 34.765 0.849 47 C 0.849 59.235 5.715 70.982 14.367 79.633 C 23.018 88.285 34.765 93.151 47 93.151 C 59.235 93.151 70.982 88.285 79.633 79.633 C 88.285 70.982 93.151 59.235 93.151 47 C 93.151 34.765 88.285 23.018 79.633 14.367 C 70.982 5.715 59.235 0.849 47 0.849 Z" />
+    </group>
+</vector>

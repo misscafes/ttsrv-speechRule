@@ -1,0 +1,364 @@
+package rm;
+
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import com.legado.app.release.i.R;
+import io.legado.app.ui.widget.recycler.scroller.FastScrollRecyclerView;
+import java.util.Iterator;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes2.dex */
+public final class r1 extends xk.b {
+
+    /* JADX INFO: renamed from: x1, reason: collision with root package name */
+    public static final /* synthetic */ sr.c[] f22391x1;
+
+    /* JADX INFO: renamed from: u1, reason: collision with root package name */
+    public final aq.a f22392u1;
+    public final ak.d v1;
+
+    /* JADX INFO: renamed from: w1, reason: collision with root package name */
+    public final vq.i f22393w1;
+
+    static {
+        mr.l lVar = new mr.l(r1.class, "binding", "getBinding()Lio/legado/app/databinding/DialogRecyclerViewBinding;");
+        mr.t.f17101a.getClass();
+        f22391x1 = new sr.c[]{lVar};
+    }
+
+    public r1() {
+        super(R.layout.dialog_recycler_view, false);
+        this.f22392u1 = hi.b.O(this, new qm.d(10));
+        vq.c cVarX = i9.e.x(vq.d.f26315v, new h0(new h0(this, 7), 8));
+        this.v1 = new ak.d(mr.t.a(w1.class), new q0(cVarX, 6), new cn.y(this, 19, cVarX), new q0(cVarX, 7));
+        this.f22393w1 = i9.e.y(new r(this, 5));
+    }
+
+    @Override // xk.b, x2.p, x2.y
+    public final void R() {
+        super.R();
+        vp.j1.J0(this, -2);
+    }
+
+    @Override // xk.b, x2.p, android.content.DialogInterface.OnDismissListener
+    public final void onDismiss(DialogInterface dialogInterface) {
+        x2.d0 d0VarL;
+        mr.i.e(dialogInterface, "dialog");
+        super.onDismiss(dialogInterface);
+        Bundle bundle = this.f27555i0;
+        if (bundle == null || !bundle.getBoolean("finishOnDismiss") || (d0VarL = l()) == null) {
+            return;
+        }
+        d0VarL.finish();
+    }
+
+    @Override // xk.b
+    public final void p0(View view) {
+        mr.i.e(view, "view");
+        q0().f7036d.setBackgroundColor(hi.b.t(this));
+        q0().f7036d.setTitle(R.string.import_theme);
+        q0().f7035c.e();
+        FastScrollRecyclerView fastScrollRecyclerView = q0().f7034b;
+        Y();
+        fastScrollRecyclerView.setLayoutManager(new LinearLayoutManager(1));
+        q0().f7034b.setAdapter((q1) this.f22393w1.getValue());
+        vp.m1.v(q0().f7037e);
+        final int i10 = 0;
+        q0().f7037e.setOnClickListener(new View.OnClickListener(this) { // from class: rm.o1
+
+            /* JADX INFO: renamed from: v, reason: collision with root package name */
+            public final /* synthetic */ r1 f22370v;
+
+            {
+                this.f22370v = this;
+            }
+
+            @Override // android.view.View.OnClickListener
+            public final void onClick(View view2) {
+                int i11;
+                boolean z4;
+                int i12 = i10;
+                ar.d dVar = null;
+                r1 r1Var = this.f22370v;
+                switch (i12) {
+                    case 0:
+                        sr.c[] cVarArr = r1.f22391x1;
+                        r1Var.i0();
+                        return;
+                    case 1:
+                        sr.c[] cVarArr2 = r1.f22391x1;
+                        lp.b0 b0Var = new lp.b0(r1Var.Y());
+                        b0Var.show();
+                        w1 w1VarR0 = r1Var.r0();
+                        xk.f.f(w1VarR0, null, null, new t1(w1VarR0, null), 31).f13164g = new jl.a(new po.j(new bn.d(b0Var, 19, r1Var), dVar, 10));
+                        return;
+                    default:
+                        sr.c[] cVarArr3 = r1.f22391x1;
+                        Iterator it = r1Var.r0().f22428j0.iterator();
+                        while (true) {
+                            i11 = 0;
+                            if (!it.hasNext()) {
+                                z4 = true;
+                            } else if (!((Boolean) it.next()).booleanValue()) {
+                                z4 = false;
+                            }
+                        }
+                        for (Object obj : r1Var.r0().f22428j0) {
+                            int i13 = i11 + 1;
+                            if (i11 < 0) {
+                                wq.l.V();
+                                throw null;
+                            }
+                            boolean z10 = !z4;
+                            if (((Boolean) obj).booleanValue() != z10) {
+                                r1Var.r0().f22428j0.set(i11, Boolean.valueOf(z10));
+                            }
+                            i11 = i13;
+                        }
+                        ((q1) r1Var.f22393w1.getValue()).f();
+                        r1Var.s0();
+                        return;
+                }
+            }
+        });
+        vp.m1.v(q0().f7040h);
+        final int i11 = 1;
+        q0().f7040h.setOnClickListener(new View.OnClickListener(this) { // from class: rm.o1
+
+            /* JADX INFO: renamed from: v, reason: collision with root package name */
+            public final /* synthetic */ r1 f22370v;
+
+            {
+                this.f22370v = this;
+            }
+
+            @Override // android.view.View.OnClickListener
+            public final void onClick(View view2) {
+                int i112;
+                boolean z4;
+                int i12 = i11;
+                ar.d dVar = null;
+                r1 r1Var = this.f22370v;
+                switch (i12) {
+                    case 0:
+                        sr.c[] cVarArr = r1.f22391x1;
+                        r1Var.i0();
+                        return;
+                    case 1:
+                        sr.c[] cVarArr2 = r1.f22391x1;
+                        lp.b0 b0Var = new lp.b0(r1Var.Y());
+                        b0Var.show();
+                        w1 w1VarR0 = r1Var.r0();
+                        xk.f.f(w1VarR0, null, null, new t1(w1VarR0, null), 31).f13164g = new jl.a(new po.j(new bn.d(b0Var, 19, r1Var), dVar, 10));
+                        return;
+                    default:
+                        sr.c[] cVarArr3 = r1.f22391x1;
+                        Iterator it = r1Var.r0().f22428j0.iterator();
+                        while (true) {
+                            i112 = 0;
+                            if (!it.hasNext()) {
+                                z4 = true;
+                            } else if (!((Boolean) it.next()).booleanValue()) {
+                                z4 = false;
+                            }
+                        }
+                        for (Object obj : r1Var.r0().f22428j0) {
+                            int i13 = i112 + 1;
+                            if (i112 < 0) {
+                                wq.l.V();
+                                throw null;
+                            }
+                            boolean z10 = !z4;
+                            if (((Boolean) obj).booleanValue() != z10) {
+                                r1Var.r0().f22428j0.set(i112, Boolean.valueOf(z10));
+                            }
+                            i112 = i13;
+                        }
+                        ((q1) r1Var.f22393w1.getValue()).f();
+                        r1Var.s0();
+                        return;
+                }
+            }
+        });
+        vp.m1.v(q0().f7038f);
+        final int i12 = 2;
+        q0().f7038f.setOnClickListener(new View.OnClickListener(this) { // from class: rm.o1
+
+            /* JADX INFO: renamed from: v, reason: collision with root package name */
+            public final /* synthetic */ r1 f22370v;
+
+            {
+                this.f22370v = this;
+            }
+
+            @Override // android.view.View.OnClickListener
+            public final void onClick(View view2) {
+                int i112;
+                boolean z4;
+                int i122 = i12;
+                ar.d dVar = null;
+                r1 r1Var = this.f22370v;
+                switch (i122) {
+                    case 0:
+                        sr.c[] cVarArr = r1.f22391x1;
+                        r1Var.i0();
+                        return;
+                    case 1:
+                        sr.c[] cVarArr2 = r1.f22391x1;
+                        lp.b0 b0Var = new lp.b0(r1Var.Y());
+                        b0Var.show();
+                        w1 w1VarR0 = r1Var.r0();
+                        xk.f.f(w1VarR0, null, null, new t1(w1VarR0, null), 31).f13164g = new jl.a(new po.j(new bn.d(b0Var, 19, r1Var), dVar, 10));
+                        return;
+                    default:
+                        sr.c[] cVarArr3 = r1.f22391x1;
+                        Iterator it = r1Var.r0().f22428j0.iterator();
+                        while (true) {
+                            i112 = 0;
+                            if (!it.hasNext()) {
+                                z4 = true;
+                            } else if (!((Boolean) it.next()).booleanValue()) {
+                                z4 = false;
+                            }
+                        }
+                        for (Object obj : r1Var.r0().f22428j0) {
+                            int i13 = i112 + 1;
+                            if (i112 < 0) {
+                                wq.l.V();
+                                throw null;
+                            }
+                            boolean z10 = !z4;
+                            if (((Boolean) obj).booleanValue() != z10) {
+                                r1Var.r0().f22428j0.set(i112, Boolean.valueOf(z10));
+                            }
+                            i112 = i13;
+                        }
+                        ((q1) r1Var.f22393w1.getValue()).f();
+                        r1Var.s0();
+                        return;
+                }
+            }
+        });
+        final int i13 = 0;
+        r0().X.g(this, new dn.k(10, new lr.l(this) { // from class: rm.p1
+
+            /* JADX INFO: renamed from: v, reason: collision with root package name */
+            public final /* synthetic */ r1 f22376v;
+
+            {
+                this.f22376v = this;
+            }
+
+            @Override // lr.l
+            public final Object invoke(Object obj) {
+                int i14 = i13;
+                vq.q qVar = vq.q.f26327a;
+                r1 r1Var = this.f22376v;
+                switch (i14) {
+                    case 0:
+                        sr.c[] cVarArr = r1.f22391x1;
+                        r1Var.q0().f7035c.a();
+                        TextView textView = r1Var.q0().f7039g;
+                        textView.setText((String) obj);
+                        vp.m1.v(textView);
+                        break;
+                    default:
+                        sr.c[] cVarArr2 = r1.f22391x1;
+                        r1Var.q0().f7035c.a();
+                        if (((Integer) obj).intValue() <= 0) {
+                            TextView textView2 = r1Var.q0().f7039g;
+                            textView2.setText(R.string.wrong_format);
+                            vp.m1.v(textView2);
+                        } else {
+                            ((q1) r1Var.f22393w1.getValue()).E(r1Var.r0().Z);
+                            r1Var.s0();
+                        }
+                        break;
+                }
+                return qVar;
+            }
+        }));
+        final int i14 = 1;
+        r0().Y.g(this, new dn.k(10, new lr.l(this) { // from class: rm.p1
+
+            /* JADX INFO: renamed from: v, reason: collision with root package name */
+            public final /* synthetic */ r1 f22376v;
+
+            {
+                this.f22376v = this;
+            }
+
+            @Override // lr.l
+            public final Object invoke(Object obj) {
+                int i142 = i14;
+                vq.q qVar = vq.q.f26327a;
+                r1 r1Var = this.f22376v;
+                switch (i142) {
+                    case 0:
+                        sr.c[] cVarArr = r1.f22391x1;
+                        r1Var.q0().f7035c.a();
+                        TextView textView = r1Var.q0().f7039g;
+                        textView.setText((String) obj);
+                        vp.m1.v(textView);
+                        break;
+                    default:
+                        sr.c[] cVarArr2 = r1.f22391x1;
+                        r1Var.q0().f7035c.a();
+                        if (((Integer) obj).intValue() <= 0) {
+                            TextView textView2 = r1Var.q0().f7039g;
+                            textView2.setText(R.string.wrong_format);
+                            vp.m1.v(textView2);
+                        } else {
+                            ((q1) r1Var.f22393w1.getValue()).E(r1Var.r0().Z);
+                            r1Var.s0();
+                        }
+                        break;
+                }
+                return qVar;
+            }
+        }));
+        Bundle bundle = this.f27555i0;
+        ar.d dVar = null;
+        String string = bundle != null ? bundle.getString("source") : null;
+        if (string == null || string.length() == 0) {
+            j0(false, false);
+            return;
+        }
+        w1 w1VarR0 = r0();
+        jl.d dVarF = xk.f.f(w1VarR0, null, null, new qm.t(w1VarR0, string, dVar, 8), 31);
+        dVarF.f13163f = new bl.v0((ar.i) null, new ko.r(w1VarR0, dVar, 27));
+        dVarF.f13162e = new bl.v0((ar.i) null, new ao.m(w1VarR0, dVar, 26));
+    }
+
+    public final el.g2 q0() {
+        return (el.g2) this.f22392u1.a(this, f22391x1[0]);
+    }
+
+    public final w1 r0() {
+        return (w1) this.v1.getValue();
+    }
+
+    public final void s0() {
+        Iterator it = r0().f22428j0.iterator();
+        while (it.hasNext()) {
+            if (!((Boolean) it.next()).booleanValue()) {
+                q0().f7038f.setText(t(R.string.select_all_count, Integer.valueOf(r0().i()), Integer.valueOf(r0().Z.size())));
+                return;
+            }
+        }
+        q0().f7038f.setText(t(R.string.select_cancel_count, Integer.valueOf(r0().i()), Integer.valueOf(r0().Z.size())));
+    }
+
+    /* JADX WARN: 'this' call moved to the top of the method (can break code semantics) */
+    public r1(String str) {
+        this();
+        mr.i.e(str, "source");
+        Bundle bundle = new Bundle();
+        bundle.putString("source", str);
+        bundle.putBoolean("finishOnDismiss", true);
+        c0(bundle);
+    }
+}

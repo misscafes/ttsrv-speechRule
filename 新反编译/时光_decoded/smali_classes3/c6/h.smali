@@ -1,0 +1,20 @@
+.class public interface abstract Lc6/h;
+.super Ljava/lang/Object;
+.source "r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949"
+
+
+# virtual methods
+.method public abstract a(Lf6/d;)V
+.end method
+
+.method public abstract apply()V
+.end method
+
+.method public abstract b()Lf6/d;
+.end method
+
+.method public abstract c()Ld6/d;
+.end method
+
+.method public abstract getKey()Ljava/lang/Object;
+.end method

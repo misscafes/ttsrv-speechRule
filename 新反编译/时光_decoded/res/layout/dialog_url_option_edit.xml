@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:id="@id/vw_bg" android:background="@drawable/shape_card_view" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:paddingBottom="10.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textSize="18.0sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/url_option" />
+            <Space android:layout_width="0.0dp" android:layout_height="1.0dp" android:layout_weight="1.0" />
+            <TextView android:id="@id/tv_ok" android:background="?selectableItemBackgroundBorderless" android:padding="12.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ok" />
+        </LinearLayout>
+        <androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:overScrollMode="ifContentScrolls">
+            <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <io.legado.app.lib.theme.view.ThemeCheckBox android:id="@id/cb_use_web_view" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="useWebView" />
+                <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/layout_method" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_method" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="method" />
+                </io.legado.app.ui.widget.text.TextInputLayout>
+                <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/layout_charset" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_charset" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="charset" />
+                </io.legado.app.ui.widget.text.TextInputLayout>
+                <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/layout_headers" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_headers" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="headers" />
+                </io.legado.app.ui.widget.text.TextInputLayout>
+                <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/layout_body" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_body" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="body" />
+                </io.legado.app.ui.widget.text.TextInputLayout>
+                <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/layout_type" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_type" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="type" />
+                </io.legado.app.ui.widget.text.TextInputLayout>
+                <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/layout_retry" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_retry" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="retry" android:inputType="number" />
+                </io.legado.app.ui.widget.text.TextInputLayout>
+                <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/layout_web_js" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_web_js" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="webJs" />
+                </io.legado.app.ui.widget.text.TextInputLayout>
+                <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/layout_js" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_js" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="js" />
+                </io.legado.app.ui.widget.text.TextInputLayout>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+</FrameLayout>

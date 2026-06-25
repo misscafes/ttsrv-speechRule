@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/content_view" android:background="@color/background" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="18.0sp" android:textStyle="bold" android:id="@id/tv_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="5.0dp" android:text="@string/custom_page_key" />
+    <io.legado.app.ui.widget.text.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="5.0dp" android:hint="@string/prev_page_key">
+        <io.legado.app.lib.theme.view.ThemeEditText android:id="@id/et_prev" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" />
+    </io.legado.app.ui.widget.text.TextInputLayout>
+    <io.legado.app.ui.widget.text.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="5.0dp" android:hint="@string/next_page_key">
+        <io.legado.app.lib.theme.view.ThemeEditText android:id="@id/et_next" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" />
+    </io.legado.app.ui.widget.text.TextInputLayout>
+    <TextView android:textColor="@color/secondaryText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="5.0dp" android:text="@string/page_key_set_help" />
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="5.0dp">
+        <TextView android:textColor="@color/primaryText" android:gravity="center" android:id="@id/tv_reset" android:background="@drawable/selector_fillet_btn_bg" android:paddingTop="5.0dp" android:paddingBottom="5.0dp" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/reset" android:layout_weight="1.0" />
+        <Space android:layout_width="3.0dp" android:layout_height="wrap_content" />
+        <TextView android:textColor="@color/primaryText" android:gravity="center" android:id="@id/tv_ok" android:background="@drawable/selector_fillet_btn_bg" android:paddingTop="5.0dp" android:paddingBottom="5.0dp" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/ok" android:layout_weight="1.0" />
+    </LinearLayout>
+</LinearLayout>

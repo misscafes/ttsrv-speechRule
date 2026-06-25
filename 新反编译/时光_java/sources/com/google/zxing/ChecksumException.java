@@ -1,0 +1,20 @@
+package com.google.zxing;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes3.dex */
+public final class ChecksumException extends ReaderException {
+    private static final ChecksumException Y;
+
+    static {
+        ChecksumException checksumException = new ChecksumException();
+        Y = checksumException;
+        checksumException.setStackTrace(ReaderException.X);
+    }
+
+    private ChecksumException() {
+    }
+
+    public static ChecksumException a() {
+        return ReaderException.f4876i ? new ChecksumException() : Y;
+    }
+}

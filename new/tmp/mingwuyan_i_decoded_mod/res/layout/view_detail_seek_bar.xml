@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textColor="@color/primaryText" android:id="@id/tv_seek_title" android:layout_width="60.0dp" android:layout_height="wrap_content" android:text="seek" android:singleLine="true" />
+    <androidx.appcompat.widget.AppCompatImageView android:id="@id/iv_seek_reduce" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_reduce" android:tint="@color/primaryText" android:contentDescription="@string/reduce" />
+    <io.legado.app.lib.theme.view.ThemeSeekBar android:layout_gravity="center_vertical" android:id="@id/seek_bar" android:layout_width="0.0dp" android:layout_height="25.0dp" android:max="10" android:layout_weight="4.0" />
+    <androidx.appcompat.widget.AppCompatImageView android:id="@id/iv_seek_plus" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="24.0dp" android:layout_height="24.0dp" android:src="@drawable/ic_add" android:tint="@color/primaryText" android:contentDescription="@string/plus" />
+    <TextView android:textColor="@color/primaryText" android:gravity="right" android:id="@id/tv_seek_value" android:layout_width="60.0dp" android:layout_height="wrap_content" android:text="0" android:singleLine="true" />
+</LinearLayout>

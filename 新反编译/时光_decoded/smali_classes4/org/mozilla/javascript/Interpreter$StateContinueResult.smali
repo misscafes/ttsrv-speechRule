@@ -1,0 +1,76 @@
+.class Lorg/mozilla/javascript/Interpreter$StateContinueResult;
+.super Lorg/mozilla/javascript/Interpreter$InterpreterResult;
+.source "r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949"
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingClass;
+    value = Lorg/mozilla/javascript/Interpreter;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x9
+    name = "StateContinueResult"
+.end annotation
+
+
+# instance fields
+.field private final frame:Lorg/mozilla/javascript/Interpreter$CallFrame;
+
+.field private final indexReg:I
+
+
+# direct methods
+.method private constructor <init>(Lorg/mozilla/javascript/Interpreter$CallFrame;I)V
+    .locals 1
+
+    .line 1
+    const/4 v0, 0x0
+
+    .line 2
+    invoke-direct {p0, v0}, Lorg/mozilla/javascript/Interpreter$InterpreterResult;-><init>(I)V
+
+    .line 3
+    .line 4
+    .line 5
+    iput-object p1, p0, Lorg/mozilla/javascript/Interpreter$StateContinueResult;->frame:Lorg/mozilla/javascript/Interpreter$CallFrame;
+
+    .line 6
+    .line 7
+    iput p2, p0, Lorg/mozilla/javascript/Interpreter$StateContinueResult;->indexReg:I
+
+    .line 8
+    .line 9
+    return-void
+.end method
+
+.method public synthetic constructor <init>(Lorg/mozilla/javascript/Interpreter$CallFrame;II)V
+    .locals 0
+
+    .line 10
+    invoke-direct {p0, p1, p2}, Lorg/mozilla/javascript/Interpreter$StateContinueResult;-><init>(Lorg/mozilla/javascript/Interpreter$CallFrame;I)V
+
+    return-void
+.end method
+
+.method public static bridge synthetic a(Lorg/mozilla/javascript/Interpreter$StateContinueResult;)Lorg/mozilla/javascript/Interpreter$CallFrame;
+    .locals 0
+
+    .line 1
+    iget-object p0, p0, Lorg/mozilla/javascript/Interpreter$StateContinueResult;->frame:Lorg/mozilla/javascript/Interpreter$CallFrame;
+
+    .line 2
+    .line 3
+    return-object p0
+.end method
+
+.method public static bridge synthetic b(Lorg/mozilla/javascript/Interpreter$StateContinueResult;)I
+    .locals 0
+
+    .line 1
+    iget p0, p0, Lorg/mozilla/javascript/Interpreter$StateContinueResult;->indexReg:I
+
+    .line 2
+    .line 3
+    return p0
+.end method

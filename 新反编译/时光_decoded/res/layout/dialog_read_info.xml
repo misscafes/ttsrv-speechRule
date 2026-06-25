@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:gravity="center" android:orientation="vertical" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp">
+        <com.google.android.material.bottomsheet.BottomSheetDragHandleView android:layout_gravity="center_horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0.0dp" android:paddingVertical="8.0dp" />
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:id="@id/bottom_sheet_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/header_footer" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:paddingBottom="8.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/global_setting" />
+        <Space android:layout_width="0.0dp" android:layout_height="match_parent" android:layout_weight="1.0" />
+        <io.legado.app.ui.widget.AccentColorButton android:id="@id/btn_header_font" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/text_font" style="@style/Widget.Material3Expressive.Button.OutlinedButton" />
+    </LinearLayout>
+    <LinearLayout android:gravity="end" android:orientation="horizontal" android:paddingTop="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <com.google.android.material.button.MaterialButton android:id="@id/btn_padding_setting" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="0.0dp" android:text="@string/padding" android:layout_marginEnd="8.0dp" style="@style/Widget.Material3Expressive.Button.OutlinedButton" />
+        <io.legado.app.ui.widget.SimpleCounterView android:id="@id/scv_header_font_size" android:layout_width="180.0dp" android:layout_height="wrap_content" android:layout_marginStart="8.0dp" app:max="30" app:min="8" app:orientation="horizontal" app:title="@string/header_font_size" />
+    </LinearLayout>
+    <com.google.android.material.button.MaterialButtonGroup android:gravity="end" android:layout_width="match_parent" android:layout_height="wrap_content" app:overflowMode="wrap">
+        <io.legado.app.ui.widget.AccentColorButton android:id="@id/btn_header_color" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/header_color" style="@style/Widget.Material3Expressive.Button.OutlinedButton" />
+        <io.legado.app.ui.widget.AccentColorButton android:id="@id/btn_footer_color" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/footer_color" style="@style/Widget.Material3Expressive.Button.OutlinedButton" />
+        <io.legado.app.ui.widget.AccentColorButton android:id="@id/btn_divider_color" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tip_divider_color" style="@style/Widget.Material3Expressive.Button.OutlinedButton" />
+    </com.google.android.material.button.MaterialButtonGroup>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_header_show" android:paddingTop="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:id="@id/tv_header_padding" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/header" android:layout_weight="1.0" />
+        <com.google.android.material.chip.Chip android:layout_gravity="end" android:id="@id/btn_header_mode" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/header" />
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/ll_header_left" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="@string/left" android:layout_weight="1.0" />
+        <TextView android:textStyle="bold" android:textColor="?colorSecondary" android:layout_gravity="end|bottom" android:id="@id/tv_header_left" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/ll_header_middle" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="@string/middle" android:layout_weight="1.0" />
+        <TextView android:textStyle="bold" android:textColor="?colorSecondary" android:layout_gravity="end|bottom" android:id="@id/tv_header_middle" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/ll_header_right" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="@string/right" android:layout_weight="1.0" />
+        <TextView android:textStyle="bold" android:textColor="?colorSecondary" android:layout_gravity="end|bottom" android:id="@id/tv_header_right" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ll_footer_show" android:paddingTop="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <io.legado.app.ui.widget.text.AccentTextView android:textSize="14.0sp" android:textStyle="bold" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/footer" android:layout_weight="1.0" />
+        <com.google.android.material.chip.Chip android:layout_gravity="end" android:id="@id/btn_footer_mode" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/footer" />
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/ll_footer_left" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="@string/left" android:layout_weight="1.0" />
+        <TextView android:textStyle="bold" android:textColor="?colorSecondary" android:layout_gravity="end|bottom" android:id="@id/tv_footer_left" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/ll_footer_middle" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="@string/middle" android:layout_weight="1.0" />
+        <TextView android:textStyle="bold" android:textColor="?colorSecondary" android:layout_gravity="end|bottom" android:id="@id/tv_footer_middle" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/ll_footer_right" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:layout_width="0.0dp" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="@string/right" android:layout_weight="1.0" />
+        <TextView android:textStyle="bold" android:textColor="?colorSecondary" android:layout_gravity="end|bottom" android:id="@id/tv_footer_right" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+</LinearLayout>

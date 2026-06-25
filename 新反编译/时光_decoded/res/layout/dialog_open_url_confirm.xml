@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.appcompat.widget.Toolbar android:theme="?actionBarStyle" android:id="@id/tool_bar" android:layout_width="match_parent" android:layout_height="wrap_content" android:elevation="5.0dp" app:title="跳转确认" />
+    <TextView android:textSize="16.0sp" android:id="@id/message" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <com.google.android.flexbox.FlexboxLayout android:layout_width="match_parent" android:layout_height="wrap_content" app:flexDirection="row" app:justifyContent="flex_end">
+        <com.google.android.material.button.MaterialButton android:id="@id/btn_negative" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/cancel" android:layout_marginEnd="8.0dp" style="@style/Widget.Material3Expressive.Button.TonalButton" />
+        <com.google.android.material.button.MaterialButton android:id="@id/btn_positive" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ok" style="@style/Widget.Material3Expressive.Button.TonalButton" />
+    </com.google.android.flexbox.FlexboxLayout>
+</LinearLayout>

@@ -1,0 +1,33 @@
+package wh;
+
+import java.lang.reflect.Array;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes.dex */
+public abstract class d {
+
+    /* JADX INFO: renamed from: a, reason: collision with root package name */
+    public static final float[][] f26975a = (float[][]) Array.newInstance((Class<?>) Float.TYPE, 2787, 8);
+
+    static {
+        int i10;
+        for (int i11 = 0; i11 < 2787; i11++) {
+            int i12 = vh.a.f26063b[i11];
+            int i13 = i12 & 1;
+            int i14 = 0;
+            while (i14 < 8) {
+                float f6 = 0.0f;
+                while (true) {
+                    i10 = i12 & 1;
+                    if (i10 == i13) {
+                        f6 += 1.0f;
+                        i12 >>= 1;
+                    }
+                }
+                f26975a[i11][7 - i14] = f6 / 17.0f;
+                i14++;
+                i13 = i10;
+            }
+        }
+    }
+}

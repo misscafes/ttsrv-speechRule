@@ -1,0 +1,660 @@
+.class public Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+.super Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;
+.source "r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892"
+
+
+# static fields
+.field public static final FULLSCREEN_ID:I
+
+.field public static final SMALL_ID:I
+
+.field public static TAG:Ljava/lang/String;
+
+.field private static videoManager:Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+    .annotation build Landroid/annotation/SuppressLint;
+        value = {
+            "StaticFieldLeak"
+        }
+    .end annotation
+.end field
+
+
+# direct methods
+.method static constructor <clinit>()V
+    .locals 1
+
+    .line 1
+    sget v0, Lcom/shuyu/gsyvideoplayer/R$id;->small_id:I
+
+    .line 2
+    .line 3
+    sput v0, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->SMALL_ID:I
+
+    .line 4
+    .line 5
+    sget v0, Lcom/shuyu/gsyvideoplayer/R$id;->full_id:I
+
+    .line 6
+    .line 7
+    sput v0, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->FULLSCREEN_ID:I
+
+    .line 8
+    .line 9
+    const-string v0, "GSYVideoManager"
+
+    .line 10
+    .line 11
+    sput-object v0, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->TAG:Ljava/lang/String;
+
+    .line 12
+    .line 13
+    return-void
+.end method
+
+.method private constructor <init>()V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    invoke-virtual {p0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->init()V
+
+    .line 5
+    .line 6
+    .line 7
+    return-void
+.end method
+
+.method public static backFromWindowFull(Landroid/content/Context;)Z
+    .locals 2
+
+    .line 1
+    invoke-static {p0}, Lcom/shuyu/gsyvideoplayer/utils/CommonUtil;->scanForActivity(Landroid/content/Context;)Landroid/app/Activity;
+
+    .line 2
+    .line 3
+    .line 4
+    move-result-object v0
+
+    .line 5
+    const v1, 0x1020002
+
+    .line 6
+    .line 7
+    .line 8
+    invoke-virtual {v0, v1}, Landroid/app/Activity;->findViewById(I)Landroid/view/View;
+
+    .line 9
+    .line 10
+    .line 11
+    move-result-object v0
+
+    .line 12
+    check-cast v0, Landroid/view/ViewGroup;
+
+    .line 13
+    .line 14
+    sget v1, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->FULLSCREEN_ID:I
+
+    .line 15
+    .line 16
+    invoke-virtual {v0, v1}, Landroid/view/View;->findViewById(I)Landroid/view/View;
+
+    .line 17
+    .line 18
+    .line 19
+    move-result-object v0
+
+    .line 20
+    if-eqz v0, :cond_1
+
+    .line 21
+    .line 22
+    invoke-static {p0}, Lcom/shuyu/gsyvideoplayer/utils/CommonUtil;->hideNavKey(Landroid/content/Context;)V
+
+    .line 23
+    .line 24
+    .line 25
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 26
+    .line 27
+    .line 28
+    move-result-object p0
+
+    .line 29
+    invoke-virtual {p0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->lastListener()Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;
+
+    .line 30
+    .line 31
+    .line 32
+    move-result-object p0
+
+    .line 33
+    const/4 v0, 0x1
+
+    .line 34
+    if-eqz p0, :cond_0
+
+    .line 35
+    .line 36
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 37
+    .line 38
+    .line 39
+    move-result-object p0
+
+    .line 40
+    invoke-virtual {p0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->lastListener()Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;
+
+    .line 41
+    .line 42
+    .line 43
+    move-result-object p0
+
+    .line 44
+    invoke-interface {p0}, Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;->onBackFullscreen()V
+
+    .line 45
+    .line 46
+    .line 47
+    :cond_0
+    return v0
+
+    .line 48
+    :cond_1
+    const/4 p0, 0x0
+
+    .line 49
+    return p0
+.end method
+
+.method public static declared-synchronized changeManager(Lcom/shuyu/gsyvideoplayer/GSYVideoManager;)V
+    .locals 1
+
+    .line 1
+    const-class v0, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 2
+    .line 3
+    monitor-enter v0
+
+    .line 4
+    :try_start_0
+    sput-object p0, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->videoManager:Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+    :try_end_0
+    .catchall {:try_start_0 .. :try_end_0} :catchall_0
+
+    .line 5
+    .line 6
+    monitor-exit v0
+
+    .line 7
+    return-void
+
+    .line 8
+    :catchall_0
+    move-exception p0
+
+    .line 9
+    :try_start_1
+    monitor-exit v0
+    :try_end_1
+    .catchall {:try_start_1 .. :try_end_1} :catchall_0
+
+    .line 10
+    throw p0
+.end method
+
+.method public static declared-synchronized instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+    .locals 2
+
+    .line 1
+    const-class v0, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 2
+    .line 3
+    monitor-enter v0
+
+    .line 4
+    :try_start_0
+    sget-object v1, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->videoManager:Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 5
+    .line 6
+    if-nez v1, :cond_0
+
+    .line 7
+    .line 8
+    new-instance v1, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 9
+    .line 10
+    invoke-direct {v1}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;-><init>()V
+
+    .line 11
+    .line 12
+    .line 13
+    sput-object v1, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->videoManager:Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 14
+    .line 15
+    goto :goto_0
+
+    .line 16
+    :catchall_0
+    move-exception v1
+
+    .line 17
+    goto :goto_1
+
+    .line 18
+    :cond_0
+    :goto_0
+    sget-object v1, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->videoManager:Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+    :try_end_0
+    .catchall {:try_start_0 .. :try_end_0} :catchall_0
+
+    .line 19
+    .line 20
+    monitor-exit v0
+
+    .line 21
+    return-object v1
+
+    .line 22
+    :goto_1
+    :try_start_1
+    monitor-exit v0
+    :try_end_1
+    .catchall {:try_start_1 .. :try_end_1} :catchall_0
+
+    .line 23
+    throw v1
+.end method
+
+.method public static isFullState(Landroid/app/Activity;)Z
+    .locals 1
+
+    .line 1
+    invoke-static {p0}, Lcom/shuyu/gsyvideoplayer/utils/CommonUtil;->scanForActivity(Landroid/content/Context;)Landroid/app/Activity;
+
+    .line 2
+    .line 3
+    .line 4
+    move-result-object p0
+
+    .line 5
+    const v0, 0x1020002
+
+    .line 6
+    .line 7
+    .line 8
+    invoke-virtual {p0, v0}, Landroid/app/Activity;->findViewById(I)Landroid/view/View;
+
+    .line 9
+    .line 10
+    .line 11
+    move-result-object p0
+
+    .line 12
+    check-cast p0, Landroid/view/ViewGroup;
+
+    .line 13
+    .line 14
+    sget v0, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->FULLSCREEN_ID:I
+
+    .line 15
+    .line 16
+    invoke-virtual {p0, v0}, Landroid/view/View;->findViewById(I)Landroid/view/View;
+
+    .line 17
+    .line 18
+    .line 19
+    move-result-object p0
+
+    .line 20
+    if-eqz p0, :cond_0
+
+    .line 21
+    .line 22
+    check-cast p0, Lcom/shuyu/gsyvideoplayer/video/base/GSYVideoPlayer;
+
+    .line 23
+    .line 24
+    goto :goto_0
+
+    .line 25
+    :cond_0
+    const/4 p0, 0x0
+
+    .line 26
+    :goto_0
+    if-eqz p0, :cond_1
+
+    .line 27
+    .line 28
+    const/4 p0, 0x1
+
+    .line 29
+    return p0
+
+    .line 30
+    :cond_1
+    const/4 p0, 0x0
+
+    .line 31
+    return p0
+.end method
+
+.method public static onPause()V
+    .locals 1
+
+    .line 1
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 2
+    .line 3
+    .line 4
+    move-result-object v0
+
+    .line 5
+    invoke-virtual {v0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->listener()Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;
+
+    .line 6
+    .line 7
+    .line 8
+    move-result-object v0
+
+    .line 9
+    if-eqz v0, :cond_0
+
+    .line 10
+    .line 11
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 12
+    .line 13
+    .line 14
+    move-result-object v0
+
+    .line 15
+    invoke-virtual {v0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->listener()Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;
+
+    .line 16
+    .line 17
+    .line 18
+    move-result-object v0
+
+    .line 19
+    invoke-interface {v0}, Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;->onVideoPause()V
+
+    .line 20
+    .line 21
+    .line 22
+    :cond_0
+    return-void
+.end method
+
+.method public static onResume()V
+    .locals 1
+
+    .line 1
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    move-result-object v0
+
+    invoke-virtual {v0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->listener()Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;
+
+    move-result-object v0
+
+    if-eqz v0, :cond_0
+
+    .line 2
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    move-result-object v0
+
+    invoke-virtual {v0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->listener()Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;
+
+    move-result-object v0
+
+    invoke-interface {v0}, Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;->onVideoResume()V
+
+    :cond_0
+    return-void
+.end method
+
+.method public static onResume(Z)V
+    .locals 1
+
+    .line 3
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    move-result-object v0
+
+    invoke-virtual {v0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->listener()Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;
+
+    move-result-object v0
+
+    if-eqz v0, :cond_0
+
+    .line 4
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    move-result-object v0
+
+    invoke-virtual {v0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->listener()Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;
+
+    move-result-object v0
+
+    invoke-interface {v0, p0}, Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;->onVideoResume(Z)V
+
+    :cond_0
+    return-void
+.end method
+
+.method public static releaseAllVideos()V
+    .locals 1
+
+    .line 1
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 2
+    .line 3
+    .line 4
+    move-result-object v0
+
+    .line 5
+    invoke-virtual {v0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->listener()Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;
+
+    .line 6
+    .line 7
+    .line 8
+    move-result-object v0
+
+    .line 9
+    if-eqz v0, :cond_0
+
+    .line 10
+    .line 11
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 12
+    .line 13
+    .line 14
+    move-result-object v0
+
+    .line 15
+    invoke-virtual {v0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->listener()Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;
+
+    .line 16
+    .line 17
+    .line 18
+    move-result-object v0
+
+    .line 19
+    invoke-interface {v0}, Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;->onCompletion()V
+
+    .line 20
+    .line 21
+    .line 22
+    :cond_0
+    invoke-static {}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->instance()Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 23
+    .line 24
+    .line 25
+    move-result-object v0
+
+    .line 26
+    invoke-virtual {v0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->releaseMediaPlayer()V
+
+    .line 27
+    .line 28
+    .line 29
+    return-void
+.end method
+
+.method public static declared-synchronized tmpInstance(Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;)Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+    .locals 4
+
+    .line 1
+    const-class v0, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 2
+    .line 3
+    monitor-enter v0
+
+    .line 4
+    :try_start_0
+    new-instance v1, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 5
+    .line 6
+    invoke-direct {v1}, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;-><init>()V
+
+    .line 7
+    .line 8
+    .line 9
+    sget-object v2, Lcom/shuyu/gsyvideoplayer/GSYVideoManager;->videoManager:Lcom/shuyu/gsyvideoplayer/GSYVideoManager;
+
+    .line 10
+    .line 11
+    iget v3, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->bufferPoint:I
+
+    .line 12
+    .line 13
+    iput v3, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->bufferPoint:I
+
+    .line 14
+    .line 15
+    iget-object v3, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->optionModelList:Ljava/util/List;
+
+    .line 16
+    .line 17
+    iput-object v3, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->optionModelList:Ljava/util/List;
+
+    .line 18
+    .line 19
+    iget-object v3, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->playTag:Ljava/lang/String;
+
+    .line 20
+    .line 21
+    iput-object v3, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->playTag:Ljava/lang/String;
+
+    .line 22
+    .line 23
+    iget v3, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->currentVideoWidth:I
+
+    .line 24
+    .line 25
+    iput v3, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->currentVideoWidth:I
+
+    .line 26
+    .line 27
+    iget v3, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->currentVideoHeight:I
+
+    .line 28
+    .line 29
+    iput v3, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->currentVideoHeight:I
+
+    .line 30
+    .line 31
+    iget-object v3, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->context:Landroid/content/Context;
+
+    .line 32
+    .line 33
+    iput-object v3, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->context:Landroid/content/Context;
+
+    .line 34
+    .line 35
+    iget v3, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->lastState:I
+
+    .line 36
+    .line 37
+    iput v3, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->lastState:I
+
+    .line 38
+    .line 39
+    iget v3, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->playPosition:I
+
+    .line 40
+    .line 41
+    iput v3, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->playPosition:I
+
+    .line 42
+    .line 43
+    iget v3, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->timeOut:I
+
+    .line 44
+    .line 45
+    iput v3, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->timeOut:I
+
+    .line 46
+    .line 47
+    iget-boolean v3, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->needMute:Z
+
+    .line 48
+    .line 49
+    iput-boolean v3, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->needMute:Z
+
+    .line 50
+    .line 51
+    iget-boolean v2, v2, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->needTimeOutOther:Z
+
+    .line 52
+    .line 53
+    iput-boolean v2, v1, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->needTimeOutOther:Z
+
+    .line 54
+    .line 55
+    invoke-virtual {v1, p0}, Lcom/shuyu/gsyvideoplayer/GSYVideoBaseManager;->setListener(Lcom/shuyu/gsyvideoplayer/listener/GSYMediaPlayerListener;)V
+    :try_end_0
+    .catchall {:try_start_0 .. :try_end_0} :catchall_0
+
+    .line 56
+    .line 57
+    .line 58
+    monitor-exit v0
+
+    .line 59
+    return-object v1
+
+    .line 60
+    :catchall_0
+    move-exception p0
+
+    .line 61
+    :try_start_1
+    monitor-exit v0
+    :try_end_1
+    .catchall {:try_start_1 .. :try_end_1} :catchall_0
+
+    .line 62
+    throw p0
+.end method

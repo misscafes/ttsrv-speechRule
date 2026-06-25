@@ -1,0 +1,146 @@
+package dn;
+
+import android.content.Intent;
+import com.legado.app.release.i.R;
+import el.g4;
+import im.l0;
+import io.legado.app.data.entities.Book;
+import io.legado.app.data.entities.BookChapter;
+import io.legado.app.data.entities.BookSource;
+import io.legado.app.data.entities.BookSourcePart;
+import io.legado.app.data.entities.rule.ExploreKind;
+import io.legado.app.ui.book.read.ReadBookActivity;
+import io.legado.app.ui.browser.WebViewActivity;
+import java.util.List;
+import vp.q0;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes2.dex */
+public final class x extends cr.i implements lr.q {
+    public /* synthetic */ Object A;
+    public final /* synthetic */ Object X;
+    public final /* synthetic */ Object Y;
+
+    /* JADX INFO: renamed from: i, reason: collision with root package name */
+    public final /* synthetic */ int f5465i;
+
+    /* JADX INFO: renamed from: v, reason: collision with root package name */
+    public final /* synthetic */ Object f5466v;
+
+    /* JADX WARN: 'super' call moved to the top of the method (can break code semantics) */
+    public x(BookSource bookSource, b0 b0Var, String str, ar.d dVar) {
+        super(3, dVar);
+        this.f5465i = 1;
+        this.X = bookSource;
+        this.f5466v = b0Var;
+        this.Y = str;
+    }
+
+    private final Object e(Object obj) {
+        ReadBookActivity readBookActivity = (ReadBookActivity) this.f5466v;
+        String str = (String) this.A;
+        br.a aVar = br.a.f2655i;
+        l3.c.F(obj);
+        if (q0.u(str)) {
+            Intent intent = new Intent(readBookActivity, (Class<?>) WebViewActivity.class);
+            intent.addFlags(268435456);
+            l0.f11134v.getClass();
+            BookSource bookSource = l0.f11130q0;
+            intent.putExtra("title", readBookActivity.getString(R.string.chapter_pay));
+            intent.putExtra(ExploreKind.Type.url, str);
+            intent.putExtra("sourceOrigin", bookSource != null ? bookSource.getBookSourceUrl() : null);
+            intent.putExtra("sourceName", bookSource != null ? bookSource.getBookSourceName() : null);
+            intent.putExtra("sourceType", bookSource != null ? new Integer(q1.c.o(bookSource)) : null);
+            readBookActivity.startActivity(intent);
+        } else if (q0.B(str)) {
+            l0.f11134v.getClass();
+            if (l0.A != null) {
+                Book book = (Book) this.X;
+                BookChapter bookChapter = (BookChapter) this.Y;
+                l0.f11128o0 = null;
+                hl.f fVar = hl.f.f9967a;
+                hl.f.c(book, bookChapter);
+                readBookActivity.l0(book);
+            }
+        }
+        return vq.q.f26327a;
+    }
+
+    @Override // lr.q
+    public final Object c(Object obj, Object obj2, Object obj3) {
+        switch (this.f5465i) {
+            case 0:
+                x xVar = new x((b0) this.f5466v, (Book) this.X, (Book) this.Y, (ar.d) obj3, 0);
+                xVar.A = (List) obj2;
+                vq.q qVar = vq.q.f26327a;
+                xVar.invokeSuspend(qVar);
+                return qVar;
+            case 1:
+                x xVar2 = new x((BookSource) this.X, (b0) this.f5466v, (String) this.Y, (ar.d) obj3);
+                xVar2.A = (Throwable) obj2;
+                vq.q qVar2 = vq.q.f26327a;
+                xVar2.invokeSuspend(qVar2);
+                return qVar2;
+            case 2:
+                x xVar3 = new x((wr.w) this.f5466v, (BookSource) this.Y, (Book) this.X, (ar.d) obj3);
+                xVar3.A = (List) obj2;
+                vq.q qVar3 = vq.q.f26327a;
+                xVar3.invokeSuspend(qVar3);
+                return qVar3;
+            case 3:
+                x xVar4 = new x((ReadBookActivity) this.f5466v, (Book) this.X, (BookChapter) this.Y, (ar.d) obj3, 3);
+                xVar4.A = (String) obj2;
+                vq.q qVar4 = vq.q.f26327a;
+                xVar4.invokeSuspend(qVar4);
+                return qVar4;
+            default:
+                x xVar5 = new x((po.q) this.f5466v, (g4) this.X, (BookSourcePart) this.Y, (ar.d) obj3, 4);
+                xVar5.A = (List) obj2;
+                vq.q qVar5 = vq.q.f26327a;
+                xVar5.invokeSuspend(qVar5);
+                return qVar5;
+        }
+    }
+
+    /* JADX WARN: Failed to restore switch over string. Please report as a decompilation issue */
+    /* JADX WARN: Removed duplicated region for block: B:100:0x0324 A[Catch: all -> 0x00cb, TryCatch #0 {all -> 0x00cb, blocks: (B:6:0x0040, B:7:0x0073, B:9:0x0079, B:10:0x0093, B:13:0x00a1, B:16:0x00aa, B:18:0x00c5, B:25:0x00e1, B:27:0x00e6, B:40:0x016e, B:29:0x00f6, B:33:0x0101, B:35:0x0109, B:37:0x010f, B:39:0x0122, B:21:0x00ce, B:23:0x00d4, B:24:0x00db, B:42:0x01a3, B:44:0x01b6, B:46:0x01cb, B:52:0x01e6, B:54:0x01eb, B:66:0x025e, B:56:0x01f1, B:60:0x01fc, B:62:0x0204, B:64:0x020a, B:65:0x021b, B:48:0x01d4, B:50:0x01da, B:51:0x01e1, B:67:0x0270, B:70:0x0286, B:88:0x02e5, B:90:0x02ec, B:92:0x02f5, B:94:0x0307, B:96:0x031a, B:105:0x0343, B:107:0x0347, B:109:0x034b, B:110:0x0356, B:112:0x0367, B:134:0x043f, B:111:0x035b, B:114:0x0375, B:118:0x0380, B:120:0x0388, B:122:0x038e, B:124:0x03a1, B:125:0x03ae, B:127:0x03c1, B:126:0x03b3, B:128:0x03c5, B:130:0x03c9, B:131:0x03d6, B:133:0x03e9, B:132:0x03db, B:100:0x0324, B:102:0x032a, B:104:0x0336, B:93:0x02fd, B:77:0x02c0, B:80:0x02c7, B:81:0x02ce, B:84:0x02d5, B:85:0x02dc, B:89:0x02e9, B:135:0x0482, B:138:0x0499, B:147:0x04bb, B:148:0x04bc, B:150:0x04cd, B:155:0x04e6, B:157:0x04f5, B:168:0x0564, B:170:0x056a, B:173:0x0579, B:175:0x05a4, B:181:0x05c0, B:177:0x05aa, B:179:0x05b0, B:180:0x05b7, B:172:0x0570, B:158:0x04f9, B:162:0x0504, B:164:0x050c, B:166:0x0512, B:167:0x0523, B:151:0x04d4, B:153:0x04da, B:154:0x04e1, B:184:0x05df, B:185:0x05e0, B:188:0x05f7, B:190:0x060c, B:195:0x0625, B:197:0x062a, B:208:0x0697, B:198:0x062e, B:202:0x0639, B:204:0x0641, B:206:0x0647, B:207:0x0658, B:191:0x0613, B:193:0x0619, B:194:0x0620, B:139:0x049a, B:141:0x04a2, B:145:0x04b2), top: B:245:0x0040, inners: #1 }] */
+    /* JADX WARN: Removed duplicated region for block: B:102:0x032a A[Catch: all -> 0x00cb, TryCatch #0 {all -> 0x00cb, blocks: (B:6:0x0040, B:7:0x0073, B:9:0x0079, B:10:0x0093, B:13:0x00a1, B:16:0x00aa, B:18:0x00c5, B:25:0x00e1, B:27:0x00e6, B:40:0x016e, B:29:0x00f6, B:33:0x0101, B:35:0x0109, B:37:0x010f, B:39:0x0122, B:21:0x00ce, B:23:0x00d4, B:24:0x00db, B:42:0x01a3, B:44:0x01b6, B:46:0x01cb, B:52:0x01e6, B:54:0x01eb, B:66:0x025e, B:56:0x01f1, B:60:0x01fc, B:62:0x0204, B:64:0x020a, B:65:0x021b, B:48:0x01d4, B:50:0x01da, B:51:0x01e1, B:67:0x0270, B:70:0x0286, B:88:0x02e5, B:90:0x02ec, B:92:0x02f5, B:94:0x0307, B:96:0x031a, B:105:0x0343, B:107:0x0347, B:109:0x034b, B:110:0x0356, B:112:0x0367, B:134:0x043f, B:111:0x035b, B:114:0x0375, B:118:0x0380, B:120:0x0388, B:122:0x038e, B:124:0x03a1, B:125:0x03ae, B:127:0x03c1, B:126:0x03b3, B:128:0x03c5, B:130:0x03c9, B:131:0x03d6, B:133:0x03e9, B:132:0x03db, B:100:0x0324, B:102:0x032a, B:104:0x0336, B:93:0x02fd, B:77:0x02c0, B:80:0x02c7, B:81:0x02ce, B:84:0x02d5, B:85:0x02dc, B:89:0x02e9, B:135:0x0482, B:138:0x0499, B:147:0x04bb, B:148:0x04bc, B:150:0x04cd, B:155:0x04e6, B:157:0x04f5, B:168:0x0564, B:170:0x056a, B:173:0x0579, B:175:0x05a4, B:181:0x05c0, B:177:0x05aa, B:179:0x05b0, B:180:0x05b7, B:172:0x0570, B:158:0x04f9, B:162:0x0504, B:164:0x050c, B:166:0x0512, B:167:0x0523, B:151:0x04d4, B:153:0x04da, B:154:0x04e1, B:184:0x05df, B:185:0x05e0, B:188:0x05f7, B:190:0x060c, B:195:0x0625, B:197:0x062a, B:208:0x0697, B:198:0x062e, B:202:0x0639, B:204:0x0641, B:206:0x0647, B:207:0x0658, B:191:0x0613, B:193:0x0619, B:194:0x0620, B:139:0x049a, B:141:0x04a2, B:145:0x04b2), top: B:245:0x0040, inners: #1 }] */
+    /* JADX WARN: Removed duplicated region for block: B:103:0x0334  */
+    /* JADX WARN: Removed duplicated region for block: B:107:0x0347 A[Catch: all -> 0x00cb, TryCatch #0 {all -> 0x00cb, blocks: (B:6:0x0040, B:7:0x0073, B:9:0x0079, B:10:0x0093, B:13:0x00a1, B:16:0x00aa, B:18:0x00c5, B:25:0x00e1, B:27:0x00e6, B:40:0x016e, B:29:0x00f6, B:33:0x0101, B:35:0x0109, B:37:0x010f, B:39:0x0122, B:21:0x00ce, B:23:0x00d4, B:24:0x00db, B:42:0x01a3, B:44:0x01b6, B:46:0x01cb, B:52:0x01e6, B:54:0x01eb, B:66:0x025e, B:56:0x01f1, B:60:0x01fc, B:62:0x0204, B:64:0x020a, B:65:0x021b, B:48:0x01d4, B:50:0x01da, B:51:0x01e1, B:67:0x0270, B:70:0x0286, B:88:0x02e5, B:90:0x02ec, B:92:0x02f5, B:94:0x0307, B:96:0x031a, B:105:0x0343, B:107:0x0347, B:109:0x034b, B:110:0x0356, B:112:0x0367, B:134:0x043f, B:111:0x035b, B:114:0x0375, B:118:0x0380, B:120:0x0388, B:122:0x038e, B:124:0x03a1, B:125:0x03ae, B:127:0x03c1, B:126:0x03b3, B:128:0x03c5, B:130:0x03c9, B:131:0x03d6, B:133:0x03e9, B:132:0x03db, B:100:0x0324, B:102:0x032a, B:104:0x0336, B:93:0x02fd, B:77:0x02c0, B:80:0x02c7, B:81:0x02ce, B:84:0x02d5, B:85:0x02dc, B:89:0x02e9, B:135:0x0482, B:138:0x0499, B:147:0x04bb, B:148:0x04bc, B:150:0x04cd, B:155:0x04e6, B:157:0x04f5, B:168:0x0564, B:170:0x056a, B:173:0x0579, B:175:0x05a4, B:181:0x05c0, B:177:0x05aa, B:179:0x05b0, B:180:0x05b7, B:172:0x0570, B:158:0x04f9, B:162:0x0504, B:164:0x050c, B:166:0x0512, B:167:0x0523, B:151:0x04d4, B:153:0x04da, B:154:0x04e1, B:184:0x05df, B:185:0x05e0, B:188:0x05f7, B:190:0x060c, B:195:0x0625, B:197:0x062a, B:208:0x0697, B:198:0x062e, B:202:0x0639, B:204:0x0641, B:206:0x0647, B:207:0x0658, B:191:0x0613, B:193:0x0619, B:194:0x0620, B:139:0x049a, B:141:0x04a2, B:145:0x04b2), top: B:245:0x0040, inners: #1 }] */
+    /* JADX WARN: Removed duplicated region for block: B:114:0x0375 A[Catch: all -> 0x00cb, TryCatch #0 {all -> 0x00cb, blocks: (B:6:0x0040, B:7:0x0073, B:9:0x0079, B:10:0x0093, B:13:0x00a1, B:16:0x00aa, B:18:0x00c5, B:25:0x00e1, B:27:0x00e6, B:40:0x016e, B:29:0x00f6, B:33:0x0101, B:35:0x0109, B:37:0x010f, B:39:0x0122, B:21:0x00ce, B:23:0x00d4, B:24:0x00db, B:42:0x01a3, B:44:0x01b6, B:46:0x01cb, B:52:0x01e6, B:54:0x01eb, B:66:0x025e, B:56:0x01f1, B:60:0x01fc, B:62:0x0204, B:64:0x020a, B:65:0x021b, B:48:0x01d4, B:50:0x01da, B:51:0x01e1, B:67:0x0270, B:70:0x0286, B:88:0x02e5, B:90:0x02ec, B:92:0x02f5, B:94:0x0307, B:96:0x031a, B:105:0x0343, B:107:0x0347, B:109:0x034b, B:110:0x0356, B:112:0x0367, B:134:0x043f, B:111:0x035b, B:114:0x0375, B:118:0x0380, B:120:0x0388, B:122:0x038e, B:124:0x03a1, B:125:0x03ae, B:127:0x03c1, B:126:0x03b3, B:128:0x03c5, B:130:0x03c9, B:131:0x03d6, B:133:0x03e9, B:132:0x03db, B:100:0x0324, B:102:0x032a, B:104:0x0336, B:93:0x02fd, B:77:0x02c0, B:80:0x02c7, B:81:0x02ce, B:84:0x02d5, B:85:0x02dc, B:89:0x02e9, B:135:0x0482, B:138:0x0499, B:147:0x04bb, B:148:0x04bc, B:150:0x04cd, B:155:0x04e6, B:157:0x04f5, B:168:0x0564, B:170:0x056a, B:173:0x0579, B:175:0x05a4, B:181:0x05c0, B:177:0x05aa, B:179:0x05b0, B:180:0x05b7, B:172:0x0570, B:158:0x04f9, B:162:0x0504, B:164:0x050c, B:166:0x0512, B:167:0x0523, B:151:0x04d4, B:153:0x04da, B:154:0x04e1, B:184:0x05df, B:185:0x05e0, B:188:0x05f7, B:190:0x060c, B:195:0x0625, B:197:0x062a, B:208:0x0697, B:198:0x062e, B:202:0x0639, B:204:0x0641, B:206:0x0647, B:207:0x0658, B:191:0x0613, B:193:0x0619, B:194:0x0620, B:139:0x049a, B:141:0x04a2, B:145:0x04b2), top: B:245:0x0040, inners: #1 }] */
+    /* JADX WARN: Removed duplicated region for block: B:54:0x01eb A[Catch: all -> 0x00cb, TryCatch #0 {all -> 0x00cb, blocks: (B:6:0x0040, B:7:0x0073, B:9:0x0079, B:10:0x0093, B:13:0x00a1, B:16:0x00aa, B:18:0x00c5, B:25:0x00e1, B:27:0x00e6, B:40:0x016e, B:29:0x00f6, B:33:0x0101, B:35:0x0109, B:37:0x010f, B:39:0x0122, B:21:0x00ce, B:23:0x00d4, B:24:0x00db, B:42:0x01a3, B:44:0x01b6, B:46:0x01cb, B:52:0x01e6, B:54:0x01eb, B:66:0x025e, B:56:0x01f1, B:60:0x01fc, B:62:0x0204, B:64:0x020a, B:65:0x021b, B:48:0x01d4, B:50:0x01da, B:51:0x01e1, B:67:0x0270, B:70:0x0286, B:88:0x02e5, B:90:0x02ec, B:92:0x02f5, B:94:0x0307, B:96:0x031a, B:105:0x0343, B:107:0x0347, B:109:0x034b, B:110:0x0356, B:112:0x0367, B:134:0x043f, B:111:0x035b, B:114:0x0375, B:118:0x0380, B:120:0x0388, B:122:0x038e, B:124:0x03a1, B:125:0x03ae, B:127:0x03c1, B:126:0x03b3, B:128:0x03c5, B:130:0x03c9, B:131:0x03d6, B:133:0x03e9, B:132:0x03db, B:100:0x0324, B:102:0x032a, B:104:0x0336, B:93:0x02fd, B:77:0x02c0, B:80:0x02c7, B:81:0x02ce, B:84:0x02d5, B:85:0x02dc, B:89:0x02e9, B:135:0x0482, B:138:0x0499, B:147:0x04bb, B:148:0x04bc, B:150:0x04cd, B:155:0x04e6, B:157:0x04f5, B:168:0x0564, B:170:0x056a, B:173:0x0579, B:175:0x05a4, B:181:0x05c0, B:177:0x05aa, B:179:0x05b0, B:180:0x05b7, B:172:0x0570, B:158:0x04f9, B:162:0x0504, B:164:0x050c, B:166:0x0512, B:167:0x0523, B:151:0x04d4, B:153:0x04da, B:154:0x04e1, B:184:0x05df, B:185:0x05e0, B:188:0x05f7, B:190:0x060c, B:195:0x0625, B:197:0x062a, B:208:0x0697, B:198:0x062e, B:202:0x0639, B:204:0x0641, B:206:0x0647, B:207:0x0658, B:191:0x0613, B:193:0x0619, B:194:0x0620, B:139:0x049a, B:141:0x04a2, B:145:0x04b2), top: B:245:0x0040, inners: #1 }] */
+    /* JADX WARN: Removed duplicated region for block: B:56:0x01f1 A[Catch: all -> 0x00cb, TryCatch #0 {all -> 0x00cb, blocks: (B:6:0x0040, B:7:0x0073, B:9:0x0079, B:10:0x0093, B:13:0x00a1, B:16:0x00aa, B:18:0x00c5, B:25:0x00e1, B:27:0x00e6, B:40:0x016e, B:29:0x00f6, B:33:0x0101, B:35:0x0109, B:37:0x010f, B:39:0x0122, B:21:0x00ce, B:23:0x00d4, B:24:0x00db, B:42:0x01a3, B:44:0x01b6, B:46:0x01cb, B:52:0x01e6, B:54:0x01eb, B:66:0x025e, B:56:0x01f1, B:60:0x01fc, B:62:0x0204, B:64:0x020a, B:65:0x021b, B:48:0x01d4, B:50:0x01da, B:51:0x01e1, B:67:0x0270, B:70:0x0286, B:88:0x02e5, B:90:0x02ec, B:92:0x02f5, B:94:0x0307, B:96:0x031a, B:105:0x0343, B:107:0x0347, B:109:0x034b, B:110:0x0356, B:112:0x0367, B:134:0x043f, B:111:0x035b, B:114:0x0375, B:118:0x0380, B:120:0x0388, B:122:0x038e, B:124:0x03a1, B:125:0x03ae, B:127:0x03c1, B:126:0x03b3, B:128:0x03c5, B:130:0x03c9, B:131:0x03d6, B:133:0x03e9, B:132:0x03db, B:100:0x0324, B:102:0x032a, B:104:0x0336, B:93:0x02fd, B:77:0x02c0, B:80:0x02c7, B:81:0x02ce, B:84:0x02d5, B:85:0x02dc, B:89:0x02e9, B:135:0x0482, B:138:0x0499, B:147:0x04bb, B:148:0x04bc, B:150:0x04cd, B:155:0x04e6, B:157:0x04f5, B:168:0x0564, B:170:0x056a, B:173:0x0579, B:175:0x05a4, B:181:0x05c0, B:177:0x05aa, B:179:0x05b0, B:180:0x05b7, B:172:0x0570, B:158:0x04f9, B:162:0x0504, B:164:0x050c, B:166:0x0512, B:167:0x0523, B:151:0x04d4, B:153:0x04da, B:154:0x04e1, B:184:0x05df, B:185:0x05e0, B:188:0x05f7, B:190:0x060c, B:195:0x0625, B:197:0x062a, B:208:0x0697, B:198:0x062e, B:202:0x0639, B:204:0x0641, B:206:0x0647, B:207:0x0658, B:191:0x0613, B:193:0x0619, B:194:0x0620, B:139:0x049a, B:141:0x04a2, B:145:0x04b2), top: B:245:0x0040, inners: #1 }] */
+    /* JADX WARN: Removed duplicated region for block: B:92:0x02f5 A[Catch: all -> 0x00cb, TryCatch #0 {all -> 0x00cb, blocks: (B:6:0x0040, B:7:0x0073, B:9:0x0079, B:10:0x0093, B:13:0x00a1, B:16:0x00aa, B:18:0x00c5, B:25:0x00e1, B:27:0x00e6, B:40:0x016e, B:29:0x00f6, B:33:0x0101, B:35:0x0109, B:37:0x010f, B:39:0x0122, B:21:0x00ce, B:23:0x00d4, B:24:0x00db, B:42:0x01a3, B:44:0x01b6, B:46:0x01cb, B:52:0x01e6, B:54:0x01eb, B:66:0x025e, B:56:0x01f1, B:60:0x01fc, B:62:0x0204, B:64:0x020a, B:65:0x021b, B:48:0x01d4, B:50:0x01da, B:51:0x01e1, B:67:0x0270, B:70:0x0286, B:88:0x02e5, B:90:0x02ec, B:92:0x02f5, B:94:0x0307, B:96:0x031a, B:105:0x0343, B:107:0x0347, B:109:0x034b, B:110:0x0356, B:112:0x0367, B:134:0x043f, B:111:0x035b, B:114:0x0375, B:118:0x0380, B:120:0x0388, B:122:0x038e, B:124:0x03a1, B:125:0x03ae, B:127:0x03c1, B:126:0x03b3, B:128:0x03c5, B:130:0x03c9, B:131:0x03d6, B:133:0x03e9, B:132:0x03db, B:100:0x0324, B:102:0x032a, B:104:0x0336, B:93:0x02fd, B:77:0x02c0, B:80:0x02c7, B:81:0x02ce, B:84:0x02d5, B:85:0x02dc, B:89:0x02e9, B:135:0x0482, B:138:0x0499, B:147:0x04bb, B:148:0x04bc, B:150:0x04cd, B:155:0x04e6, B:157:0x04f5, B:168:0x0564, B:170:0x056a, B:173:0x0579, B:175:0x05a4, B:181:0x05c0, B:177:0x05aa, B:179:0x05b0, B:180:0x05b7, B:172:0x0570, B:158:0x04f9, B:162:0x0504, B:164:0x050c, B:166:0x0512, B:167:0x0523, B:151:0x04d4, B:153:0x04da, B:154:0x04e1, B:184:0x05df, B:185:0x05e0, B:188:0x05f7, B:190:0x060c, B:195:0x0625, B:197:0x062a, B:208:0x0697, B:198:0x062e, B:202:0x0639, B:204:0x0641, B:206:0x0647, B:207:0x0658, B:191:0x0613, B:193:0x0619, B:194:0x0620, B:139:0x049a, B:141:0x04a2, B:145:0x04b2), top: B:245:0x0040, inners: #1 }] */
+    /* JADX WARN: Removed duplicated region for block: B:93:0x02fd A[Catch: all -> 0x00cb, TryCatch #0 {all -> 0x00cb, blocks: (B:6:0x0040, B:7:0x0073, B:9:0x0079, B:10:0x0093, B:13:0x00a1, B:16:0x00aa, B:18:0x00c5, B:25:0x00e1, B:27:0x00e6, B:40:0x016e, B:29:0x00f6, B:33:0x0101, B:35:0x0109, B:37:0x010f, B:39:0x0122, B:21:0x00ce, B:23:0x00d4, B:24:0x00db, B:42:0x01a3, B:44:0x01b6, B:46:0x01cb, B:52:0x01e6, B:54:0x01eb, B:66:0x025e, B:56:0x01f1, B:60:0x01fc, B:62:0x0204, B:64:0x020a, B:65:0x021b, B:48:0x01d4, B:50:0x01da, B:51:0x01e1, B:67:0x0270, B:70:0x0286, B:88:0x02e5, B:90:0x02ec, B:92:0x02f5, B:94:0x0307, B:96:0x031a, B:105:0x0343, B:107:0x0347, B:109:0x034b, B:110:0x0356, B:112:0x0367, B:134:0x043f, B:111:0x035b, B:114:0x0375, B:118:0x0380, B:120:0x0388, B:122:0x038e, B:124:0x03a1, B:125:0x03ae, B:127:0x03c1, B:126:0x03b3, B:128:0x03c5, B:130:0x03c9, B:131:0x03d6, B:133:0x03e9, B:132:0x03db, B:100:0x0324, B:102:0x032a, B:104:0x0336, B:93:0x02fd, B:77:0x02c0, B:80:0x02c7, B:81:0x02ce, B:84:0x02d5, B:85:0x02dc, B:89:0x02e9, B:135:0x0482, B:138:0x0499, B:147:0x04bb, B:148:0x04bc, B:150:0x04cd, B:155:0x04e6, B:157:0x04f5, B:168:0x0564, B:170:0x056a, B:173:0x0579, B:175:0x05a4, B:181:0x05c0, B:177:0x05aa, B:179:0x05b0, B:180:0x05b7, B:172:0x0570, B:158:0x04f9, B:162:0x0504, B:164:0x050c, B:166:0x0512, B:167:0x0523, B:151:0x04d4, B:153:0x04da, B:154:0x04e1, B:184:0x05df, B:185:0x05e0, B:188:0x05f7, B:190:0x060c, B:195:0x0625, B:197:0x062a, B:208:0x0697, B:198:0x062e, B:202:0x0639, B:204:0x0641, B:206:0x0647, B:207:0x0658, B:191:0x0613, B:193:0x0619, B:194:0x0620, B:139:0x049a, B:141:0x04a2, B:145:0x04b2), top: B:245:0x0040, inners: #1 }] */
+    /* JADX WARN: Removed duplicated region for block: B:96:0x031a A[Catch: all -> 0x00cb, TryCatch #0 {all -> 0x00cb, blocks: (B:6:0x0040, B:7:0x0073, B:9:0x0079, B:10:0x0093, B:13:0x00a1, B:16:0x00aa, B:18:0x00c5, B:25:0x00e1, B:27:0x00e6, B:40:0x016e, B:29:0x00f6, B:33:0x0101, B:35:0x0109, B:37:0x010f, B:39:0x0122, B:21:0x00ce, B:23:0x00d4, B:24:0x00db, B:42:0x01a3, B:44:0x01b6, B:46:0x01cb, B:52:0x01e6, B:54:0x01eb, B:66:0x025e, B:56:0x01f1, B:60:0x01fc, B:62:0x0204, B:64:0x020a, B:65:0x021b, B:48:0x01d4, B:50:0x01da, B:51:0x01e1, B:67:0x0270, B:70:0x0286, B:88:0x02e5, B:90:0x02ec, B:92:0x02f5, B:94:0x0307, B:96:0x031a, B:105:0x0343, B:107:0x0347, B:109:0x034b, B:110:0x0356, B:112:0x0367, B:134:0x043f, B:111:0x035b, B:114:0x0375, B:118:0x0380, B:120:0x0388, B:122:0x038e, B:124:0x03a1, B:125:0x03ae, B:127:0x03c1, B:126:0x03b3, B:128:0x03c5, B:130:0x03c9, B:131:0x03d6, B:133:0x03e9, B:132:0x03db, B:100:0x0324, B:102:0x032a, B:104:0x0336, B:93:0x02fd, B:77:0x02c0, B:80:0x02c7, B:81:0x02ce, B:84:0x02d5, B:85:0x02dc, B:89:0x02e9, B:135:0x0482, B:138:0x0499, B:147:0x04bb, B:148:0x04bc, B:150:0x04cd, B:155:0x04e6, B:157:0x04f5, B:168:0x0564, B:170:0x056a, B:173:0x0579, B:175:0x05a4, B:181:0x05c0, B:177:0x05aa, B:179:0x05b0, B:180:0x05b7, B:172:0x0570, B:158:0x04f9, B:162:0x0504, B:164:0x050c, B:166:0x0512, B:167:0x0523, B:151:0x04d4, B:153:0x04da, B:154:0x04e1, B:184:0x05df, B:185:0x05e0, B:188:0x05f7, B:190:0x060c, B:195:0x0625, B:197:0x062a, B:208:0x0697, B:198:0x062e, B:202:0x0639, B:204:0x0641, B:206:0x0647, B:207:0x0658, B:191:0x0613, B:193:0x0619, B:194:0x0620, B:139:0x049a, B:141:0x04a2, B:145:0x04b2), top: B:245:0x0040, inners: #1 }] */
+    @Override // cr.a
+    /*
+        Code decompiled incorrectly, please refer to instructions dump.
+        To view partially-correct add '--show-bad-code' argument
+    */
+    public final java.lang.Object invokeSuspend(java.lang.Object r45) {
+        /*
+            Method dump skipped, instruction units count: 2156
+            To view this dump add '--comments-level debug' option
+        */
+        throw new UnsupportedOperationException("Method not decompiled: dn.x.invokeSuspend(java.lang.Object):java.lang.Object");
+    }
+
+    /* JADX WARN: 'super' call moved to the top of the method (can break code semantics) */
+    public /* synthetic */ x(Object obj, Object obj2, Object obj3, ar.d dVar, int i10) {
+        super(3, dVar);
+        this.f5465i = i10;
+        this.f5466v = obj;
+        this.X = obj2;
+        this.Y = obj3;
+    }
+
+    /* JADX WARN: 'super' call moved to the top of the method (can break code semantics) */
+    public x(wr.w wVar, BookSource bookSource, Book book, ar.d dVar) {
+        super(3, dVar);
+        this.f5465i = 2;
+        this.f5466v = wVar;
+        this.Y = bookSource;
+        this.X = book;
+    }
+}

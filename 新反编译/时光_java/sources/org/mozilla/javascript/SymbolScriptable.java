@@ -1,0 +1,13 @@
+package org.mozilla.javascript;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes.dex */
+public interface SymbolScriptable {
+    void delete(Symbol symbol);
+
+    Object get(Symbol symbol, Scriptable scriptable);
+
+    boolean has(Symbol symbol, Scriptable scriptable);
+
+    void put(Symbol symbol, Scriptable scriptable, Object obj);
+}

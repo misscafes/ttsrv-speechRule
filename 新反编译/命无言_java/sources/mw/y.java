@@ -1,0 +1,48 @@
+package mw;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes2.dex */
+public class y extends e {
+    public static final List l0 = Collections.unmodifiableList(new ArrayList());
+
+    /* JADX INFO: renamed from: i0, reason: collision with root package name */
+    public e f17269i0;
+
+    /* JADX INFO: renamed from: j0, reason: collision with root package name */
+    public ArrayList f17270j0;
+
+    /* JADX INFO: renamed from: k0, reason: collision with root package name */
+    public boolean f17271k0;
+
+    public y(int i10) {
+        super(i10);
+        this.f17271k0 = false;
+        this.type = 43;
+    }
+
+    public final void r(List list) {
+        if (list == null) {
+            this.f17270j0 = null;
+            return;
+        }
+        ArrayList arrayList = this.f17270j0;
+        if (arrayList != null) {
+            arrayList.clear();
+        }
+        Iterator it = list.iterator();
+        while (it.hasNext()) {
+            e eVar = (e) it.next();
+            e.o(eVar);
+            if (this.f17270j0 == null) {
+                this.f17270j0 = new ArrayList();
+            }
+            this.f17270j0.add(eVar);
+            eVar.q(this);
+        }
+    }
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:id="@id/cv_content" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:paddingLeft="4.0dp" android:paddingTop="4.0dp" android:paddingRight="4.0dp" android:paddingBottom="4.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" app:layout_constraintTop_toTopOf="parent">
+        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+            <io.legado.app.ui.widget.image.CoverImageView android:id="@id/iv_cover" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="4.0dp" android:src="@drawable/image_cover_default" android:scaleType="centerCrop" android:transitionName="img_cover" app:layout_constraintTop_toTopOf="parent" />
+            <io.legado.app.ui.widget.text.BadgeView android:layout_gravity="right" android:id="@id/bv_unread" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent" />
+            <io.legado.app.ui.widget.anima.RotateLoading android:layout_gravity="right" android:id="@id/rl_loading" android:visibility="invisible" android:layout_width="22.0dp" android:layout_height="22.0dp" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent" app:loading_width="2.0dp" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView android:textSize="12.0sp" android:textColor="@color/primaryText" android:ellipsize="end" android:gravity="center|top" android:id="@id/tv_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6.0dp" android:text="@string/book_name" android:lines="2" android:includeFontPadding="false" />
+    </LinearLayout>
+    <View android:id="@id/vw_foreground" android:background="?android:selectableItemBackground" android:layout_width="match_parent" android:layout_height="0.0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintVertical_bias="0.0" />
+</androidx.constraintlayout.widget.ConstraintLayout>

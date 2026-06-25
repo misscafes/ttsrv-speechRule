@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <io.legado.app.lib.prefs.ThemeModePreference
+        android:entries="@array/theme_mode"
+        android:key="themeMode"
+        android:defaultValue="0"
+        android:entryValues="@array/theme_mode_v"/>
+    <io.legado.app.lib.prefs.ThemeCardPreference
+        android:entries="@array/themes_item"
+        android:key="app_theme"
+        android:defaultValue="0"
+        android:entryValues="@array/themes_value"/>
+</androidx.preference.PreferenceScreen>

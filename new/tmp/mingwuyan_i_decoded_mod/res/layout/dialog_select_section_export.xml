@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp">
+            <io.legado.app.ui.widget.checkbox.SmoothCheckBox android:layout_gravity="center" android:id="@id/cb_all_export" android:layout_width="20.0dp" android:layout_height="20.0dp" android:layout_marginStart="6.0dp" android:layout_marginEnd="16.0dp" />
+            <TextView android:textSize="18.0sp" android:id="@id/tv_all_export" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/export_all" />
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp">
+            <io.legado.app.ui.widget.checkbox.SmoothCheckBox android:layout_gravity="center" android:id="@id/cb_select_export" android:layout_width="20.0dp" android:layout_height="20.0dp" android:layout_marginStart="6.0dp" android:layout_marginEnd="16.0dp" />
+            <TextView android:textSize="18.0sp" android:id="@id/tv_select_export" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/custom_export" />
+        </LinearLayout>
+        <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/ly_et_epub_filename" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp" android:hint="@string/export_file_name" app:endIconCheckable="true" app:endIconContentDescription="Execute script" app:endIconDrawable="@drawable/ic_play_24dp" app:endIconMode="custom" app:helperText="Variable: name, author, epubIndex">
+            <io.legado.app.lib.theme.view.ThemeEditText android:enabled="false" android:id="@id/et_epub_filename" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+        </io.legado.app.ui.widget.text.TextInputLayout>
+        <io.legado.app.ui.widget.text.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dp" android:hint="@string/file_contains_number">
+            <io.legado.app.lib.theme.view.ThemeEditText android:id="@id/et_epub_size" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLength="6" android:inputType="number" />
+        </io.legado.app.ui.widget.text.TextInputLayout>
+        <io.legado.app.ui.widget.text.TextInputLayout android:id="@id/ly_et_input_scope" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/export_chapter_index">
+            <io.legado.app.lib.theme.view.ThemeEditText android:id="@id/et_input_scope" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        </io.legado.app.ui.widget.text.TextInputLayout>
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

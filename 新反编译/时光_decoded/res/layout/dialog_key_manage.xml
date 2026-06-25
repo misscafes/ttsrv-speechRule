@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/root_layout" android:background="@android:color/transparent" android:paddingTop="8.0dp" android:paddingBottom="24.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="20.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:gravity="center" android:paddingBottom="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="配置模型" />
+    <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp" app:cardBackgroundColor="?colorSurfaceContainerLow" app:cardCornerRadius="16.0dp" app:cardElevation="0.0dp" app:strokeColor="?colorOutlineVariant" app:strokeWidth="1.0dp">
+        <LinearLayout android:orientation="vertical" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" android:text="当前AI模型" />
+            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="?colorOnSurface" android:ellipsize="end" android:id="@id/tv_current_key_preview" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="未设置" android:maxLines="1" />
+            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+                <com.google.android.material.button.MaterialButton android:textSize="13.0sp" android:id="@id/btn_show_key" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="查看密钥" android:layout_weight="1.0" android:layout_marginEnd="4.0dp" style="@style/Widget.Material3.Button.OutlinedButton" />
+                <com.google.android.material.button.MaterialButton android:textSize="13.0sp" android:id="@id/btn_copy_key" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="复制密钥" android:layout_weight="1.0" android:layout_marginStart="4.0dp" style="@style/Widget.Material3.Button.OutlinedButton" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+    <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp" app:cardBackgroundColor="?colorSurfaceContainerLow" app:cardCornerRadius="16.0dp" app:cardElevation="0.0dp" app:strokeColor="?colorOutlineVariant" app:strokeWidth="1.0dp">
+        <LinearLayout android:orientation="vertical" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="密钥管理" />
+            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp">
+                <com.google.android.material.button.MaterialButton android:textSize="13.0sp" android:id="@id/btn_save_key" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="添加模型" android:layout_weight="1.0" android:layout_marginEnd="4.0dp" app:icon="@drawable/ic_save" app:iconSize="16.0dp" style="@style/Widget.Material3.Button.TonalButton" />
+                <com.google.android.material.button.MaterialButton android:textSize="13.0sp" android:id="@id/btn_restore_key" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="恢复备份" android:layout_weight="1.0" android:layout_marginHorizontal="2.0dp" app:icon="@drawable/ic_restore" app:iconSize="16.0dp" style="@style/Widget.Material3.Button.TonalButton" />
+                <com.google.android.material.button.MaterialButton android:textSize="13.0sp" android:id="@id/btn_delete_key" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="删除密钥" android:layout_weight="1.0" android:layout_marginStart="4.0dp" app:icon="@drawable/ic_delete" app:iconSize="16.0dp" style="@style/Widget.Material3.Button.TonalButton" />
+            </LinearLayout>
+            <com.google.android.material.button.MaterialButton android:textSize="13.0sp" android:id="@id/btn_modify_key" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="修改密钥" app:icon="@drawable/ic_edit" app:iconSize="16.0dp" style="@style/Widget.Material3.Button.TonalButton" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+    <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" app:cardBackgroundColor="?colorSurfaceContainerLow" app:cardCornerRadius="16.0dp" app:cardElevation="0.0dp" app:strokeColor="?colorOutlineVariant" app:strokeWidth="1.0dp">
+        <LinearLayout android:orientation="vertical" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textSize="13.0sp" android:textColor="?colorOnSurfaceVariant" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:text="备份与恢复" />
+            <com.google.android.material.button.MaterialButton android:textSize="13.0sp" android:id="@id/btn_restore_keys_json" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="从配置恢复密钥" app:icon="@drawable/ic_restore" app:iconSize="16.0dp" style="@style/Widget.Material3.Button.TonalButton" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</LinearLayout>

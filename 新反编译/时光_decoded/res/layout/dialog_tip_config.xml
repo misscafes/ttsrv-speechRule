@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp">
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="16.0dp">
+            <com.google.android.material.bottomsheet.BottomSheetDragHandleView android:layout_gravity="center_horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0.0dp" android:paddingVertical="8.0dp" />
+            <TextView android:textSize="18.0sp" android:textStyle="bold" android:id="@id/bottom_sheet_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/read_config" android:layout_marginVertical="8.0dp" />
+        </LinearLayout>
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textSize="16.0sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/body_title" />
+            <View android:layout_width="0.0dp" android:layout_height="match_parent" android:layout_weight="1.0" />
+            <com.google.android.material.chip.ChipGroup android:id="@id/rg_title_mode" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginVertical="8.0dp" app:selectionRequired="true" app:singleLine="true" app:singleSelection="true">
+                <com.google.android.material.chip.Chip android:id="@id/rb_title_mode1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/title_left" android:checkable="true" />
+                <com.google.android.material.chip.Chip android:id="@id/rb_title_mode2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/title_center" android:checkable="true" />
+                <com.google.android.material.chip.Chip android:id="@id/rb_title_mode3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/title_hide" android:checkable="true" />
+            </com.google.android.material.chip.ChipGroup>
+        </LinearLayout>
+        <com.google.android.material.button.MaterialButtonGroup android:gravity="end" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <com.google.android.material.button.MaterialButton android:id="@id/btnSelectTitleFont" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="0.0dp" android:text="@string/text_font" app:icon="@drawable/ic_title_font" style="@style/Widget.Material3Expressive.Button.TonalButton" />
+            <com.google.android.material.button.MaterialButton android:id="@id/textFontWeightConverter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="0.0dp" android:text="@string/title_font_size" style="@style/Widget.Material3Expressive.Button.TonalButton" />
+            <io.legado.app.ui.widget.AccentColorButton android:id="@id/abtnTitleColor" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/title_color" style="@style/Widget.Material3Expressive.Button.TonalButton" />
+        </com.google.android.material.button.MaterialButtonGroup>
+        <com.google.android.material.button.MaterialButtonGroup android:gravity="end" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <com.google.android.material.button.MaterialButton android:id="@id/btn_title_segType" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/split_title" style="@style/Widget.Material3Expressive.Button.TonalButton" />
+            <com.google.android.material.button.MaterialButton android:id="@id/btn_title_seg_config" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/split_title_mode" style="@style/Widget.Material3Expressive.Button.TonalButton" />
+        </com.google.android.material.button.MaterialButtonGroup>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+            <io.legado.app.ui.widget.SimpleCounterView android:id="@id/dsb_title_seg_scaling" android:layout_width="108.0dp" android:layout_height="wrap_content" app:max="20" app:min="-20" app:title="@string/subtitle_scale" />
+            <View android:layout_width="0.0dp" android:layout_height="match_parent" android:layout_weight="1.0" />
+            <io.legado.app.ui.widget.SimpleCounterView android:id="@id/dsb_title_size" android:layout_width="108.0dp" android:layout_height="wrap_content" app:max="20" app:title="@string/title_font_size" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+            <io.legado.app.ui.widget.SimpleCounterView android:id="@id/dsb_title_line_spacing_sub" android:layout_width="108.0dp" android:layout_height="wrap_content" app:max="30" app:min="-30" app:title="@string/subtitle_margin" />
+            <View android:layout_width="0.0dp" android:layout_height="match_parent" android:layout_weight="1.0" />
+            <io.legado.app.ui.widget.SimpleCounterView android:id="@id/dsb_title_line_spacing_extra" android:layout_width="108.0dp" android:layout_height="wrap_content" app:max="20" app:title="@string/heading_spacing" />
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <io.legado.app.ui.widget.SimpleCounterView android:id="@id/dsb_title_top" android:layout_width="120.0dp" android:layout_height="wrap_content" app:max="200" app:title="@string/title_margin_top" />
+            <View android:layout_width="0.0dp" android:layout_height="match_parent" android:layout_weight="1.0" />
+            <io.legado.app.ui.widget.SimpleCounterView android:id="@id/dsb_title_bottom" android:layout_width="120.0dp" android:layout_height="wrap_content" app:max="200" app:title="@string/title_margin_bottom" />
+        </LinearLayout>
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:text="@string/tool_bar_style" />
+        <com.google.android.material.chip.ChipGroup android:layout_gravity="end" android:id="@id/bottom_mode" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginVertical="8.0dp" app:selectionRequired="true" app:singleLine="true" app:singleSelection="true">
+            <com.google.android.material.chip.Chip android:id="@id/bottom_mode1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/flow_sys" android:checkable="true" />
+            <com.google.android.material.chip.Chip android:id="@id/bottom_mode2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/follow_read_background" android:checkable="true" />
+            <com.google.android.material.chip.Chip android:id="@id/bottom_mode3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/custom" android:checkable="true" />
+        </com.google.android.material.chip.ChipGroup>
+        <com.google.android.material.button.MaterialButtonGroup android:gravity="end" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <io.legado.app.ui.widget.AccentColorButton android:id="@id/abtnBackgroundColor" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/background_color" style="@style/Widget.Material3Expressive.Button.OutlinedButton" />
+            <io.legado.app.ui.widget.AccentColorButton android:id="@id/abtnAccentColor" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/accent" style="@style/Widget.Material3Expressive.Button.OutlinedButton" />
+        </com.google.android.material.button.MaterialButtonGroup>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

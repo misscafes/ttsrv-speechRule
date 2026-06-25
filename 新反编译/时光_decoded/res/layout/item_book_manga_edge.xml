@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_vertical" android:orientation="vertical" android:background="@color/book_ant_10" android:padding="24.0dp" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textStyle="bold" android:textColor="@color/white" android:id="@id/text" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/read_end" android:autoSizeTextType="uniform" android:autoSizeStepGranularity="2.0dp" android:autoSizePresetSizes="12.0sp" android:autoSizeMinTextSize="8.0sp" android:autoSizeMaxTextSize="12.0sp" />
+    <TextView android:textSize="22.0sp" android:textStyle="bold" android:textColor="@color/white" android:id="@id/textChapter" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" android:autoSizeTextType="uniform" android:autoSizeStepGranularity="2.0dp" android:autoSizePresetSizes="22.0sp" android:autoSizeMinTextSize="12.0sp" android:autoSizeMaxTextSize="22.0sp" />
+</LinearLayout>

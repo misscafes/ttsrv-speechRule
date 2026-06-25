@@ -1,0 +1,19 @@
+.class public interface abstract Lorg/joni/constants/MetaChar;
+.super Ljava/lang/Object;
+.source "r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892"
+
+
+# static fields
+.field public static final ANYCHAR:I = 0x1
+
+.field public static final ANYCHAR_ANYTIME:I = 0x5
+
+.field public static final ANYTIME:I = 0x2
+
+.field public static final ESCAPE:I = 0x0
+
+.field public static final INEFFECTIVE_META_CHAR:I = 0x0
+
+.field public static final ONE_OR_MORE_TIME:I = 0x4
+
+.field public static final ZERO_OR_ONE_TIME:I = 0x3

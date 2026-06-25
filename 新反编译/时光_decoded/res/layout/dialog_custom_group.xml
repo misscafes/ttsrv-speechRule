@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:overScrollMode="ifContentScrolls" android:paddingHorizontal="16.0dp" android:paddingVertical="8.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <androidx.constraintlayout.widget.ConstraintLayout android:paddingTop="8.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:id="@id/tv_add_group_title" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/add_group" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toLeftOf="@id/sw_add_group" app:layout_constraintTop_toTopOf="parent" />
+            <TextView android:id="@id/tv_add_group_s" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="@string/custom_group_summary" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toLeftOf="@id/sw_add_group" app:layout_constraintTop_toBottomOf="@id/tv_add_group_title" />
+            <com.google.android.material.materialswitch.MaterialSwitch android:id="@id/sw_add_group" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textOn="@string/add" android:textOff="@string/replace" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <com.google.android.material.textfield.TextInputLayout android:id="@id/text_input_layout" android:paddingTop="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <io.legado.app.ui.widget.text.AutoCompleteTextView android:id="@id/edit_view" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

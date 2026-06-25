@@ -1,0 +1,346 @@
+package org.mozilla.javascript;
+
+import f0.u1;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+/* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+/* JADX INFO: loaded from: classes2.dex */
+final class NativeError extends IdScriptableObject {
+    private static final int ConstructorId_captureStackTrace = -1;
+    public static final int DEFAULT_STACK_LIMIT = -1;
+    private static final Object ERROR_TAG = "Error";
+    private static final int Id_constructor = 1;
+    private static final int Id_toSource = 3;
+    private static final int Id_toString = 2;
+    private static final int MAX_PROTOTYPE_ID = 3;
+    private static final String STACK_HIDE_KEY = "_stackHide";
+    private static final String STACK_TAG = "stack";
+    private static final long serialVersionUID = -5338413581437645187L;
+    private Object stack;
+    private RhinoException stackProvider;
+
+    /* JADX INFO: compiled from: r8-map-id-05bfbbe9086a2edb9eee68032a6875ae8b29a17573f56b596f68c5a5f5b16892 */
+    public static final class ProtoProps implements Serializable {
+        static final String KEY = "_ErrorPrototypeProps";
+        private static final long serialVersionUID = 1907180507775337939L;
+        Function prepareStackTrace;
+        int stackTraceLimit;
+
+        public /* synthetic */ ProtoProps(int i10) {
+            this();
+        }
+
+        public Object getPrepareStackTrace() {
+            Function function = this.prepareStackTrace;
+            return function == null ? Undefined.instance : function;
+        }
+
+        public Object getStackTraceLimit() {
+            int i10 = this.stackTraceLimit;
+            return i10 >= 0 ? Integer.valueOf(i10) : Double.valueOf(Double.POSITIVE_INFINITY);
+        }
+
+        public void setPrepareStackTrace(Object obj) {
+            if (obj == null || Undefined.isUndefined(obj)) {
+                this.prepareStackTrace = null;
+            } else if (obj instanceof Function) {
+                this.prepareStackTrace = (Function) obj;
+            }
+        }
+
+        public void setStackTraceLimit(Object obj) {
+            double number = Context.toNumber(obj);
+            if (Double.isNaN(number) || Double.isInfinite(number)) {
+                this.stackTraceLimit = -1;
+            } else {
+                this.stackTraceLimit = (int) number;
+            }
+        }
+
+        private ProtoProps() {
+            this.stackTraceLimit = -1;
+        }
+    }
+
+    private Object callPrepareStack(Function function, ScriptStackElement[] scriptStackElementArr) {
+        Context currentContext = Context.getCurrentContext();
+        Object[] objArr = new Object[scriptStackElementArr.length];
+        for (int i10 = 0; i10 < scriptStackElementArr.length; i10++) {
+            NativeCallSite nativeCallSite = (NativeCallSite) currentContext.newObject(this, "CallSite");
+            nativeCallSite.setElement(scriptStackElementArr[i10]);
+            objArr[i10] = nativeCallSite;
+        }
+        return function.call(currentContext, function, this, new Object[]{this, currentContext.newArray(this, objArr)});
+    }
+
+    public static void init(Scriptable scriptable, boolean z4) {
+        NativeError nativeError = new NativeError();
+        ScriptableObject.putProperty(nativeError, "name", "Error");
+        ScriptableObject.putProperty(nativeError, "message", y8.d.EMPTY);
+        ScriptableObject.putProperty(nativeError, "fileName", y8.d.EMPTY);
+        ScriptableObject.putProperty((Scriptable) nativeError, "lineNumber", (Object) 0);
+        nativeError.setAttributes("name", 2);
+        nativeError.setAttributes("message", 2);
+        nativeError.exportAsJSClass(3, scriptable, z4);
+        NativeCallSite.init(nativeError, z4);
+    }
+
+    public static void installCause(NativeObject nativeObject, NativeError nativeError) {
+        Object property = ScriptableObject.getProperty(nativeObject, "cause");
+        if (property != Scriptable.NOT_FOUND) {
+            ScriptableObject.putProperty(nativeError, "cause", property);
+            nativeError.setAttributes("cause", 2);
+        }
+    }
+
+    private static void js_captureStackTrace(Context context, Scriptable scriptable, Scriptable scriptable2, Object[] objArr) {
+        Object obj;
+        ScriptableObject scriptableObject = (ScriptableObject) ScriptRuntime.toObject(context, scriptable, objArr[0]);
+        Scriptable scriptable3 = objArr.length > 1 ? (Function) ScriptRuntime.toObjectOrNull(context, objArr[1], scriptable) : null;
+        NativeError nativeError = (NativeError) context.newObject(scriptable2, "Error");
+        nativeError.setStackProvider(new EvaluatorException("[object Object]"));
+        if (scriptable3 != null && (obj = scriptable3.get("name", scriptable3)) != null && !Undefined.isUndefined(obj)) {
+            nativeError.associateValue(STACK_HIDE_KEY, Context.toString(obj));
+        }
+        scriptableObject.defineProperty(STACK_TAG, nativeError.get(STACK_TAG), 2);
+    }
+
+    private static String js_toSource(Context context, Scriptable scriptable, Scriptable scriptable2) {
+        int int32;
+        Object property = ScriptableObject.getProperty(scriptable2, "name");
+        Object property2 = ScriptableObject.getProperty(scriptable2, "message");
+        Object property3 = ScriptableObject.getProperty(scriptable2, "fileName");
+        Object property4 = ScriptableObject.getProperty(scriptable2, "lineNumber");
+        StringBuilder sb2 = new StringBuilder("(new ");
+        Object obj = Scriptable.NOT_FOUND;
+        if (property == obj) {
+            property = Undefined.instance;
+        }
+        sb2.append(ScriptRuntime.toString(property));
+        sb2.append("(");
+        if (property2 != obj || property3 != obj || property4 != obj) {
+            if (property2 == obj) {
+                property2 = y8.d.EMPTY;
+            }
+            sb2.append(ScriptRuntime.uneval(context, scriptable, property2));
+            if (property3 != obj || property4 != obj) {
+                sb2.append(", ");
+                if (property3 == obj) {
+                    property3 = y8.d.EMPTY;
+                }
+                sb2.append(ScriptRuntime.uneval(context, scriptable, property3));
+                if (property4 != obj && (int32 = ScriptRuntime.toInt32(property4)) != 0) {
+                    sb2.append(", ");
+                    sb2.append(ScriptRuntime.toString(int32));
+                }
+            }
+        }
+        sb2.append("))");
+        return sb2.toString();
+    }
+
+    private static Object js_toString(Scriptable scriptable) {
+        Object property = ScriptableObject.getProperty(scriptable, "name");
+        Object obj = Scriptable.NOT_FOUND;
+        String string = (property == obj || Undefined.isUndefined(property)) ? "Error" : ScriptRuntime.toString(property);
+        Object property2 = ScriptableObject.getProperty(scriptable, "message");
+        String string2 = (property2 == obj || Undefined.isUndefined(property2)) ? y8.d.EMPTY : ScriptRuntime.toString(property2);
+        return string.isEmpty() ? string2 : string2.isEmpty() ? string : u1.w(string, ": ", string2);
+    }
+
+    public static NativeError make(Context context, Scriptable scriptable, IdFunctionObject idFunctionObject, Object[] objArr) {
+        NativeError nativeErrorMakeProto = makeProto(scriptable, idFunctionObject);
+        int length = objArr.length;
+        if (length >= 1) {
+            if (!Undefined.isUndefined(objArr[0])) {
+                ScriptableObject.putProperty(nativeErrorMakeProto, "message", ScriptRuntime.toString(objArr[0]));
+                nativeErrorMakeProto.setAttributes("message", 2);
+            }
+            if (length >= 2) {
+                Object obj = objArr[1];
+                if (obj instanceof NativeObject) {
+                    installCause((NativeObject) obj, nativeErrorMakeProto);
+                } else {
+                    ScriptableObject.putProperty(nativeErrorMakeProto, "fileName", ScriptRuntime.toString(obj));
+                    if (length >= 3) {
+                        ScriptableObject.putProperty(nativeErrorMakeProto, "lineNumber", Integer.valueOf(ScriptRuntime.toInt32(objArr[2])));
+                    }
+                }
+            }
+        }
+        nativeErrorMakeProto.setStackProvider(new EvaluatorException(y8.d.EMPTY));
+        return nativeErrorMakeProto;
+    }
+
+    public static NativeError makeAggregate(Context context, Scriptable scriptable, IdFunctionObject idFunctionObject, Object[] objArr) {
+        NativeError nativeErrorMakeProto = makeProto(scriptable, idFunctionObject);
+        int length = objArr.length;
+        if (length < 1) {
+            throw ScriptRuntime.typeErrorById("msg.iterable.expected", new Object[0]);
+        }
+        if (length >= 2) {
+            if (!Undefined.isUndefined(objArr[1])) {
+                ScriptableObject.putProperty(nativeErrorMakeProto, "message", ScriptRuntime.toString(objArr[1]));
+                nativeErrorMakeProto.setAttributes("message", 2);
+            }
+            if (length >= 3) {
+                Object obj = objArr[2];
+                if (obj instanceof NativeObject) {
+                    installCause((NativeObject) obj, nativeErrorMakeProto);
+                } else {
+                    ScriptableObject.putProperty(nativeErrorMakeProto, "fileName", ScriptRuntime.toString(obj));
+                    if (length >= 4) {
+                        ScriptableObject.putProperty(nativeErrorMakeProto, "lineNumber", Integer.valueOf(ScriptRuntime.toInt32(objArr[3])));
+                    }
+                }
+            }
+        }
+        IteratorLikeIterable iteratorLikeIterable = new IteratorLikeIterable(context, scriptable, ScriptRuntime.callIterator(objArr[0], context, scriptable));
+        try {
+            ArrayList arrayList = new ArrayList();
+            Iterator<Object> it = iteratorLikeIterable.iterator();
+            while (it.hasNext()) {
+                arrayList.add(it.next());
+            }
+            nativeErrorMakeProto.defineProperty("errors", context.newArray(scriptable, arrayList.toArray()), 2);
+            iteratorLikeIterable.close();
+            nativeErrorMakeProto.setStackProvider(new EvaluatorException(y8.d.EMPTY));
+            return nativeErrorMakeProto;
+        } catch (Throwable th2) {
+            try {
+                iteratorLikeIterable.close();
+            } catch (Throwable th3) {
+                th2.addSuppressed(th3);
+            }
+            throw th2;
+        }
+    }
+
+    public static NativeError makeProto(Scriptable scriptable, IdFunctionObject idFunctionObject) {
+        Scriptable scriptable2 = (Scriptable) idFunctionObject.get("prototype", idFunctionObject);
+        NativeError nativeError = new NativeError();
+        nativeError.setPrototype(scriptable2);
+        nativeError.setParentScope(scriptable);
+        return nativeError;
+    }
+
+    private static NativeError realThis(Scriptable scriptable, IdFunctionObject idFunctionObject) {
+        return (NativeError) IdScriptableObject.ensureType(scriptable, NativeError.class, idFunctionObject);
+    }
+
+    @Override // org.mozilla.javascript.IdScriptableObject, org.mozilla.javascript.IdFunctionCall
+    public Object execIdCall(IdFunctionObject idFunctionObject, Context context, Scriptable scriptable, Scriptable scriptable2, Object[] objArr) {
+        if (!idFunctionObject.hasTag(ERROR_TAG)) {
+            return super.execIdCall(idFunctionObject, context, scriptable, scriptable2, objArr);
+        }
+        int iMethodId = idFunctionObject.methodId();
+        if (iMethodId == -1) {
+            js_captureStackTrace(context, scriptable, scriptable2, objArr);
+            return Undefined.instance;
+        }
+        if (iMethodId == 1) {
+            return make(context, scriptable, idFunctionObject, objArr);
+        }
+        if (iMethodId == 2) {
+            return (scriptable2 == scriptable || !(scriptable2 instanceof NativeObject)) ? js_toString(realThis(scriptable2, idFunctionObject)) : js_toString(scriptable2);
+        }
+        if (iMethodId == 3) {
+            return js_toSource(context, scriptable, scriptable2);
+        }
+        throw new IllegalArgumentException(String.valueOf(iMethodId));
+    }
+
+    @Override // org.mozilla.javascript.IdScriptableObject
+    public void fillConstructorProperties(IdFunctionObject idFunctionObject) {
+        addIdFunctionProperty(idFunctionObject, ERROR_TAG, -1, "captureStackTrace", 2);
+        ProtoProps protoProps = new ProtoProps(0);
+        associateValue("_ErrorPrototypeProps", protoProps);
+        idFunctionObject.defineProperty("stackTraceLimit", new g(0, protoProps), new h(0, protoProps), 0);
+        idFunctionObject.defineProperty("prepareStackTrace", new g(1, protoProps), new h(1, protoProps), 0);
+        super.fillConstructorProperties(idFunctionObject);
+    }
+
+    @Override // org.mozilla.javascript.IdScriptableObject
+    public int findPrototypeId(String str) {
+        str.getClass();
+        switch (str) {
+            case "toSource":
+                return 3;
+            case "toString":
+                return 2;
+            case "constructor":
+                return 1;
+            default:
+                return 0;
+        }
+    }
+
+    @Override // org.mozilla.javascript.ScriptableObject, org.mozilla.javascript.Scriptable
+    public String getClassName() {
+        return "Error";
+    }
+
+    public Object getStackDelegated() {
+        int i10;
+        Function function;
+        Object obj = this.stack;
+        if (obj != null) {
+            return obj;
+        }
+        if (this.stackProvider == null) {
+            return Scriptable.NOT_FOUND;
+        }
+        ProtoProps protoProps = (ProtoProps) ((NativeError) getPrototype()).getAssociatedValue("_ErrorPrototypeProps");
+        if (protoProps != null) {
+            i10 = protoProps.stackTraceLimit;
+            function = protoProps.prepareStackTrace;
+        } else {
+            i10 = -1;
+            function = null;
+        }
+        ScriptStackElement[] scriptStack = this.stackProvider.getScriptStack(i10, (String) getAssociatedValue(STACK_HIDE_KEY));
+        Object stackTrace = function == null ? RhinoException.formatStackTrace(scriptStack, this.stackProvider.details()) : callPrepareStack(function, scriptStack);
+        this.stack = stackTrace;
+        return stackTrace;
+    }
+
+    @Override // org.mozilla.javascript.IdScriptableObject
+    public void initPrototypeId(int i10) {
+        int i11;
+        String str;
+        if (i10 != 1) {
+            i11 = 0;
+            if (i10 == 2) {
+                str = "toString";
+            } else {
+                if (i10 != 3) {
+                    throw new IllegalArgumentException(String.valueOf(i10));
+                }
+                str = "toSource";
+            }
+        } else {
+            i11 = 1;
+            str = "constructor";
+        }
+        initPrototypeMethod(ERROR_TAG, i10, str, i11);
+    }
+
+    public void setStackDelegated(Object obj) {
+        this.stackProvider = null;
+        this.stack = obj;
+    }
+
+    public void setStackProvider(RhinoException rhinoException) {
+        if (this.stackProvider == null) {
+            defineProperty(STACK_TAG, new g(2, this), new h(2, this), 2);
+        }
+        this.stackProvider = rhinoException;
+    }
+
+    public String toString() {
+        Object objJs_toString = js_toString(this);
+        return objJs_toString instanceof String ? (String) objJs_toString : super.toString();
+    }
+}

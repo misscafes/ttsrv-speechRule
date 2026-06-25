@@ -1,0 +1,66 @@
+package cn.hutool.crypto.symmetric;
+
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.KeyUtil;
+import javax.crypto.spec.IvParameterSpec;
+
+/* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+/* JADX INFO: loaded from: classes3.dex */
+public class ZUC extends SymmetricCrypto {
+    private static final long serialVersionUID = 1;
+
+    /* JADX INFO: renamed from: cn.hutool.crypto.symmetric.ZUC$1, reason: invalid class name */
+    /* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+    public static /* synthetic */ class AnonymousClass1 {
+        static final /* synthetic */ int[] $SwitchMap$cn$hutool$crypto$symmetric$ZUC$ZUCAlgorithm;
+
+        static {
+            int[] iArr = new int[ZUCAlgorithm.values().length];
+            $SwitchMap$cn$hutool$crypto$symmetric$ZUC$ZUCAlgorithm = iArr;
+            try {
+                iArr[ZUCAlgorithm.ZUC_128.ordinal()] = 1;
+            } catch (NoSuchFieldError unused) {
+            }
+            try {
+                $SwitchMap$cn$hutool$crypto$symmetric$ZUC$ZUCAlgorithm[ZUCAlgorithm.ZUC_256.ordinal()] = 2;
+            } catch (NoSuchFieldError unused2) {
+            }
+        }
+    }
+
+    /* JADX INFO: compiled from: r8-map-id-47d7031f5d78718531f48f1c7640d5b20aa4ef3796b143da36b974009fbbf949 */
+    public enum ZUCAlgorithm {
+        ZUC_128("ZUC-128"),
+        ZUC_256("ZUC-256");
+
+        private final String value;
+
+        ZUCAlgorithm(String str) {
+            this.value = str;
+        }
+
+        public String getValue() {
+            return this.value;
+        }
+    }
+
+    public ZUC(ZUCAlgorithm zUCAlgorithm, byte[] bArr, byte[] bArr2) {
+        super(zUCAlgorithm.value, KeyUtil.generateKey(zUCAlgorithm.value, bArr), generateIvParam(zUCAlgorithm, bArr2));
+    }
+
+    private static IvParameterSpec generateIvParam(ZUCAlgorithm zUCAlgorithm, byte[] bArr) {
+        if (bArr == null) {
+            int i10 = AnonymousClass1.$SwitchMap$cn$hutool$crypto$symmetric$ZUC$ZUCAlgorithm[zUCAlgorithm.ordinal()];
+            if (i10 == 1) {
+                bArr = RandomUtil.randomBytes(16);
+            } else if (i10 == 2) {
+                bArr = RandomUtil.randomBytes(25);
+            }
+        }
+        return new IvParameterSpec(bArr);
+    }
+
+    public static byte[] generateKey(ZUCAlgorithm zUCAlgorithm) {
+        return KeyUtil.generateKey(zUCAlgorithm.value).getEncoded();
+    }
+}
