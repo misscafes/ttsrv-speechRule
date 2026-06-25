@@ -73,9 +73,10 @@
 - `tmp/mingwuyan_final/smali/im/t.smali`
   - 已新增全局 `_logCache:Ljava/lang/StringBuilder;`，在 `<clinit>` 中初始化。
   - 已新增静态方法 `appendLog(Ljava/lang/String;Ljava/lang/String;)V`，供 `tc/l0` 调用，把 tag + msg 追加到 `_logCache`。
+  - 已在 `e()` 方法开头（`monitor-enter p0` 之后）无条件缓存所有 JS `java.log()` 日志到 `_logCache`，不再依赖 `Lim/t;->b` 是否已设置。
 - `tmp/mingwuyan_final/smali/tc/l0.smali`
-  - JS/Rhino 的 `java.log()` 实际最终输出到这里：`tc/l0.o0()` → `android.util.Log.println()`。
-  - 已在 `o0()` 中 `Log.println()` 之后调用 `Lim/t;->appendLog(Ljava/lang/String;Ljava/lang/String;)V`，把日志同步写入 `_logCache`。
+  - 部分系统组件/日志通过 `tc/l0.o0()` → `android.util/Log.println()` 输出。
+  - 已在 `o0()` 中 `Log.println()` 之后调用 `Lim/t;->appendLog(Ljava/lang/String;Ljava/lang/String;)V`，把这类日志同步写入 `_logCache`。
 
 ### 资源文件
 - `tmp/mingwuyan_final/res/layout/dialog_read_aloud.xml`

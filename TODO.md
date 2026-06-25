@@ -11,10 +11,15 @@
   1. **根因**：JS/Rhino 的 `java.log()` 实际输出路径是 `pc/d8` → `pm/n0.I()` → `tc/n0` → `tc/l0.o0()` → `android.util.Log.println()`，并不经过 `im/t.e()`，所以第一版缓存位置错误，导致弹窗空白。
   2. `smali/im/t.smali`：新增静态方法 `appendLog(Ljava/lang/String;Ljava/lang/String;)V`，将 tag + msg 追加到 `_logCache`。
   3. `smali/tc/l0.smali`：在 `tc/l0.o0()` 调用 `android.util/Log.println()` 之后，调用 `Lim/t;->appendLog(Ljava/lang/String;Ljava/lang/String;)V`，把真正输出到 Logcat 的日志同步写入缓存。
+- **改动内容（第三版，修复只有 FA 日志）**:
+  1. **根因**：第二版虽然能捕获 Logcat 日志，但 TTS 朗读时 `java.log()` 实际只调用 `Lim/t.e()`，且只有在书源调试窗口设置了 `Lim/t;->b` 回调时才会继续输出到 Logcat；日常朗读场景 `Lim/t;->b` 为 null，所以 TTS/JS 日志不会进入 `tc/l0.o0()`，导致缓存里只有 Firebase 等系统日志。
+  2. `smali/im/t.smali`：把缓存逻辑从 `e()` 方法内部的条件分支之后移到 `monitor-enter p0` 之后，**无条件缓存所有进入 `Lim/t.e()` 的日志**，不再依赖 `Lim/t;->b` 是否已设置。
+  3. 保留第二版在 `tc/l0.o0()` 中的缓存，用于捕获其他非 JS 日志。
 - **生成文件**:
   - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_已签名.apk.1`（第一版，弹窗空白）
-  - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_fix_已签名.apk.1`（第二版，修复缓存路径）
-- **当前状态**: 已重新回编译并签名，等待用户安装测试点击朗读对话框中「缓存日志」按钮后是否能显示日志。
+  - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_fix_已签名.apk.1`（第二版，只有 Firebase 等系统日志）
+  - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_fullfix_已签名.apk.1`（第三版，同时缓存 JS 日志和 Logcat 日志）
+- **当前状态**: 已重新回编译并签名，等待用户安装测试点击朗读对话框中「缓存日志」按钮后是否能显示 TTS/JS 日志。
 - **后续计划**:
   - 若方案 A 能正常显示日志，再升级方案 B：复用 `dialog_tts_audio_log.xml` + `item_tts_audio_log.xml` 实现 RecyclerView + 自动滚动。
   - 继续收集 `tts_debug_log.txt` 中「切换章节卡住」相关日志。
@@ -2713,10 +2718,15 @@ C:/date/ttsrv-speechRule/
    - 在 `smali/im/t.smali` 新增 `appendLog(Ljava/lang/String;Ljava/lang/String;)V` 静态方法。
    - 在 `smali/tc/l0.smali` 的 `o0()` 中 `Log.println()` 后调用 `Lim/t;->appendLog()`，把真正输出到 Logcat 的日志同步写入缓存。
    - 回编译并签名生成 `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_fix_已签名.apk.1`。
-3. 更新 `MEMORY.md`：
+3. 命无言 APK 内置日志查看器方案 A（第三版，修复只有 FA 日志）：
+   - 用户测试第二版：对话框能弹出，但只显示 Firebase 等系统日志，没有 TTS/JS 日志。
+   - 排查发现 TTS 朗读时 `java.log()` 调用 `Lim/t.e()`，而 `Lim/t.e()` 只有在书源调试窗口设置了 `Lim/t;->b` 回调时才会继续输出到 Logcat；日常朗读 `Lim/t;->b` 为 null，所以 TTS 日志不会进入 `tc/l0.o0()`。
+   - 把缓存逻辑移到 `Lim/t.e()` 方法开头（`monitor-enter p0` 之后），无条件缓存所有 JS 日志。
+   - 回编译并签名生成 `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_fullfix_已签名.apk.1`。
+4. 更新 `MEMORY.md`：
    - 添加工具/程序查找顺序约定（项目根目录 → C 盘 → 下载）。
-   - 更新命无言 APK 内置日志查看器状态为「方案 A 第二版已构建，待测试」。
-4. 更新 `TODO.md` 变更记录和会话摘要。
+   - 更新命无言 APK 内置日志查看器状态为「方案 A 第三版已构建，待测试」。
+5. 更新 `TODO.md` 变更记录和会话摘要。
 
 **主目录结构（相关）**:
 ```
@@ -2728,8 +2738,9 @@ C:/date/ttsrv-speechRule/
 │       └── ttsrv-replaces4.json                   <- 合并+修复后的音效规则
 ├── 新反编译/命无言/
 │   ├── i·阅读 尝鲜版[3.26.062019].apk.1
-│   ├── i·阅读 尝鲜版[3.26.062019]_log_已签名.apk.1       <- 第一版（弹窗空白）
-│   └── i·阅读 尝鲜版[3.26.062019]_log_fix_已签名.apk.1   <- 第二版（修复缓存路径）
+│   ├── i·阅读 尝鲜版[3.26.062019]_log_已签名.apk.1           <- 第一版（弹窗空白）
+│   ├── i·阅读 尝鲜版[3.26.062019]_log_fix_已签名.apk.1       <- 第二版（只有系统日志）
+│   └── i·阅读 尝鲜版[3.26.062019]_log_fullfix_已签名.apk.1   <- 第三版（同时缓存 JS 日志）
 ├── js/new/                                        <- JS 调阅文件
 ├── yinpin/
 │   └── ttsrv-replaces4.json                       <- 项目仓库音效规则镜像
