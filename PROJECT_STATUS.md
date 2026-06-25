@@ -1,7 +1,7 @@
 # 项目状态摘要（快速查阅版）
 
-> 本文件用于替代 `TODO.md` 的完整读取，快速了解项目当前状态。
-> 每次会话开始时优先读取此文件，如需详细历史再读 `TODO.md`。
+> 本文件是项目当前状态的**唯一权威快照**。
+> 每次会话开始时，建议先读 `MEMORY.md` 了解用户偏好，再读本文件了解当前状态，如需详细历史再读 `TODO.md`。
 
 ---
 
@@ -52,6 +52,7 @@ js/                           # JS 调阅文件（extract-js.js 生成）
 yinpin/                       # 音效规则文件
   ttsrv-replaces4.json
 TODO.md                       # 完整历史记录（详细版）
+MEMORY.md                     # AI 跨会话记忆：用户偏好、历史约定、未解决问题根因
 朗读脚本代码规范.md            # Rhino JS 引擎兼容指南（详细版）
 AGENTS.md                     # 项目规范（进入项目必读）
 PROJECT_STATUS.md             # 本文件（快速查阅版）
@@ -67,7 +68,8 @@ PROJECT_STATUS.md             # 本文件（快速查阅版）
   - 从 v1.13 备份生成 v1.14 JSON 源文件
   - 脚本 obj0 和引擎统一日志输出到 `/storage/emulated/0/Download/chajian/mingwuyan/tts_debug_log.txt`
   - 运行 `node extract-js.js` 重新生成 `js/new/...v1.14...` 调阅文件
-  - 更新 `PROJECT_STATUS.md` 和 `TODO.md`
+  - 新增 `MEMORY.md` 作为 AI 跨会话记忆
+  - 优化 `AGENTS.md` / `MEMORY.md` / `PROJECT_STATUS.md` 的文档分工，减少重复
 - **注意事项**：
   - 修改 `.json` 前必须先备份并递增版本号
   - 修改后必须运行 `node extract-js.js` 同步 `js/` 目录
