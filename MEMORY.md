@@ -32,13 +32,13 @@
 
 ### 1. 切换章节卡住
 - 用户反馈换书后切换章节可能卡住不播放。
-- v1.13 尝试在 `handleBookSwitch()` 中清空旧书章节缓存，但使用了 `new java.io.File()`，违反 Rhino 安全规范，实际清理失败。
-- v1.14 已增加统一文件日志，等待用户提供 `tts_debug_log.txt` 中换书前后、卡住前后的日志。
+- v1.17 已移除 `handleBookSwitch()` 中违规的 `new java.io.File()` 逻辑，并增强书名容错，等待用户测试反馈。
+- 若仍卡住，请提供 `tts_debug_log.txt` 中换书前后、卡住前后的日志。
 
-### 2. v1.13 缓存清理实现缺陷
-- 根因：`java.io.File` 被 `RhinoClassShutter` 屏蔽，会抛安全异常。
-- 后续修复方向：改用章节缓存索引文件记录已缓存章节路径，换书时用 `java.deleteExternalFile()` 逐个删除。
-- 待用户提供 v1.14 日志后，再决定是否需要发布 v1.15 修复。
+### 2. 切换新书后自动回默认书籍（v1.17 已修复，待验证）
+- 根因：`getBookNameSafely()` 过度信任 App 生成的 `data.json` 中的 `bookName`；当该书名字段缺失时回退到 `cunfang.txt`，若 `cunfang.txt` 已被覆盖为 `default_book`，就会持续使用默认书。
+- v1.17 修复：同时读取 `data.json` 和 `cunfang.txt`，优先使用非 `default_book` 书名；保存角色时同步刷新 `cunfang.txt`；在 `handleBookSwitch()` 中防御性地拒绝从真实书切回 `default_book`。
+- 待用户安装 v1.17 后验证是否彻底解决。
 
 ### 3. 命无言 APK 内置日志查看器（方案 A 第二版已构建，待测试）
 - **背景**：用户希望阅读 APK 本身能显示日志，不要依赖外部文件管理器。

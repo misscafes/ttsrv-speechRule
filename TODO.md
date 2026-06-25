@@ -1,5 +1,36 @@
 # 待办事项（TODO）
 
+### 猫剪豆问 v1.17 修复切换新书后自动回默认书籍（2026-06-25）
+- **版本升级**: v1.15 → v1.17（脚本 + 引擎）
+- **问题背景**: 用户反馈切换新书后，书名保持在 `default_book`；即使手动切换，下次朗读又自动切回默认书籍。同时后台仍有 AI 分析新书的角色分配输出
+- **根因分析**:
+  1. `getBookNameSafely()` 优先信任 App 生成的 `data.json` 中的 `bookName`；当 App 切换新书后未把新书名字段写入 `data.json`（或写入空值）时，脚本回退到 `cunfang.txt`
+  2. 若某次换书检测把 `cunfang.txt` 覆盖为 `default_book`，后续朗读将持续使用 `default_book`
+  3. v1.13 引入的旧书章节缓存清理使用了 `new java.io.File()`，违反 Rhino `RhinoClassShutter` 安全规范，会抛安全异常，增加不稳定因素且实际清理无效
+- **改动内容**:
+  1. 按项目规范备份 v1.15 并创建 v1.17 JSON 源文件：
+     - `new/(脚本)猫剪豆问（自然情绪版）v1.17.json`
+     - `new/猫剪豆问（自然情绪版）v1.17.json`
+  2. 同步更新 JSON 顶层 `name` / `version` 与 `code` 内部版本注释为 v1.17
+  3. 重写脚本 obj0 的 `getBookNameSafely()`：同时读取 `data.json` 和 `cunfang.txt`，优先返回非 `default_book` 的书名；增加 `[书名]` 来源日志便于排查
+  4. 在 `saveBookCharacters(charArr)` 末尾调用 `saveCurrentBookName(bookName)`，确保 AI 分析完角色后 `cunfang.txt` 与当前实际书名保持一致
+  5. 修改 `handleBookSwitch()`：移除 `new java.io.File()` 违规缓存清理逻辑；增加防御逻辑——若当前书名被解析为 `default_book` 而旧书不是，则拒绝切回默认书，仅清空历史/进度
+  6. 引擎同步版本号与头部注释，逻辑不变
+  7. 运行 `node extract-js.js` 重新生成 `js/new/...v1.17...` 调阅文件
+- **影响**:
+  - App 切换新书后，即使 `data.json` 偶尔缺失 `bookName`，脚本仍能从 `cunfang.txt` 保持真实书名，不会回退到 `default_book`
+  - 角色分析完成后会同步刷新 `cunfang.txt`，进一步增强书名稳定性
+  - 换书流程不再触发 Rhino 安全异常
+- **当前文件**:
+  - `new/(脚本)猫剪豆问（自然情绪版）v1.17.json`
+  - `new/猫剪豆问（自然情绪版）v1.17.json`
+- **JS 调阅文件同步**:
+  - `js/new/(脚本)猫剪豆问（自然情绪版）v1.17_obj{0,1}.js`
+  - `js/new/猫剪豆问（自然情绪版）v1.17.js`
+- **注意事项**:
+  - v1.17 脚本需与 v1.17 引擎配套使用
+  - 旧书章节缓存目录不再被主动删除（因 Rhino 安全限制），但缓存按 `CACHE_ROOT + 书名/` 隔离，换书后不会污染新书；如需释放空间可手动删除
+
 ### 命无言 APK 内置日志查看器方案 A（2026-06-25）
 - **目标 APK**: `新反编译/命无言/i·阅读 尝鲜版[3.26.062019].apk.1`
 - **问题背景**: 用户希望阅读 APK 本身能显示日志，不要依赖外部文件管理器。`dialog_read_aloud.xml` 中已有 `ll_tts_audio_log` 按钮，但对应的 smali 逻辑缺失，点击无反应。
