@@ -22,6 +22,8 @@
 
 .field public static i:J
 
+.field public static _logCache:Ljava/lang/StringBuilder;
+
 
 # direct methods
 .method static constructor <clinit>()V
@@ -116,7 +118,16 @@
     sput-wide v0, Lim/t;->i:J
 
     .line 47
+    new-instance v0, Ljava/lang/StringBuilder;
+
     .line 48
+    invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V
+
+    .line 49
+    sput-object v0, Lim/t;->_logCache:Ljava/lang/StringBuilder;
+
+    .line 50
+    .line 51
     return-void
 .end method
 
@@ -352,6 +363,17 @@
     .line 90
     :goto_1
     invoke-interface {p5, p4, p3}, Lim/q;->a(ILjava/lang/String;)V
+
+    # [AI] 缓存日志到全局 StringBuilder，供朗读对话框查看
+    sget-object v0, Lim/t;->_logCache:Ljava/lang/StringBuilder;
+
+    invoke-virtual {v0, p3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v0
+
+    const-string v1, "\n"
+
+    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
     :try_end_0
     .catchall {:try_start_0 .. :try_end_0} :catchall_0
 

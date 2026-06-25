@@ -1,5 +1,20 @@
 # 待办事项（TODO）
 
+### 命无言 APK 内置日志查看器方案 A（2026-06-25）
+- **目标 APK**: `新反编译/命无言/i·阅读 尝鲜版[3.26.062019].apk.1`
+- **问题背景**: 用户希望阅读 APK 本身能显示日志，不要依赖外部文件管理器。`dialog_read_aloud.xml` 中已有 `ll_tts_audio_log` 按钮，但对应的 smali 逻辑缺失，点击无反应。
+- **改动内容**:
+  1. `smali/im/t.smali`：新增全局静态字段 `_logCache:Ljava/lang/StringBuilder;`，在 `<clinit>` 中初始化，并在 `e()` 方法中将每条日志追加到缓存。
+  2. `smali_classes2/ln/f4.smali`：新增 `showLogDialog()` 方法，创建 `AlertDialog + ScrollView + TextView` 显示 `_logCache` 内容。
+  3. `smali_classes2/ln/x3.smali`：在 `onClick` 中拦截原值 `0xd`（超出 packed-switch 范围，原逻辑会 finish），改为调用 `showLogDialog()`。
+- **生成文件**:
+  - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log.apk.1`（未签名）
+  - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_已签名.apk.1`（使用 `C:/Users/kang/.android/debug.keystore` 签名）
+- **当前状态**: 已回编译并签名，等待用户安装测试点击朗读对话框中「缓存日志」按钮能否正常弹出日志窗口。
+- **后续计划**:
+  - 若方案 A 能正常打开，再升级方案 B：复用 `dialog_tts_audio_log.xml` + `item_tts_audio_log.xml` 实现 RecyclerView + 自动滚动。
+  - 继续收集 `tts_debug_log.txt` 中「切换章节卡住」相关日志。
+
 ### 猫剪豆问 v1.14 统一日志写入外部文件（2026-06-25）
 - **版本升级**: v1.13 → v1.14（脚本 + 引擎）
 - **问题背景**: 用户使用的阅读 APK 没有日志功能，无法查看脚本/引擎运行日志，难以排查「切换章节卡住」等问题
@@ -2601,3 +2616,46 @@ C:/date/ttsrv-speechRule/
 - v1.0.9 新增章节标题自动使用「」括号发音人朗读；如遇到误识别，请将 ENABLE_CHAPTER_TITLE_BRACKET3 改为 0 或提供具体文本调整规则
 - 手机端如已缓存旧版 `ttsrv-replaces4.json`，建议删除 `/storage/emulated/0/Download/chajian/mingwuyan/ttsrv-replaces4.json` 后重启
 - 历史 `shuming.default_book_xxxx.json` 文件可手动清理，后续统一使用 `shuming.default_book.json`
+
+## 会话摘要（2026-06-25）
+
+**当前版本**:
+- 猫剪豆问脚本：`new/(脚本)猫剪豆问（自然情绪版）v1.14.json`
+- 猫剪豆问引擎：`new/猫剪豆问（自然情绪版）v1.14.json`
+- 多角色朗读规则：`多角色朗读2.129【基于126保留情绪修复回退127别名校验】.json`
+- 音效规则：`yinpin/ttsrv-replaces4.json` / `new/新脚本/ttsrv-replaces4.json`
+
+**本次完成事项**:
+1. 命无言 APK 内置日志查看器方案 A：
+   - 在 `smali/im/t.smali` 新增全局 `_logCache` 缓存日志。
+   - 在 `smali_classes2/ln/f4.smali` 新增 `showLogDialog()` 方法，弹出 `AlertDialog + ScrollView + TextView`。
+   - 在 `smali_classes2/ln/x3.smali` 拦截 `ll_tts_audio_log` 按钮点击（原值 `0xd` 超出 packed-switch），改为显示日志对话框。
+   - 回编译并签名生成 `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_已签名.apk.1`。
+2. 更新 `MEMORY.md`：
+   - 添加工具/程序查找顺序约定（项目根目录 → C 盘 → 下载）。
+   - 更新命无言 APK 内置日志查看器状态为「方案 A 已完成，待测试」。
+3. 更新 `TODO.md` 变更记录和会话摘要。
+
+**主目录结构（相关）**:
+```
+C:/date/ttsrv-speechRule/
+├── new/
+│   ├── (脚本)猫剪豆问（自然情绪版）v1.14.json   <- 当前最新脚本
+│   ├── 猫剪豆问（自然情绪版）v1.14.json         <- 当前引擎
+│   └── 新脚本/
+│       └── ttsrv-replaces4.json                   <- 合并+修复后的音效规则
+├── 新反编译/命无言/
+│   ├── i·阅读 尝鲜版[3.26.062019].apk.1
+│   └── i·阅读 尝鲜版[3.26.062019]_log_已签名.apk.1  <- 新增内置日志查看器
+├── js/new/                                        <- JS 调阅文件
+├── yinpin/
+│   └── ttsrv-replaces4.json                       <- 项目仓库音效规则镜像
+├── MEMORY.md
+├── TODO.md
+└── extract-js.js
+```
+
+**注意事项**:
+- 签名 APK 使用 `C:/Users/kang/.android/debug.keystore`，安装前可能需要先卸载原签名不同的版本。
+- 方案 A 仅显示当前运行期间通过 `Lim/t` 缓存的日志，App 杀死后缓存会清空；后续方案 B 会实现更完整的日志对话框（自动滚动、保留更多历史）。
+- 切换章节卡住问题仍在等待 v1.14 的 `tts_debug_log.txt` 日志进一步定位。

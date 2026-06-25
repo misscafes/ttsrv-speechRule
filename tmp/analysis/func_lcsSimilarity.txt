@@ -1,5 +1,0 @@
-function lcsSimilarity(a, b) {
-    var len = lcsLength(a, b);
-    if (len === 0) return 0;
-    return len / Math.max(a.length, b.length);
-}

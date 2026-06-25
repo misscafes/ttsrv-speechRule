@@ -1,0 +1,16 @@
+# AI 工作临时目录：反编译副本、中间 APK/dex 等，本地保留但不提交
+tmp/
+
+# apktool 回编译产生的 build 目录
+*/build/
+
+# APK 二进制包（体积大，本地保留但不提交）
+*.apk
+*.apk.1
+*_aligned.apk
+*_signed.apk
+*_unsigned.apk
+
+# 本地备份
+*.smali.bak
+*.bak

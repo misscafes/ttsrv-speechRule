@@ -23,6 +23,8 @@
 - 每次修改后必须运行 `node extract-js.js` 同步 `js/` 目录。
 - 完成后必须执行 `git add . && git commit -m "版本说明" && git push origin master`。
 - 日志文件统一放在 `/storage/emulated/0/Download/chajian/mingwuyan/tts_debug_log.txt`。
+- **工具/程序查找顺序（用户约定）**：需要外部工具时，先搜索项目根目录 → 再搜索 C 盘 → 搜索不到才下载。
+- **文件保留约定（用户约定）**：解压、反编译、回编译产生的中间目录和 APK 不要随便删除，保留在项目中或约定的临时目录，方便后续回头查看、验证、二次修改。
 
 ---
 
@@ -38,16 +40,65 @@
 - 后续修复方向：改用章节缓存索引文件记录已缓存章节路径，换书时用 `java.deleteExternalFile()` 逐个删除。
 - 待用户提供 v1.14 日志后，再决定是否需要发布 v1.15 修复。
 
-### 3. 命无言 APK 内置日志查看器（进行中）
+### 3. 命无言 APK 内置日志查看器（方案 A 已完成，待测试）
 - **背景**：用户希望阅读 APK 本身能显示日志，不要依赖外部文件管理器。
-- **当前状态**：`命无言_decoded_mod` 中已存在日志对话框的 UI 资源（`dialog_tts_audio_log.xml`、`item_tts_audio_log.xml`、字符串资源、朗读对话框中的 `ll_tts_audio_log` 按钮），但**对应的 smali 功能代码完全缺失**，所以点击按钮无反应。
+- **当前状态**：
+  - `命无言_decoded_mod` 中已存在日志对话框的 UI 资源（`dialog_tts_audio_log.xml`、`item_tts_audio_log.xml`、字符串资源、朗读对话框中的 `ll_tts_audio_log` 按钮），但**对应的 smali 功能代码完全缺失**，所以点击按钮无反应。
+  - **方案 A 已实现**：在 `Lim/t.smali` 中新增全局 `_logCache` 缓存日志；在 `ln/f4.smali` 中新增 `showLogDialog()` 方法，点击 `ll_tts_audio_log` 按钮时弹出 `AlertDialog + ScrollView + TextView` 显示缓存日志；在 `ln/x3.smali` 中拦截原值 `0xd`（超出 packed-switch 范围）调用 `showLogDialog()`。
+  - 已回编译并签名生成：`新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_已签名.apk.1`。
 - **失败根因**：之前从时光版本移植时只拷了资源文件，没拷/没写对应的 Dialog/Activity/Adapter/数据收集逻辑。
 - **计划**：
-  - **方案 A（当前）**：点击 `ll_tts_audio_log` 按钮弹出一个简单 `AlertDialog`，内嵌 `ScrollView + TextView`，显示缓存的日志文本。先验证回编后 App 能正常打开。
+  - **方案 A（当前）**：已构建签名包，待用户安装测试是否能正常弹出日志对话框。
   - **方案 B（后续）**：复用现有的 `dialog_tts_audio_log.xml` + `item_tts_audio_log.xml`，实现完整的 RecyclerView + 自动滚动日志对话框。
-- **当前目标**：先完成方案 A。
 
 ---
+
+## 关键文件索引（命无言 APK 内置日志查看器相关）
+
+### Smali 类
+- `新反编译/命无言_decoded_mod/smali_classes2/ln/f4.smali`
+  - 朗读对话框 `ReadAloudDialog`（BottomSheetDialogFragment），按钮事件绑定和 UI 更新都在这里。
+  - 已新增 `showLogDialog()` 方法，供 `ll_tts_audio_log` 按钮调用。
+- `新反编译/命无言_decoded_mod/smali/el/c2.smali`
+  - `DialogReadAloudBinding`，包含朗读对话框所有 View 引用（字段 `a`~`P`）。
+  - 字段 `x` 对应布局中的 `ll_tts_audio_log`（缓存日志按钮）。
+- `新反编译/命无言_decoded_mod/smali_classes2/ln/x3.smali`
+  - 朗读对话框按钮的统一 `OnClickListener`，用 `packed-switch` 根据 int 值分发。
+  - 已拦截值 `0xd`（原超出 switch 范围会 finish），改为调用 `f4.showLogDialog()`。
+- `新反编译/命无言_decoded_mod/smali/im/t.smali`
+  - 日志工具类。`JsExtensions.log()` → `gl/r0.F0()` → `Lim/t.e()/d()`。
+  - 已新增全局 `_logCache:Ljava/lang/StringBuilder;`，在 `e()` 中追加日志。
+- `新反编译/命无言_decoded_mod/smali/gl/r0.smali`
+  - `JsExtensions` 相关桥接，`F0()` 方法负责把脚本日志转发到 `Lim/t`。
+- `新反编译/命无言_decoded_mod/smali/com/king/logx/logger/FileLogger.smali`
+  - 命无言 APK 内嵌的 `FileLogger`（默认日志目录 `logs`），但当前 `Lim/t` 未使用它。
+
+### 资源文件
+- `新反编译/命无言_decoded_mod/res/layout/dialog_read_aloud.xml`
+  - 朗读对话框布局，`ll_tts_audio_log` 按钮所在布局。
+- `新反编译/命无言_decoded_mod/res/layout/dialog_tts_audio_log.xml`
+  - 已存在但未使用的日志对话框布局，**方案 B** 计划复用。
+- `新反编译/命无言_decoded_mod/res/layout/item_tts_audio_log.xml`
+  - 已存在但未使用的日志列表项布局，**方案 B** 计划复用。
+
+### 临时/生成文件（保留）
+- `/c/date/ttsrv-speechRule/tmp/mingwuyan_decoded_mod/`
+  - 命无言反编译目录的英文路径副本，用于回编译（避免中文路径导致 apktool 失败）。
+- `/c/date/ttsrv-speechRule/tmp/mingwuyan_log.apk`
+  - 回编译后未签名 APK。
+- `/c/date/ttsrv-speechRule/tmp/mingwuyan_log_aligned.apk`
+  - zipalign 对齐后的 APK。
+- `/c/date/ttsrv-speechRule/tmp/mingwuyan_log_signed.apk`
+  - apksigner 签名后的 APK。
+- `/c/date/ttsrv-speechRule/tmp/classes.dex` / `classes2.dex`
+  - 从签名 APK 中提取的 dex，用于 dexdump 验证。
+
+### 常用工具位置
+- apktool: `/c/Windows/apktool.jar`
+- zipalign: `/c/date/android-sdk/build-tools/35.0.0/zipalign.exe`
+- apksigner: `/c/date/android-sdk/build-tools/35.0.0/lib/apksigner.jar`
+- dexdump: `/c/date/android-sdk/build-tools/35.0.0/dexdump.exe`
+- debug keystore: `C:/Users/kang/.android/debug.keystore`（密码 `android`）
 
 ## 常用排查关键词
 

@@ -4143,3 +4143,89 @@
     :cond_e
     return-void
 .end method
+
+# [AI] 方案 A：点击缓存日志按钮弹出 AlertDialog 显示日志
+.method public final showLogDialog()V
+    .locals 7
+
+    .line 1
+    invoke-virtual {p0}, Lx2/y;->Y()Landroid/content/Context;
+
+    move-result-object v0
+
+    .line 2
+    new-instance v1, Landroid/app/AlertDialog$Builder;
+
+    invoke-direct {v1, v0}, Landroid/app/AlertDialog$Builder;-><init>(Landroid/content/Context;)V
+
+    .line 3
+    const-string v0, "\u7f13\u5b58\u65e5\u5fd7"
+
+    invoke-virtual {v1, v0}, Landroid/app/AlertDialog$Builder;->setTitle(Ljava/lang/CharSequence;)Landroid/app/AlertDialog$Builder;
+
+    .line 4
+    invoke-virtual {p0}, Lx2/y;->Y()Landroid/content/Context;
+
+    move-result-object v0
+
+    new-instance v2, Landroid/widget/ScrollView;
+
+    invoke-direct {v2, v0}, Landroid/widget/ScrollView;-><init>(Landroid/content/Context;)V
+
+    .line 5
+    new-instance v3, Landroid/widget/TextView;
+
+    invoke-direct {v3, v0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
+
+    .line 6
+    const/16 v4, 0x1e
+
+    const/16 v5, 0x1e
+
+    const/16 v6, 0x1e
+
+    invoke-virtual {v3, v4, v5, v6, v4}, Landroid/widget/TextView;->setPadding(IIII)V
+
+    .line 7
+    const/4 v4, 0x2
+
+    const/high16 v5, 0x41400000    # 12.0f
+
+    invoke-virtual {v3, v4, v5}, Landroid/widget/TextView;->setTextSize(IF)V
+
+    .line 8
+    sget-object v4, Lim/t;->_logCache:Ljava/lang/StringBuilder;
+
+    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v4
+
+    invoke-virtual {v3, v4}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+
+    .line 9
+    new-instance v4, Landroid/widget/FrameLayout$LayoutParams;
+
+    const/4 v5, -0x1
+
+    const/4 v6, -0x2
+
+    invoke-direct {v4, v5, v6}, Landroid/widget/FrameLayout$LayoutParams;-><init>(II)V
+
+    invoke-virtual {v2, v3, v4}, Landroid/widget/ScrollView;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
+
+    .line 10
+    invoke-virtual {v1, v2}, Landroid/app/AlertDialog$Builder;->setView(Landroid/view/View;)Landroid/app/AlertDialog$Builder;
+
+    .line 11
+    const-string v0, "\u786e\u5b9a"
+
+    const/4 v2, 0x0
+
+    invoke-virtual {v1, v0, v2}, Landroid/app/AlertDialog$Builder;->setPositiveButton(Ljava/lang/CharSequence;Landroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
+
+    .line 12
+    invoke-virtual {v1}, Landroid/app/AlertDialog$Builder;->show()Landroid/app/AlertDialog;
+
+    .line 13
+    return-void
+.end method

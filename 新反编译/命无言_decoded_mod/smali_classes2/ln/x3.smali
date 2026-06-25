@@ -49,7 +49,16 @@
     iget-object v1, p0, Lln/x3;->v:Lln/f4;
 
     .line 5
-    .line 6
+    # [AI] 方案 A：缓存日志按钮（原值 13 超出 packed-switch 范围）
+    const/16 v2, 0xd
+
+    if-ne p1, v2, :cond_not_log
+
+    invoke-virtual {v1}, Lln/f4;->showLogDialog()V
+
+    return-void
+
+    :cond_not_log
     packed-switch p1, :pswitch_data_0
 
     .line 7
