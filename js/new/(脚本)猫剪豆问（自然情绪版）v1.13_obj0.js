@@ -1,4 +1,4 @@
-// ===================== 朗读脚本 v1.12（自然情绪版）：章节标题默认由「」发音人朗读 =====================
+// ===================== 朗读脚本 v1.13（自然情绪版）：修复换书后上本书角色缓存留存 =====================
 var EXT_DIR = "/storage/emulated/0/Download/chajian/mingwuyan/";
 var CACHE_ROOT = "/storage/emulated/0/Download/chajian/xiaoshuo/";
 var KEY_FILE = EXT_DIR + "miyue.txt";
@@ -524,6 +524,20 @@ function handleBookSwitch() {
     var newRaw = "[]";
     try { newRaw = String(java.readExternalFile(newBackupPath)); if (!newRaw || newRaw.trim() === "") newRaw = "[]"; } catch (err) { newRaw = "[]"; }
     try { java.writeExternalFile(charMainPath, newRaw); } catch (err) {}
+    // v1.13 修复：换书时清空旧书章节缓存，避免上本书角色缓存留存
+    var oldBookCacheDir = CACHE_ROOT + sanitizeFileName(oldBookName) + "/";
+    try {
+        var oldDir = new java.io.File(oldBookCacheDir);
+        if (oldDir.exists() && oldDir.isDirectory()) {
+            var oldFiles = oldDir.listFiles();
+            if (oldFiles) {
+                for (var fi = 0; fi < oldFiles.length; fi++) {
+                    try { oldFiles[fi].delete(); } catch (ed) {}
+                }
+            }
+            log("【换书】已清空旧书章节缓存：" + oldBookName);
+        }
+    } catch (e) { log("【换书】清空旧书缓存失败：" + e.message); }
     java.writeExternalFile(HISTORY_FILE, "[]");
     java.writeExternalFile(PROGRESS_FILE, "{}");
     saveCurrentBookName(validCurrBook);
