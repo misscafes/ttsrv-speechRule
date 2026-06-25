@@ -15,13 +15,24 @@
   1. **根因**：第二版虽然能捕获 Logcat 日志，但 TTS 朗读时 `java.log()` 实际只调用 `Lim/t.e()`，且只有在书源调试窗口设置了 `Lim/t;->b` 回调时才会继续输出到 Logcat；日常朗读场景 `Lim/t;->b` 为 null，所以 TTS/JS 日志不会进入 `tc/l0.o0()`，导致缓存里只有 Firebase 等系统日志。
   2. `smali/im/t.smali`：把缓存逻辑从 `e()` 方法内部的条件分支之后移到 `monitor-enter p0` 之后，**无条件缓存所有进入 `Lim/t.e()` 的日志**，不再依赖 `Lim/t;->b` 是否已设置。
   3. 保留第二版在 `tc/l0.o0()` 中的缓存，用于捕获其他非 JS 日志。
+- **改动内容（第四版，日志查看器增强）**:
+  1. 新增独立工具类 `smali/im/LogViewer.smali`（含 `LogViewer$1~$5` 内部类），用 Java 源码编写后编译为 smali 插入，负责构建复杂日志对话框。
+  2. `smali_classes2/ln/f4.smali`：简化 `showLogDialog()`，仅获取 Context 和 `_logCache`，转调 `Lim/LogViewer;->showDialog(Landroid/content/Context;Ljava/lang/StringBuilder;)V`。
+  3. 日志查看器功能：
+     - 顶部搜索框，实时按关键字过滤。
+     - 主分类按钮：全部 / 对话 / 旁白 / 系统。
+     - 系统日志子分类按钮：全部系统 / 音效 / BGM / 情绪。
+     - 清空日志按钮，调用 `StringBuilder.setLength(0)` 清空缓存。
+     - 不同类别用不同颜色标注（对话蓝、旁白绿、音效橙、BGM紫、情绪红、系统灰）。
+  4. 分类规则按内容关键词识别（音效/sound/effect、背景音乐/bgm、情绪桥接/情绪、对话/说、旁白/正文等）。
 - **生成文件**:
   - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_已签名.apk.1`（第一版，弹窗空白）
   - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_fix_已签名.apk.1`（第二版，只有 Firebase 等系统日志）
   - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_fullfix_已签名.apk.1`（第三版，同时缓存 JS 日志和 Logcat 日志）
-- **当前状态**: 已重新回编译并签名，等待用户安装测试点击朗读对话框中「缓存日志」按钮后是否能显示 TTS/JS 日志。
+  - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_viewer_已签名.apk.1`（第四版，带搜索/筛选/颜色/清空的增强日志查看器）
+- **当前状态**: 已重新回编译并签名，等待用户安装测试第四版。
 - **后续计划**:
-  - 若方案 A 能正常显示日志，再升级方案 B：复用 `dialog_tts_audio_log.xml` + `item_tts_audio_log.xml` 实现 RecyclerView + 自动滚动。
+  - 根据用户测试反馈调整分类关键词、颜色或 UI 布局。
   - 继续收集 `tts_debug_log.txt` 中「切换章节卡住」相关日志。
 
 ### 猫剪豆问 v1.15 修复日志换行转义导致无声音（2026-06-25）

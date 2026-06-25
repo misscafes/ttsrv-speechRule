@@ -74,9 +74,14 @@
   - 已新增全局 `_logCache:Ljava/lang/StringBuilder;`，在 `<clinit>` 中初始化。
   - 已新增静态方法 `appendLog(Ljava/lang/String;Ljava/lang/String;)V`，供 `tc/l0` 调用，把 tag + msg 追加到 `_logCache`。
   - 已在 `e()` 方法开头（`monitor-enter p0` 之后）无条件缓存所有 JS `java.log()` 日志到 `_logCache`，不再依赖 `Lim/t;->b` 是否已设置。
+- `tmp/mingwuyan_final/smali/im/LogViewer.smali`（新增）
+  - 独立日志查看器工具类，用 Java 源码编译后反编译插入。
+  - 提供 `showDialog(Landroid/content/Context;Ljava/lang/StringBuilder;)V`：构建带搜索框、分类按钮、子分类按钮、清空按钮的 Dialog，用 `SpannableStringBuilder` + `ForegroundColorSpan` 按类别着色。
 - `tmp/mingwuyan_final/smali/tc/l0.smali`
   - 部分系统组件/日志通过 `tc/l0.o0()` → `android.util/Log.println()` 输出。
   - 已在 `o0()` 中 `Log.println()` 之后调用 `Lim/t;->appendLog(Ljava/lang/String;Ljava/lang/String;)V`，把这类日志同步写入 `_logCache`。
+- `tmp/mingwuyan_final/smali_classes2/ln/f4.smali`
+  - `showLogDialog()` 已简化，仅获取 Context 与 `_logCache`，转调 `Lim/LogViewer;->showDialog(...)`。
 
 ### 资源文件
 - `tmp/mingwuyan_final/res/layout/dialog_read_aloud.xml`
@@ -91,16 +96,20 @@
   - 第一版签名 APK（对话框能弹出，但日志显示空白）。
 - `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_fix_已签名.apk.1`
   - 第二版签名 APK（修复日志缓存路径）。
+- `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_fullfix_已签名.apk.1`
+  - 第三版签名 APK（同时缓存 JS 日志和 Logcat 日志）。
+- `新反编译/命无言/i·阅读 尝鲜版[3.26.062019]_log_viewer_已签名.apk.1`
+  - 第四版签名 APK（带搜索、分类筛选、子分类筛选、颜色标注、清空按钮的增强日志查看器）。
 
 ### 临时/生成文件（保留）
 - `/c/date/ttsrv-speechRule/tmp/mingwuyan_final/`
   - 命无言反编译目录的工作副本，用于回编译。
-- `/c/date/ttsrv-speechRule/tmp/i_read_l0fix.apk`
-  - 第二版回编译后未签名 APK。
-- `/c/date/ttsrv-speechRule/tmp/i_read_l0fix_aligned.apk`
-  - 第二版 zipalign 对齐后的 APK。
-- `/c/date/ttsrv-speechRule/tmp/i_read_l0fix_signed.apk`
-  - 第二版 apksigner 签名后的 APK（与 `新反编译/命无言/..._log_fix_已签名.apk.1` 内容相同）。
+- `/c/date/ttsrv-speechRule/tmp/i_read_logviewer.apk`
+  - 第四版回编译后未签名 APK。
+- `/c/date/ttsrv-speechRule/tmp/i_read_logviewer_aligned.apk`
+  - 第四版 zipalign 对齐后的 APK。
+- `/c/date/ttsrv-speechRule/tmp/i_read_logviewer_signed.apk`
+  - 第四版 apksigner 签名后的 APK（与 `新反编译/命无言/..._log_viewer_已签名.apk.1` 内容相同）。
 
 ### 常用工具位置
 - apktool: `/c/Windows/apktool.jar`
