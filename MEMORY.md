@@ -40,7 +40,13 @@
 - v1.17 修复：同时读取 `data.json` 和 `cunfang.txt`，优先使用非 `default_book` 书名；保存角色时同步刷新 `cunfang.txt`；在 `handleBookSwitch()` 中防御性地拒绝从真实书切回 `default_book`。
 - 待用户安装 v1.17 后验证是否彻底解决。
 
-### 3. 命无言 APK 内置日志查看器（方案 A 第二版已构建，待测试）
+### 3. 多角色朗读 2.130 修复切书回默认/未知书籍（已修复，待验证）
+- 重要纠正：多角色朗读规则并非没有切书逻辑。`SpeechRuleJS` 主流程中存在「书籍切换与角色备份」段，同样读取 `data.json` 的 `bookName` 并与 `cunfang.txt` 比较。
+- 根因：当 `data.json` 缺失有效 `bookName` 时，`newBookName` 会变成 `"未知书名"` 或 `"default_book"`，随后覆盖 `cunfang.txt`，导致后续朗读切回默认/未知书籍。
+- 2.130 修复：同时读取 `data.json` 和 `cunfang.txt`，优先使用非 `"未知书名"` / `"default_book"` 的真实书名；若 `data.json` 无效但 `cunfang.txt` 有真实书名，则拒绝切回；仅当明确检测到新的真实书名时才执行换书流程。
+- 待用户安装 2.130 后验证是否彻底解决。
+
+### 4. 命无言 APK 内置日志查看器（方案 A 第二版已构建，待测试）
 - **背景**：用户希望阅读 APK 本身能显示日志，不要依赖外部文件管理器。
 - **当前状态**：
   - `命无言_decoded` 中已存在日志对话框的 UI 资源（`dialog_tts_audio_log.xml`、`item_tts_audio_log.xml`、字符串资源、朗读对话框中的 `ll_tts_audio_log` 按钮），但**对应的 smali 功能代码完全缺失**，所以点击按钮无反应。
