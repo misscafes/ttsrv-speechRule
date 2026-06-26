@@ -11,8 +11,9 @@
   5. 在 `handleText` 返回 `list` 前加入完整的情绪处理循环（含场景温度、情绪继承、段落主情绪稳定器、旁白默认兜底、音效跳过等逻辑），并兼容 2.87 中不存在 `emotionSummary` 的情况
   6. 将 `cleanDialogText`（全局及缓存匹配局部）更新为 2.131 实现，增加 `[[emo:...]]` 前缀清理
   7. 统一 4 处版本号/名称：文件名、JSON 顶层 `name`/`version`、`SpeechRuleJS.name`/`SpeechRuleJS.version` 全部为 2.88/63
-  8. 运行 `node extract-js.js` 同步生成 `js/参考/多角色朗读2.88【加速版+1修复2+情绪模块】_obj0.js`
-  9. 使用 `node --check` 验证 JS 无语法错误，使用 Python `json.load` 验证 JSON 可解析
+  8. 在 `handleText` 情绪处理循环末尾补回 `return list;`，确保 `handleText` 正确返回处理后的列表
+  9. 运行 `node extract-js.js` 同步生成 `js/参考/多角色朗读2.88【加速版+1修复2+情绪模块】_obj0.js`
+  10. 使用 `node --check` 验证 JS 无语法错误，使用 Python `json.load` 验证 JSON 可解析
 - **影响**:
   - 参考目录下的 2.87 加速版获得 2.131 的情绪桥接、本地情绪修正、表演指令、跨段情绪继承、段落主情绪稳定等能力
   - 未引入猫剪豆问的 `applyEmotionBridge` 或其他独立自然情绪模块，仅移植 2.131 的内置情绪模块
