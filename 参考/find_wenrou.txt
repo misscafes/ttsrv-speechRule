@@ -1,0 +1,43 @@
+Found in group 💬特殊(⁎⁍̴̛ᴗ⁍̴̛⁎): tagName=『对话旁白』
+{
+  "id": 1779007353588,
+  "displayName": "温柔桃子",
+  "groupId": 1780573895969,
+  "isEnabled": true,
+  "config": {
+    "#type": "tts",
+    "speechRule": {
+      "target": 4,
+      "tag": "括号4",
+      "tagRuleId": "mingwuyan",
+      "tagName": "『对话旁白』"
+    },
+    "audioParams": {
+      "speed": 0.9,
+      "volume": 1.5
+    },
+    "audioFormat": {
+      "sampleRate": 24000
+    },
+    "source": {
+      "#type": "plugin",
+      "locale": "all",
+      "voice": "zh_female_wenroutaozi_uranus_bigtts",
+      "pluginId": "maoxiang.tts.gj",
+      "speed": 0.9,
+      "volume": 1.5,
+      "data": {
+        "contextTexts": "[设定：纯女声，28-40岁成熟声线，全程锁定偏低沉中低音域，无尖细甜腻、虚飘发嗲、尖锐破音、稚嫩感；强化胸腔低频共鸣，音色低沉醇厚、干净通透、丝滑有质感，无杂音断层。声线基底：知性冷沉、温柔大气、沉稳克制，带低沉叙事沉稳感，沉而不闷、柔而不糯、稳而不僵。气质：端庄自持、疏离高级、从容冷静，无轻浮戏谑、情绪外放、夸张起伏。表达：咬字清晰规整，语速平稳舒缓，节奏沉缓克制，尾音沉稳收束，适配纪录片旁白、高级文案、知性叙事、情绪独白、正式解说。]",
+        "emotion": "",
+        "emotionScale": "4",
+        "audioFormat": "mp3",
+        "sampleRate": "24000",
+        "clonePresetIndex": "0",
+        "manualContextTexts": "[设定：纯女声，28-40岁成熟声线，全程锁定偏低沉中低音域，无尖细甜腻、虚飘发嗲、尖锐破音、稚嫩感；强化胸腔低频共鸣，音色低沉醇厚、干净通透、丝滑有质感，无杂音断层。声线基底：知性冷沉、温柔大气、沉稳克制，带低沉叙事沉稳感，沉而不闷、柔而不糯、稳而不僵。气质：端庄自持、疏离高级、从容冷静，无轻浮戏谑、情绪外放、夸张起伏。表达：咬字清晰规整，语速平稳舒缓，节奏沉缓克制，尾音沉稳收束，适配纪录片旁白、高级文案、知性叙事、情绪独白、正式解说。]",
+        "enableLocalEmotion": "true",
+        "moduleEmotionEnabled": "1",
+        "voiceName": "温柔桃子"
+      }
+    }
+  }
+}

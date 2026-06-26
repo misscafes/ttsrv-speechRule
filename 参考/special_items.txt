@@ -1,0 +1,17 @@
+Group: 💬特殊(⁎⁍̴̛ᴗ⁍̴̛⁎)
+  displayName=温柔桃子, tagName=『对话旁白』, tagData={}
+  displayName=通用男童, tagName=「」括号发音人, tagData={'genderAge': '男/男孩', 'role': '通用男童'}
+  displayName=通用男主, tagName=【】括号发音人, tagData={'genderAge': '男/主角', 'role': '通用男主'}
+  displayName=通用女主, tagName=【女/特殊01】乖巧, tagData={'genderAge': '女/主角', 'role': '通用女主', 'personality': '乖巧'}
+  displayName=通用女中年, tagName=【女/特殊02】通用, tagData={'genderAge': '女/女中年', 'role': '通用女中年', 'personality': '通用'}
+  displayName=通用女童, tagName=【女/特殊03】活泼, tagData={'genderAge': '女/女童', 'role': '通用女童', 'personality': '活泼'}
+  displayName=通用女老年, tagName=【女/特殊04】通用, tagData={'genderAge': '女/女老年', 'role': '通用女老年', 'personality': '通用'}
+  displayName=通用女青年, tagName=【女/特殊05】温婉, tagData={'emotion': '无', 'genderAge': '女/女青年', 'role': '通用女青年', 'personality': '温婉'}
+  displayName=通用少女, tagName=【女/特殊06】温婉, tagData={'genderAge': '女/少女', 'role': '通用少女', 'personality': '温婉'}
+  displayName=少年梓辛, tagName=【男/特殊01】温润, tagData={'personality': '温润'}
+  displayName=通用男青年, tagName=【男/特殊02】通用, tagData={'emotion': '无', 'genderAge': '男/男青年', 'personality': '通用', 'role': '通用男青年'}
+  displayName=通用少年, tagName=【男/特殊03】通用, tagData={'genderAge': '男/少年', 'role': '通用少年', 'personality': '通用'}
+  displayName=通用男中年, tagName=【男/特殊04】通用, tagData={'genderAge': '男/男中年', 'role': '通用男中年', 'personality': '通用'}
+  displayName=通用男老年, tagName=【男/特殊05】通用, tagData={'genderAge': '男/男老年', 'role': '通用男老年', 'personality': '通用'}
+  displayName=通用女声, tagName=女, tagData={}
+  displayName=通用男声, tagName=男, tagData={}

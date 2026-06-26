@@ -1,5 +1,43 @@
 # 待办事项（TODO）
 
+### 多角色朗读 2.88（参考目录）：从 2.131 移植情绪模块（2026-06-26）
+- **版本升级**: 2.87【加速版+1修复2】 → 2.88【加速版+1修复2+情绪模块】
+- **目标文件**: `参考/多角色朗读2.88【加速版+1修复2+情绪模块】.json`
+- **改动内容**:
+  1. 按项目规范备份原 2.87 文件：`参考/多角色朗读2.87【加速版+1修复2】_情绪模块备份.json`
+  2. 从 2.131 移植情绪模块常量：`EMOTION_ITEMS_CONFIG`、`ENABLE_EMOTION_DEBUG_LOG`、`ENABLE_EMOTION_BRIDGE`、`ENABLE_LOCAL_EMOTION_CORRECTION`、`ENABLE_PERFORMANCE_PROMPT`、`DEFAULT_NARRATION_EMOTION`、`JREAD_LAST_DIALOGUE_EMOTION_FILE`、`JREAD_DIALOGUE_EMOTION_INHERIT_MAX_AGE_MS`、`ENABLE_SEGMENT_MAIN_EMOTION`
+  3. 从 2.131 移植情绪模块函数：`logEmotionInitStatus`、`normalizeRuleEmotionNameForLocal`、`getDialogueInnerTextForLocalEmotion`、`inferStrongLocalEmotion`、`applyLocalDialogueEmotionCorrection`、`normalizeEmotionDebugValue`、`inferSceneMood`、`buildPerformancePrompt`、`isLikelyInlineEmotionCue`、`buildEmotionBridgePrefix`、`attachEmotionBridgeToText`、跨段情绪续接系列 `__emotionInherit*`、`getEmotionBucketByTag`、`isStrongEmotionException`、`resolveStableEmotion`、`logEmotionDebug`
+  4. 在 `handleText` 开头添加情绪模块初始化日志调用 `logEmotionInitStatus()`
+  5. 在 `handleText` 返回 `list` 前加入完整的情绪处理循环（含场景温度、情绪继承、段落主情绪稳定器、旁白默认兜底、音效跳过等逻辑），并兼容 2.87 中不存在 `emotionSummary` 的情况
+  6. 将 `cleanDialogText`（全局及缓存匹配局部）更新为 2.131 实现，增加 `[[emo:...]]` 前缀清理
+  7. 统一 4 处版本号/名称：文件名、JSON 顶层 `name`/`version`、`SpeechRuleJS.name`/`SpeechRuleJS.version` 全部为 2.88/63
+  8. 运行 `node extract-js.js` 同步生成 `js/参考/多角色朗读2.88【加速版+1修复2+情绪模块】_obj0.js`
+  9. 使用 `node --check` 验证 JS 无语法错误，使用 Python `json.load` 验证 JSON 可解析
+- **影响**:
+  - 参考目录下的 2.87 加速版获得 2.131 的情绪桥接、本地情绪修正、表演指令、跨段情绪继承、段落主情绪稳定等能力
+  - 未引入猫剪豆问的 `applyEmotionBridge` 或其他独立自然情绪模块，仅移植 2.131 的内置情绪模块
+- **当前文件**:
+  - `参考/多角色朗读2.88【加速版+1修复2+情绪模块】.json`
+- **JS 调阅文件同步**:
+  - `js/参考/多角色朗读2.88【加速版+1修复2+情绪模块】_obj0.js`
+- **注意事项**:
+  - 2.88 位于 `参考/` 目录，是 2.87 加速版的情绪模块增强版；主流程仍保留 2.87 加速版的其他所有逻辑
+  - `emotionSummary` 在 2.87 中不存在，情绪循环已做兼容性判断（判断 `emotionSummary` 是否存在后再读取）
+
+### 参考目录角色列表合并分组（2026-06-26）
+- **文件**: `参考/jiaoseliebiao-5.json`
+- **改动内容**:
+  1. 按角色类别将分散的 36 个分组合并为 15 个唯一分组：旁白、女主、男主、女青年、男青年、女中年、男中年、女老年、男老年、少女、少年、女童、男童、特殊、音效
+  2. 各标准分组内按 tagName 中的编号 01-300 进行自然排序
+  3. 旁白分组内按 clonePresetIndex 排序，主分组预设在前、演员对话在后
+  4. 特殊分组保留原 `特殊男/女`、`括号发音人` 及通用角色
+  5. 按项目规范创建备份：`参考/jiaoseliebiao-5_合并分组备份.json`
+- **当前文件**:
+  - `参考/jiaoseliebiao-5.json`
+- **脚本/日志**:
+  - `参考/merge_groups.py`
+  - `参考/merge_groups.log`
+
 ### 多角色朗读 2.131：修复切书语法错误（2026-06-25）
 - **版本升级**: 2.130 → 2.131
 - **问题背景**: 用户安装 2.130 后报错 `EvaluatorException: try 被检测到没有 catch 或 finally`，定位到切书段多余的大括号导致 try-catch 结构不匹配
