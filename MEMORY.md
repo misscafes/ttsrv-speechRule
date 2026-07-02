@@ -40,6 +40,12 @@
 - v1.17 修复：同时读取 `data.json` 和 `cunfang.txt`，优先使用非 `default_book` 书名；保存角色时同步刷新 `cunfang.txt`；在 `handleBookSwitch()` 中防御性地拒绝从真实书切回 `default_book`。
 - 待用户安装 v1.17 后验证是否彻底解决。
 
+### 2.5 切换新书后再切回旧书导致旧书角色丢失（v1.18 已修复，待验证）
+- 根因：App 切换书籍后 `data.json` 的 `bookName` 更新滞后（仍为旧书名）时，`handleBookSwitch` 检测不到换书（`oldBookName === currBookName`），`saveBookCharacters` 用滞后的旧书名把"旧书角色+新书内容"混合记录**整体覆盖**写入 `shuming.<旧书>.json`，破坏旧书纯净备份；v1.17 新增的 `saveCurrentBookName` 加剧把 `cunfang.txt` 锁定在滞后的旧书名；待 `data.json` 更新后 `handleBookSwitch` 用已被污染的 `characterRecords.json` 再次覆盖旧书备份，旧书角色彻底丢失。
+- v1.18 修复：新增 `mergeCharacterBackup(backupPath, newRecords)` 函数，角色备份改为**合并写入**（按 name 合并、保护已有 voice、追加新角色、只增不减）；`saveBookCharacters` 和 `handleBookSwitch` 备份旧书均改用合并写入；`saveCurrentBookName` 增加 `default_book` 保护（仅非默认书才刷新 `cunfang.txt`）。
+- 逻辑自测模拟"书A→书B（data.json 滞后污染）→切回书A"完整流程，14 项断言全通过，确认旧书角色不再丢失。
+- 待用户安装 v1.18 后验证；可观察 `tts_debug_log.txt` 中 `【角色保存】` / `【换书】备份旧书角色` / `【换书】恢复新书角色` 日志。
+
 ### 3. 多角色朗读 2.131 修复切书回默认/未知书籍 + 语法错误（已修复，待验证）
 - 重要纠正：多角色朗读规则并非没有切书逻辑。`SpeechRuleJS` 主流程中存在「书籍切换与角色备份」段，同样读取 `data.json` 的 `bookName` 并与 `cunfang.txt` 比较。
 - 根因：当 `data.json` 缺失有效 `bookName` 时，`newBookName` 会变成 `"未知书名"` 或 `"default_book"`，随后覆盖 `cunfang.txt`，导致后续朗读切回默认/未知书籍。

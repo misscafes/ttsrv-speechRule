@@ -1,5 +1,38 @@
 # 待办事项（TODO）
 
+### 猫剪豆问 v1.18 修复切换新书后再切回旧书导致旧书角色丢失（2026-07-02）
+- **版本升级**: v1.17 → v1.18（脚本 + 引擎）
+- **问题背景**: 用户反馈切换新书后，再切换回旧书，旧书的角色记录会丢失（切回旧书后旧书角色不恢复、发音人错乱）
+- **根因分析**:
+  1. 当 App 切换书籍后 `data.json` 的 `bookName` 更新滞后（仍为旧书名）时，`getBookNameSafely()` 返回旧书名，导致 `handleBookSwitch()` 检测不到换书（`oldBookName === currBookName`），不切换角色记录
+  2. 此时 `saveBookCharacters()` 用滞后的旧书名把"旧书角色 + 新书内容"的混合记录**整体覆盖**写入 `shuming.<旧书>.json`，破坏旧书纯净备份
+  3. v1.17 新增的 `saveCurrentBookName(bookName)` 进一步把 `cunfang.txt` 锁定在滞后的旧书名，加剧问题
+  4. 待 `data.json` 更新后 `handleBookSwitch()` 用已被污染的 `characterRecords.json` 再次覆盖旧书备份，旧书纯净角色彻底丢失；切回旧书时从被污染的 `shuming.<旧书>.json` 恢复，旧书角色丢失
+- **改动内容**:
+  1. 按项目规范基于 v1.17 创建 v1.18 JSON 源文件（脚本 + 引擎）
+  2. 脚本新增 `mergeCharacterBackup(backupPath, newRecords)` 函数：合并写入角色到书备份，按 name 合并（保护已有 voice、追加新角色、只增不减），主记录被污染时不再整体覆盖丢失旧书角色
+  3. `saveBookCharacters()` 改为调用 `mergeCharacterBackup` 合并写入 `shuming.<书>.json`，并增加 `【角色保存】` 日志；`saveCurrentBookName` 增加 `default_book` 保护（仅非默认书才刷新 cunfang.txt）
+  4. `handleBookSwitch()` 备份旧书角色改为合并写入（避免主记录被别书污染时覆盖丢失旧书纯净角色），恢复新书角色增加 `【换书】` 角色数量日志
+  5. 同步更新 JSON 顶层 `name` / `version` 与 `code` 内部版本注释为 v1.18
+  6. 引擎同步版本号与头部注释，逻辑不变
+  7. 运行 `node extract-js.js` 重新生成 `js/new/...v1.18...` 调阅文件
+  8. 使用 `node --check` 验证 JS 无语法错误，使用 Node `JSON.parse` 验证 JSON 可解析
+  9. 编写逻辑自测脚本模拟"书A→书B（data.json 滞后污染）→切回书A"完整流程，14 项断言全部通过，确认旧书角色不再丢失
+- **影响**:
+  - 角色备份改为合并写入后，即使换书过渡期 `data.json` 滞后导致主记录被别书内容污染，旧书备份 `shuming.<旧书>.json` 也不会被覆盖丢失，切回旧书时能正确恢复
+  - 最坏情况下书备份可能累积少量别书角色（冗余但不影响按 name 匹配朗读），远优于角色丢失
+  - `cunfang.txt` 不会被错误刷新为 `default_book`
+- **当前文件**:
+  - `new/(脚本)猫剪豆问（自然情绪版）v1.18.json`
+  - `new/猫剪豆问（自然情绪版）v1.18.json`
+- **JS 调阅文件同步**:
+  - `js/new/(脚本)猫剪豆问（自然情绪版）v1.18_obj{0,1}.js`
+  - `js/new/猫剪豆问（自然情绪版）v1.18.js`
+- **注意事项**:
+  - v1.18 脚本需与 v1.18 引擎配套使用
+  - 旧版本 `shuming.<书>.json` 备份格式与 v1.18 兼容，升级后首次朗读即生效合并保护
+  - 临时构建/测试脚本会在提交前清理
+
 ### 多角色朗读 2.89（参考目录）：修复表演指令不兼容导致无音频数据（2026-06-26）
 - **版本升级**: 2.88【加速版+1修复2+情绪模块】 → 2.89【加速版+1修复2+情绪模块修复表演指令不兼容】
 - **目标文件**: `参考/多角色朗读2.89【加速版+1修复2+情绪模块修复表演指令不兼容】.json`
@@ -2903,3 +2936,39 @@ C:/date/ttsrv-speechRule/
 - 签名 APK 使用 `C:/Users/kang/.android/debug.keystore`，安装前可能需要先卸载原签名不同的版本。
 - 方案 A 仅显示当前运行期间缓存的日志，App 杀死后缓存会清空；后续方案 B 会实现更完整的日志对话框（自动滚动、保留更多历史）。
 - 切换章节卡住问题仍在等待 v1.14/v1.15 的 `tts_debug_log.txt` 日志进一步定位。
+
+---
+
+## 会话摘要（2026-07-02）
+
+**当前版本**:
+- 猫剪豆问脚本：`new/(脚本)猫剪豆问（自然情绪版）v1.18.json`
+- 猫剪豆问引擎：`new/猫剪豆问（自然情绪版）v1.18.json`
+- 多角色朗读规则：`多角色朗读2.131【修复切书语法错误+修复切书回默认书籍】.json`
+
+**本次完成事项**:
+1. 修复"切换新书后再切回旧书导致旧书角色丢失"：
+   - 定位根因：`data.json` 的 `bookName` 更新滞后时，`handleBookSwitch` 检测不到换书，`saveBookCharacters` 用滞后的旧书名把混合记录整体覆盖写入 `shuming.<旧书>.json`，破坏旧书纯净备份；v1.17 新增的 `saveCurrentBookName` 加剧锁定错误书名。
+   - 修复方案：新增 `mergeCharacterBackup` 函数，角色备份改为合并写入（按 name 合并、保护已有 voice、追加新角色、只增不减）；`saveBookCharacters` 和 `handleBookSwitch` 备份旧书均改用合并写入；`saveCurrentBookName` 增加 `default_book` 保护。
+2. 基于 v1.17 生成 v1.18 脚本 + 引擎 JSON 源文件，同步版本号与注释。
+3. 使用 `node --check` 验证 v1.18 脚本 code 无语法错误，`JSON.parse` 验证 JSON 可解析。
+4. 编写逻辑自测模拟"书A→书B（data.json 滞后污染）→切回书A"完整流程，14 项断言全部通过。
+5. 运行 `node extract-js.js` 同步生成 `js/new/...v1.18...` 调阅文件。
+6. 更新 `MEMORY.md`、`PROJECT_STATUS.md`、`TODO.md`。
+
+**主目录结构（相关）**:
+```
+/workspace/
+├── new/
+│   ├── (脚本)猫剪豆问（自然情绪版）v1.18.json   <- 当前最新脚本
+│   ├── 猫剪豆问（自然情绪版）v1.18.json         <- 当前引擎
+│   └── （v1.11~v1.17 历史版本保留）
+├── js/new/                                        <- JS 调阅文件
+├── MEMORY.md / PROJECT_STATUS.md / TODO.md
+└── extract-js.js
+```
+
+**注意事项**:
+- v1.18 脚本需与 v1.18 引擎配套使用。
+- 角色备份合并写入后，旧书角色不会因换书过渡期污染而丢失；最坏情况是书备份累积少量别书冗余角色，不影响按 name 匹配朗读。
+- 待用户安装 v1.18 后验证"切回旧书角色丢失"是否彻底解决，可观察 `tts_debug_log.txt` 中 `【角色保存】` / `【换书】备份旧书角色` / `【换书】恢复新书角色` 日志。
