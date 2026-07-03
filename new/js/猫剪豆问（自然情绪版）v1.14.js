@@ -1,0 +1,796 @@
+
+// 猫剪豆问引擎 v1.14（自然情绪版）：同步脚本 v1.14 版本号，统一日志写入外部文件
+try {
+
+if (!Array.isArray) { Array.isArray = function(arg) { return Object.prototype.toString.call(arg) === "[object Array]"; }; }
+
+// ===== 基础参数配置（可调） =====
+var BASE_URL           = 'wss://audio5-normal-hl.myparallelstory.com/internal/api/v1/ws';
+var AUDIO_FORMAT       = 'mp3';
+var SAMPLE_RATE        = 24000;
+var APP_KEY            = 'WQuVLKMGRo';
+var TIMEOUT_MS         = 45000;
+var PITCH_VALUE        = 0;
+var GLOBAL_SPEED_RATIO = 1.7;  // 全局语速倍率
+var GLOBAL_VOLUME      = 1.0;  // 全局音量（1.0为原声）
+var SAVE_REQUEST_LOG   = 1;    // 调试：是否把每次合成参数写入文件（0关闭，1开启）
+var SAVE_RESPONSE_LOG  = 1;    // 调试：是否把每次合成结果写入文件（0关闭，1开启）
+var LOG_RESET_PER_SESSION = 1; // 是否在 App 新会话首次合成时清空日志
+var LOG_MAX_SIZE_BYTES = 1048576; // 日志文件大小上限（1MB），超过则清空
+var LOG_SESSION_KEY    = 'tts_log_session_started_v1'; // 内存缓存键，用于判断新会话
+var MAX_CHARS_PER_SYNTHESIS = 800; // 单次合成最大字符数，超长文本自动切分 // 单次合成最大字符数，超长文本自动切分
+var SEGMENT_RETRY_MAX  = 7;    // 单段合成最大重试次数
+var ENABLE_CHAPTER_TITLE_BRACKET3 = 1;  // 章节标题默认使用「」括号发音人（括号3）朗读，0关闭
+
+var DEBUG_LOG_FILE = "/storage/emulated/0/Download/chajian/mingwuyan/tts_debug_log.txt";
+var DEBUG_LOG_MAX_BYTES = 500 * 1024; // 超过500KB自动清空
+
+function log(msg) {
+    var line = "";
+    try { line = "[" + new Date().toLocaleString() + "] " + msg; } catch (e) { line = "[?] " + msg; }
+    try { java.log(line); } catch (e) {}
+    try {
+        var oldLog = "";
+        try { oldLog = String(java.readExternalFile(DEBUG_LOG_FILE)); } catch (e) {}
+        if (oldLog.length > DEBUG_LOG_MAX_BYTES) oldLog = "";
+        java.writeExternalFile(DEBUG_LOG_FILE, oldLog + line + "
+");
+    } catch (e) {}
+}
+
+
+
+// ===== 0. 文本预处理 =====
+var text = speakText;
+
+// 章节标题预处理：未加特殊括号的章节标题自动转为「」括号发音人朗读
+function preprocessChapterTitle(t) {
+    if (!t || ENABLE_CHAPTER_TITLE_BRACKET3 !== 1) return t;
+    if (t.indexOf("“") !== -1 || t.indexOf("”") !== -1) return t;
+    if (t.indexOf("<<括号") !== -1) return t;
+
+    var trimmed = t.replace(/[\s　]+/g, "");
+    if (trimmed.length === 0) return t;
+
+    var chapterPatterns = [
+        /^第[0-9一二三四五六七八九十百千万〇]+[章回卷集节篇]/,
+        /^卷[0-9一二三四五六七八九十百千万〇]+/,
+        /^序[章篇]?$/,
+        /^楔子$/,
+        /^引[言子]$/,
+        /^前[言序]$/,
+        /^后[记序]$/,
+        /^尾[声章]$/,
+        /^终[章篇]$/,
+        /^结[语语]?$/,
+        /^番外[篇]?/,
+        /^附录$/,
+        /^卷[终末]$/
+    ];
+
+    for (var i = 0; i < chapterPatterns.length; i++) {
+        if (chapterPatterns[i].test(trimmed)) {
+            log("【章节标题】引擎识别为章节标题，使用括号3朗读：" + trimmed.substring(0, 40));
+            return '“<<括号3>>' + t + '”';
+        }
+    }
+    return t;
+}
+
+// 将特殊括号转换为带发音人标记的对话（引号包裹，引擎才能识别为对话并消费 <<tag>>）
+text = text.replace(/【([^【】]+?)】/g, function(match, inner) {
+    if (/^\s*\d+\s*$/.test(inner)) return match;
+    return '“<<括号1>>' + inner + '”';
+});
+text = text.replace(/「([^「」]+?)」/g, '“<<括号3>>$1”');
+text = text.replace(/『([^『』]+?)』/g, '“<<括号4>>$1”');
+
+// 章节标题默认使用「」发音人（括号3）朗读
+text = preprocessChapterTitle(text);
+
+// 循环清洗对话内剩余括号，直到无匹配（允许跨行）
+var cleaned = true;
+while (cleaned) {
+    cleaned = false;
+    var newText = text.replace(/(“[^“”]*?)[【「『』」】]([^“”]*?”)/g, "$1$2");
+    if (newText !== text) { text = newText; cleaned = true; }
+}
+
+
+var SFX_REGEX = /“(<<[^<>]+>>)?(((锵|咔嚓|哗啦|轰隆|咕噜|滴答|叮咚|咚咚|哐当|噼啪|扑通|吧嗒|吱呀|嘎吱|嗡嗡|喵喵|汪汪|咩咩|哞哞|呱呱|叽喳|啾啾|嘎嘎|嘶嘶|嘟嘟|嘀嘀|砰砰|乓乓|噼里啪啦|稀里哗啦|丁零当啷|叽里咕噜|乒乒乓乓|淅淅沥沥|窸窸窣窣|滴滴答答|叮叮当当|轰轰隆隆|咕咕噜噜|噼噼啪啪|吱吱呀呀|哔哔剥剥|咔咔嚓嚓|扑扑簌簌|踢踢踏踏|咕嘟咕嘟|呼哧呼哧|咯吱咯吱|当啷当啷|哗啦哗啦|沙沙|唰唰|淅沥|咕咚|啪嗒|骨碌碌|轰|咚|唰|砰|铛|咣|咻|嗖|嘭|嚓|咣当|咕嘟|咕隆|哗|唧唧|喳喳|呱嗒|嗒嗒|哒哒|铮铮|铮|嗡|呲|呲啦|咝|咝咝|呜|呜呜|呼呼|飕飕|轰隆隆|咕噜噜|叮铃铃|嘀铃铃|嘀嗒嗒|哐啷|哐啷啷|啪嚓|啪嗒|骨碌|咕噜|咕咕|笃笃|笃|嗒|嘎|嘎嘎|嘎啦|嘎嘣|嘣|嘣嘣|噔|噔噔|噔噔噔|噗|噗噗|噗噜噜|哧|哧溜|哧啦|当|当当|哔|哔哔|哔剥|剥|剥剥|咿呀|咿咿呀呀|吱|吱吱|吱扭|吱嘎|轧轧|轧|轧然|霍霍|霍|霍啦|飕|飕飕|飒飒|飒|萧萧|萧|簌簌|簌|咕|咕咕|咕儿|呱|呱呱|呱唧|唧|唧唧|唧咕|啾|啾啾|啾唧|啁啾|啁|啁啁|嘤|嘤嘤|嗡|嗡嗡|嗡营|营营|铮|铮铮|铮鏦|鏦|鏦然|叮|叮叮|叮当|叮咚|叮铃|铃|铃铃|泠泠|淙淙|潺潺|溅溅|汩汩|咕嘟|咕嘟咕嘟|哗|哗哗|哗啦|哗啦啦|澎|澎湃|澎澎|汹|汹涌|汹汹|轧|轧轧|轧然|吱|吱吱|吱扭|嘎|嘎吱|嘎巴|嘎嘣|嘣|嘣嘣|啪|啪啪|啪嚓|啪嗒|嗒|嗒嗒|哒|哒哒|咚|咚咚|噔|噔噔|噗|噗通|噗嗤|嗤|嗤嗤|嗤啦|咝|咝咝|咻|咻咻|嗖|嗖嗖|飕|飕飕|呜|呜呜|呼|呼呼|呼啦|呼啦啦|哗|哗啦|哗啦啦|咕|咕噜|咕咚|咕嘟|嘟|嘟嘟|嘟噜|噜|噜噜|哞|哞哞|咩|咩咩|喵|喵喵|汪|汪汪|嗷|嗷嗷|咯|咯咯|咯吱|吱|吱吱|呱|呱呱|叽|叽叽|喳|喳喳|啾|啾啾|嘶|嘶嘶|吼|吼吼|唳|唳唳|吠|汪汪|嗡|嗡嗡|营|营营|铮|铮铮|叮|叮当|叮咚|当|当当|哐|哐当|砰|砰砰|乓|乓乓|咣|咣当|嚓|咔嚓|啪|啪嗒|嗒|嗒嗒|嘀|嘀嗒|嗒|嗒嗒|哒|哒哒|嘟|嘟嘟|哔|哔哔|噗|噗噗|哧|哧哧|咝|咝咝|唰|唰唰|淅沥|沥沥|沥|沙|沙沙|飒|飒飒|萧|萧萧|簌|簌簌|哗|哗哗|轰|轰轰|咕|咕咕|咚|咚咚|吱|吱吱|嘎|嘎嘎|当|当当|乓|乓乓|砰|砰砰|啪|啪啪|哐|哐哐|咣|咣咣|叮|叮叮|铮|铮铮|嗡|嗡嗡|嘟|嘟嘟|哔|哔哔|噗|噗噗|哧|哧哧|咻|咻咻|嗖|嗖嗖|飕|飕飕|呜|呜呜|呼|呼呼|哗|哗哗|轰|轰轰|咕|咕咕|咚|咚咚|吱|吱吱|嘎|嘎嘎|咯噔|咕叽|咕叽咕叽|咕噜咕噜|哗啦啦|噼啪|噼噼啪啪|咚咚咚|哐哐|咣咣|叮叮当|叮叮咚咚|吱嘎吱嘎|吱呀呀|轰隆轰隆|咕咚咕咚|吧嗒吧嗒|嘀嗒嘀嗒|沙沙沙|飒飒飒|嗡嗡嗡|喵呜|汪汪汪|咩咩咩|哞哞哞|呱呱呱|叽叽叽|喳喳喳|啾啾啾|嘶嘶嘶|呼呼呼|呜呜呜|哒哒哒|嗒嗒嗒|砰砰砰|乓乓乓|嚓嚓嚓|唰唰唰|淅沥沥|哗哗哗|咕咕咕|咚咚咚|吱吱吱|嘎嘎嘎|当当当|铮铮铮|噗噗噗|哧哧哧|咻咻咻|嗖嗖嗖|飕飕飕|哐当哐当|咕噜咕噜|噼里啪啦轰隆隆|稀里哗啦丁零当啷|叽里咕噜乒乒乓乓|窸窸窣窣滴滴答答|叮叮当当轰轰隆隆|噼噼啪啪吱吱呀呀|哔哔剥剥咔咔嚓嚓|扑扑簌簌踢踢踏踏|咕嘟咕嘟呼哧呼哧|咯吱咯吱当啷当啷|哗啦哗啦唧唧喳喳|呱嗒呱嗒铮铮作响|咣当咣当扑通扑通|吧唧吧唧咕叽咕叽|沙啦沙啦飒啦飒啦|簌啦簌啦霍啦霍啦|咝啦咝啦哧溜哧溜|嘟噜嘟噜哔剥哔剥|噼啪噼啪咔嚓咔嚓|轰隆轰隆咕咚咕咚|叮咚叮咚嘀嗒嘀嗒|哗啦哗啦呼啦呼啦|吧嗒吧嗒啪嗒啪嗒|吱呀吱呀嘎吱嘎吱|嗡嗡嗡嗡喵喵喵喵|汪汪汪汪咩咩咩咩|哞哞哞哞呱呱呱呱|叽叽叽叽喳喳喳喳|啾啾啾啾嘶嘶嘶嘶|呼呼呼呼呜呜呜呜|咚咚咚咚吱吱吱吱|嘎嘎嘎嘎当当当当|铮铮铮铮噗噗噗噗|哧哧哧哧咻咻咻咻|嗖嗖嗖嗖飕飕飕飕|哐哐哐哐咣咣咣咣|嚓嚓嚓嚓唰唰唰唰|淅沥淅沥哗哗哗哗|咕咕咕咕咚咚咚咚|噼里啪啦稀里哗啦|丁零当啷叽里咕噜|乒乒乓乓淅淅沥沥|窸窸窣窣滴滴答答|叮叮当当轰轰隆隆|噼噼啪啪吱吱呀呀|哔哔剥剥咔咔嚓嚓|扑扑簌簌踢踢踏踏|咕嘟咕嘟呼哧呼哧|咯吱咯吱当啷当啷)([！？。，；：、]*)){1,3})”/g;
+
+// 使用预编译正则（避免重复解析超长字面量）
+text = text.replace(SFX_REGEX, '$2');
+// ===== 跨段对话与缓存工具函数 =====
+var CACHE_KEY_TAG_CONFIG = "maoxiang_tag_config_v2";
+var CACHE_KEY_PENDING = "maoxiang_pending_voice_v1";
+
+function analyzeOrphanQuotes(text) {
+    var quotes = [];
+    for (var i = 0; i < text.length; i++) {
+        var c = text.charAt(i);
+        if (c === '“') quotes.push({type: "L", pos: i});
+        else if (c === '”') quotes.push({type: "R", pos: i});
+    }
+    var stack = [], orphanLeft = [], orphanRight = [];
+    for (var i = 0; i < quotes.length; i++) {
+        if (quotes[i].type === "L") stack.push(quotes[i]);
+        else if (stack.length > 0) stack.pop();
+        else orphanRight.push(quotes[i]);
+    }
+    for (var i = 0; i < stack.length; i++) orphanLeft.push(stack[i]);
+    return { orphanLeft: orphanLeft, orphanRight: orphanRight };
+}
+
+var sfxDir = '/storage/emulated/0/Download/chajian/bendiyinxiao/';
+var parts = text.split(/(\([\u4e00-\u9fa5]*音效\))/);
+var mixedSegments = [];
+for (var p = 0; p < parts.length; p++) {
+    var part = parts[p];
+    if (!part) continue;
+    if (/^\([\u4e00-\u9fa5]*音效\)$/.test(part)) {
+        var nameMatch = part.match(/\(([\u4e00-\u9fa5]*音效)\)/);
+        if (nameMatch && nameMatch[1]) {
+            mixedSegments.push({type: 'sfx', fileName: nameMatch[1] + '.json'});
+            log('[音效] 提取: ' + nameMatch[1]);
+        }
+    } else {
+        mixedSegments.push({type: 'text', content: part});
+    }
+}
+
+// ===== 1. 读取/下载角色映射表 =====
+var MAP_FILE = '/storage/emulated/0/Download/chajian/mingwuyan/jiaoseliebiao-list.json';
+var REMOTE_URL = 'https://cnb.cool/mingwuyan/yinpin/-/git/raw/main/jiaoseliebiao-list.json?download=true';
+var DATA_DIR = '/storage/emulated/0/Download/chajian/mingwuyan/';
+var LOG_FILE_PATH = DATA_DIR + 'tts_request_log.txt';
+
+function writeSessionHeader(logPath) {
+    try {
+        var NL = String.fromCharCode(10);
+        var now = new Date();
+        var pad = function(n) { return ('0' + n).slice(-2); };
+        var timeStr = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' +
+                      pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+        var header = '# TTS 合成日志' + NL + NL + '## 会话开始：' + timeStr + NL + NL;
+        java.writeExternalFile(logPath, header);
+    } catch (e) {}
+}
+
+function checkAndResetLog(logPath) {
+    if (SAVE_REQUEST_LOG !== 1 && SAVE_RESPONSE_LOG !== 1) return;
+    try {
+        var shouldReset = false;
+        if (LOG_RESET_PER_SESSION === 1) {
+            var sessionStarted = cache.get(LOG_SESSION_KEY);
+            if (!sessionStarted) {
+                shouldReset = true;
+                try { cache.put(LOG_SESSION_KEY, '1'); } catch(e) {}
+            }
+        }
+        if (!shouldReset && LOG_MAX_SIZE_BYTES > 0) {
+            try {
+                var existing = String(java.readExternalFile(logPath) || '');
+                if (existing.length > LOG_MAX_SIZE_BYTES) shouldReset = true;
+            } catch (e) { shouldReset = true; }
+        }
+        if (shouldReset) {
+            writeSessionHeader(logPath);
+        }
+    } catch (e) {}
+}
+
+function buildMarkdownLogEntry(seg, cfg, segRate, segVolume, extraObj, resultInfo) {
+    var NL = String.fromCharCode(10);
+    var now = new Date();
+    var pad = function(n) { return ('0' + n).slice(-2); };
+    var timeStr = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' +
+                  pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds()) + '.' +
+                  ('00' + now.getMilliseconds()).slice(-3);
+    var textPreview = (seg.txt || '').substring(0, 30);
+    var lines = [];
+    lines.push('### [' + timeStr + '] result=' + resultInfo.result);
+    lines.push('');
+    lines.push('- 文本：' + textPreview);
+    lines.push('- voice：' + (cfg.voice || '无'));
+    lines.push('- emotion：' + (cfg.emotion || '无'));
+    lines.push('- speed：' + (segRate != null ? segRate.toFixed(2) : '无'));
+    lines.push('- volume：' + (segVolume != null ? segVolume.toFixed(2) : '无'));
+    lines.push('- len：' + (seg.txt ? seg.txt.length : 0));
+    lines.push('- bytes：' + resultInfo.bytes);
+    lines.push('- retries：' + resultInfo.retries);
+    lines.push('- error：' + (resultInfo.error || '-'));
+    lines.push('- extra：');
+    var ac = null;
+    if (extraObj && extraObj.audio_config) {
+        ac = extraObj.audio_config;
+        lines.push('  - audio_config：');
+        if (ac.format != null) lines.push('    - format：' + ac.format);
+        if (ac.sample_rate != null) lines.push('    - sample_rate：' + ac.sample_rate);
+        if (ac.loudness_rate != null) lines.push('    - loudness_rate：' + ac.loudness_rate);
+        if (ac.emotion != null) lines.push('    - emotion：' + ac.emotion);
+        if (ac.emotion_scale != null) lines.push('    - emotion_scale：' + ac.emotion_scale);
+    }
+    if (extraObj) {
+        if (extraObj.contextTexts != null) lines.push('  - contextTexts：[已省略设定]');
+        if (extraObj.manualContextTexts != null) lines.push('  - manualContextTexts：[已省略设定]');
+        if (extraObj.context_texts != null) lines.push('  - context_texts：[已省略设定]');
+        if (extraObj.enableLocalEmotion != null) lines.push('  - enableLocalEmotion：' + extraObj.enableLocalEmotion);
+        if (extraObj.moduleEmotionEnabled != null) lines.push('  - moduleEmotionEnabled：' + extraObj.moduleEmotionEnabled);
+        if (extraObj.voiceName != null) lines.push('  - voiceName：' + extraObj.voiceName);
+        if (extraObj.audioFormat != null) lines.push('  - audioFormat：' + extraObj.audioFormat);
+        if (extraObj.sampleRate != null) lines.push('  - sampleRate：' + extraObj.sampleRate);
+        if (extraObj.clonePresetIndex != null) lines.push('  - clonePresetIndex：' + extraObj.clonePresetIndex);
+        if (extraObj.emotion != null) lines.push('  - emotion：' + extraObj.emotion);
+        if (extraObj.emotionScale != null) lines.push('  - emotionScale：' + extraObj.emotionScale);
+        if (extraObj.source && extraObj.source.data) {
+            var sd = extraObj.source.data;
+            if (sd.contextTexts != null) lines.push('  - source.data.contextTexts：[已省略设定]');
+            if (sd.manualContextTexts != null) lines.push('  - source.data.manualContextTexts：[已省略设定]');
+            if (sd.context_texts != null) lines.push('  - source.data.context_texts：[已省略设定]');
+        }
+    }
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    return lines.join(NL);
+}
+
+checkAndResetLog(LOG_FILE_PATH);
+var RULE_PRESETS_URL = "https://cnb.cool/xiatian.ktn/tts/-/git/raw/main/rule_presets.json";
+var RULE_PRESETS_CACHE_FILE = DATA_DIR + "rule_presets.json";
+var VOICE_LIST_URL = "https://cnb.cool/xiatian.ktn/tts/-/git/raw/main/maojiandouwentts.json";
+var VOICE_LIST_CACHE_FILE = DATA_DIR + "voice_list.json";
+
+var tagConfig = {};
+
+// 尝试从内存缓存加载角色配置
+try {
+    var cachedTagConfig = cache.get(CACHE_KEY_TAG_CONFIG);
+    if (cachedTagConfig) {
+        tagConfig = JSON.parse(cachedTagConfig);
+        log('[缓存] 从内存加载角色配置，共' + Object.keys(tagConfig).length + '个角色');
+    }
+} catch (e) { tagConfig = {}; }
+
+function isJsonLike(str) {
+    return str && (str.charAt(0) === '[' || str.charAt(0) === '{');
+}
+
+function ensureJsonFile(localPath, remoteUrl) {
+    try {
+        var content = String(java.readExternalFile(localPath));
+        if (isJsonLike(content)) return content;
+    } catch(e) {}
+    log('下载文件: ' + remoteUrl);
+    try {
+        var downloaded = String(java.ajax(remoteUrl, 60000));
+        if (downloaded && isJsonLike(downloaded)) {
+            java.writeExternalFile(localPath, downloaded);
+            return downloaded;
+        }
+    } catch(e) {
+        log('下载失败: ' + e);
+    }
+    return null;
+}
+
+try { var d = new java.io.File(DATA_DIR); if(!d.exists()) d.mkdirs(); } catch(e) {}
+
+var raw = ensureJsonFile(MAP_FILE, REMOTE_URL);
+ensureJsonFile(RULE_PRESETS_CACHE_FILE, RULE_PRESETS_URL);
+ensureJsonFile(VOICE_LIST_CACHE_FILE, VOICE_LIST_URL);
+
+var DEFAULT_VOICE = 'zh_female_vv_uranus_bigtts';
+var DEFAULT_PROMPT = null;
+
+try {
+    if (isJsonLike(raw)) {
+        var groups = JSON.parse(raw);
+        for (var g = 0; g < groups.length; g++) {
+            var group = groups[g];
+            if (group && group.list) {
+                for (var l = 0; l < group.list.length; l++) {
+                    var item = group.list[l];
+                    if (item && item.config) {
+                        var tag = item.config.speechRule && item.config.speechRule.tag;
+                        if (!tag) continue;
+                        var source = item.config.source;
+                        var voice = (source && source.voice) || DEFAULT_VOICE;
+                        var prompt = (source && source.data && source.data.contextTexts) || null;
+                        var emotion = (source && source.data && source.data.emotion) || null;
+                        var ap = item.config.audioParams || {};
+                        var speed = ap.speed || (source && source.speed) || 1.0;
+                        var volume = (ap.volume != null) ? ap.volume : ((source && source.volume != null) ? source.volume : 1);
+                        tagConfig[tag] = {
+                            voice: voice,
+                            prompt: prompt,
+                            emotion: emotion,
+                            speed: speed,
+                            volume: volume,
+                            source: source
+                        };
+                    }
+                }
+            }
+        }
+    }
+} catch (e) {
+    log('JSON解析失败: ' + e);
+}
+
+// 角色配置写入内存缓存
+try {
+    if (Object.keys(tagConfig).length > 0) {
+        cache.put(CACHE_KEY_TAG_CONFIG, JSON.stringify(tagConfig));
+        log('[缓存] 角色配置已写入内存');
+    }
+} catch (e) {}
+
+// 旁白硬编码兜底
+var NARRATOR_DEFAULT = {
+    voice: 'zh_female_vv_uranus_bigtts',
+    prompt: '[#设定：男声，年龄40-55岁。强制物理级锁定醇厚沉稳中低音绝对频段，底层强制开启宽厚饱满胸腔共鸣与苍劲通透喉结发音，彻底屏蔽轻浮跳脱、尖锐刺耳与稚嫩单薄感，全程评书腔调。赋予声音在中低音区岁月基底上醇厚稳重、抑扬顿挫的独特质感，声线浑厚有力，带岁月磨砂颗粒感，中气十足老练通透，绝对禁止稚嫩、禁止沙哑、禁止单薄伪音。咬字顿挫分明，语速张弛有度，尾音利落收束，语气沉稳大气，能在绝对纯正中年音域内完成评书叙事、悬念铺垫、生动演绎、感慨点评，绝不稚嫩轻浮、绝不尖锐刺耳。评书先生感、岁月沉淀感、看似沉稳老练实则声情并茂的中年男声，说话带贴耳醇厚呼吸感，用焊死中低音的极致厚重感，打造传统评书故事感中年声线。]',
+    speed: 1.0,
+    volume: 1
+};
+var narratorCfg = tagConfig["narration"] || NARRATOR_DEFAULT;
+
+var NEEDS_CONTEXT_TEXTS = {
+    'zh_female_vv_uranus_bigtts': true,
+    'zh_female_vv_mars_bigtts': true,
+    'zh_female_wenroutaozi_uranus_bigtts': true
+};
+
+// ===== 3. 拆分段落 =====
+var segments = [];
+
+// 读取跨段对话的pending voice配置
+var pendingVoice = null;
+try {
+    var cachedPending = cache.get(CACHE_KEY_PENDING);
+    if (cachedPending) pendingVoice = JSON.parse(cachedPending);
+} catch (e) {}
+
+for (var s = 0; s < mixedSegments.length; s++) {
+    var mix = mixedSegments[s];
+    if (mix.type === 'sfx') {
+        segments.push({type: 'sfx', fileName: mix.fileName});
+        continue;
+    }
+
+    var segText = mix.content;
+    var quoteAnalysis = analyzeOrphanQuotes(segText);
+    var hasOrphanRight = quoteAnalysis.orphanRight.length > 0;
+
+    // 处理孤儿右引号（对话在上段开始，本段结束）
+    if (hasOrphanRight && pendingVoice) {
+        var rightPos = quoteAnalysis.orphanRight[0].pos;
+        var textBeforeRight = segText.substring(0, rightPos);
+        // 关键修复：如果孤儿右引号前面存在左引号，说明文本包含正常对话结构
+        // 不能整体当作孤儿对话处理，否则会把旁白误吞进对话
+        var hasLeftQuoteBefore = textBeforeRight.indexOf('“') !== -1;
+        if (!hasLeftQuoteBefore) {
+            var orphanDialog = textBeforeRight + '”';
+            if (orphanDialog.replace(/[“”]/g, '').trim().length > 0) {
+                var orphanCfg = pendingVoice ? JSON.parse(JSON.stringify(pendingVoice)) : null;
+                var orphanEmoMatch = orphanDialog.match(/\[\[emo:([^|\]]+)(?:\|([^\]]+))?\]\]/);
+                if (orphanEmoMatch && orphanCfg) {
+                    orphanDialog = orphanDialog.replace(/\[\[emo:[^\]]+(?:\|[^\]]+)?\]\]/g, '');
+                    orphanCfg.emotion = orphanEmoMatch[1];
+                    if (orphanEmoMatch[2]) orphanCfg.performancePrompt = orphanEmoMatch[2];
+                }
+                segments.push({txt: orphanDialog, config: orphanCfg || pendingVoice});
+            }
+            // 右引号之后的内容继续按正常流程处理
+            segText = segText.substring(rightPos + 1);
+            pendingVoice = null;
+            try { cache.delete(CACHE_KEY_PENDING); } catch(e) {}
+            // 重新分析剩余文本
+            quoteAnalysis = analyzeOrphanQuotes(segText);
+        }
+    }
+
+    var idx = 0;
+    while (idx < segText.length) {
+        var qStart = segText.indexOf('“', idx);
+        if (qStart === -1) {
+            var rem = segText.substring(idx);
+            var remTrim = rem.trim();
+            if (remTrim.length > 0) {
+                var narCfg = JSON.parse(JSON.stringify(narratorCfg));
+                var emoMatch = rem.match(/\[\[emo:([^|\]]+)(?:\|([^\]]+))?\]\]/);
+                if (emoMatch) {
+                    rem = rem.replace(/\[\[emo:[^\]]+(?:\|[^\]]+)?\]\]/g, '');
+                    narCfg.emotion = emoMatch[1];
+                    if (emoMatch[2]) narCfg.performancePrompt = emoMatch[2];
+                }
+                segments.push({txt: rem, config: narCfg});
+            }
+            break;
+        }
+        if (qStart > idx) {
+            var pre = segText.substring(idx, qStart);
+            var preTrim = pre.trim();
+            if (preTrim.length > 0) {
+                var narCfg = JSON.parse(JSON.stringify(narratorCfg));
+                var emoMatch = pre.match(/\[\[emo:([^|\]]+)(?:\|([^\]]+))?\]\]/);
+                if (emoMatch) {
+                    pre = pre.replace(/\[\[emo:[^\]]+(?:\|[^\]]+)?\]\]/g, '');
+                    narCfg.emotion = emoMatch[1];
+                    if (emoMatch[2]) narCfg.performancePrompt = emoMatch[2];
+                }
+                segments.push({txt: pre, config: narCfg});
+            }
+        }
+
+        var qEnd = segText.indexOf('”', qStart + 1);
+        var isCrossSegment = (qEnd === -1);
+        if (isCrossSegment) qEnd = segText.length - 1;
+        var dialogText = segText.substring(qStart, qEnd + 1);
+
+        var roleCfg = null;
+        var match = dialogText.match(/<<([^>]+)>>/);
+        if (match) {
+            var tag = match[1];
+            roleCfg = tagConfig[tag];
+            dialogText = dialogText.replace(/<<[^>]+>>/, '');
+        }
+        if (!roleCfg) {
+            roleCfg = {
+                voice: DEFAULT_VOICE,
+                prompt: null,
+                emotion: null,
+                speed: 1.0,
+                volume: 1
+            };
+        }
+
+        // 移除情绪桥接标记 [[emo:xxx|...]]，避免被猫箱API当作普通文本朗读
+        var emoMatch = dialogText.match(/\[\[emo:([^|\]]+)(?:\|([^\]]+))?\]\]/);
+        if (emoMatch) {
+            dialogText = dialogText.replace(/\[\[emo:[^\]]+(?:\|[^\]]+)?\]\]/g, '');
+            // 保存情绪值供阶段4传入extra参数（v1.6：不再限制voice必须包含emo）
+            roleCfg.emotion = emoMatch[1];
+            if (emoMatch[2]) roleCfg.performancePrompt = emoMatch[2];
+        }
+
+        var pureText = dialogText.replace(/[“”]/g, '').trim();
+        if (pureText.length > 0) {
+            segments.push({txt: dialogText, config: roleCfg});
+        }
+
+        // 跨段对话：保存voice配置供下一段使用
+        if (isCrossSegment) {
+            try {
+                cache.put(CACHE_KEY_PENDING, JSON.stringify(roleCfg));
+                log('[跨段] 保存pending voice: ' + roleCfg.voice);
+            } catch(e) {}
+        }
+
+        idx = qEnd + 1;
+    }
+}
+
+if (segments.length === 0) {
+    var allText = String(text || "");
+    var allTrim = allText.replace(/[""]/g, '').replace(/[“”]/g, '').trim();
+    if (allTrim.length > 0) {
+        var narCfg = JSON.parse(JSON.stringify(narratorCfg));
+        var emoMatch = allText.match(/\[\[emo:([^|\]]+)(?:\|([^\]]+))?\]\]/);
+        if (emoMatch) {
+            allText = allText.replace(/\[\[emo:[^\]]+(?:\|[^\]]+)?\]\]/g, '');
+            narCfg.emotion = emoMatch[1];
+            if (emoMatch[2]) narCfg.performancePrompt = emoMatch[2];
+        }
+        segments.push({txt: allText, config: narCfg});
+    }
+}
+
+// 将超长文本按语义边界切分为多个子段，避免单次合成过长导致音频截断或服务端返回null
+// 切分优先级：句子结束符 > 子句标点 > 空格/词组边界 > 字数硬切（仅在单片段无合适边界时）
+function splitLongText(text, maxChars) {
+    if (!text || text.length <= maxChars) return [text];
+    var result = [];
+    var current = '';
+
+    function flushCurrent() {
+        if (current) { result.push(current); current = ''; }
+    }
+
+    function appendPiece(piece) {
+        if (!piece) return;
+        if ((current + piece).length <= maxChars) {
+            current += piece;
+        } else {
+            flushCurrent();
+            if (piece.length <= maxChars) {
+                current = piece;
+            } else {
+                splitOversized(piece);
+            }
+        }
+    }
+
+    function splitOversized(str) {
+        // 第二层：按子句标点切分
+        var parts = str.split(/([，、；：]+)/);
+        for (var i = 0; i < parts.length; i++) {
+            var p = parts[i];
+            if (!p) continue;
+            if ((current + p).length <= maxChars) {
+                current += p;
+            } else {
+                flushCurrent();
+                if (p.length <= maxChars) {
+                    current = p;
+                } else {
+                    splitByBoundary(p);
+                }
+            }
+        }
+    }
+
+    function splitByBoundary(str) {
+        // 第三层：按空格/连字符/中英数边界切分；第四层：无边界时按字数硬切
+        var start = 0;
+        while (start < str.length) {
+            if (current) { result.push(current); current = ''; }
+            var remaining = str.length - start;
+            if (remaining <= maxChars) {
+                current = str.substring(start);
+                break;
+            }
+            var end = start + maxChars;
+            var bestEnd = end;
+            for (var i = end - 1; i > start && i >= end - 30; i--) {
+                var c = str.charAt(i);
+                var prev = str.charAt(i - 1);
+                // 优先在空格、连字符、斜杠后切分
+                if (c === ' ' || c === '-' || c === '—' || c === '/') {
+                    bestEnd = i;
+                    break;
+                }
+                // 中英/中数/英数边界
+                var isCjkPrev = /[一-龥]/.test(prev);
+                var isCjkCur = /[一-龥]/.test(c);
+                if (isCjkPrev !== isCjkCur) {
+                    bestEnd = i;
+                }
+            }
+            if (bestEnd <= start) bestEnd = end;
+            current = str.substring(start, bestEnd);
+            start = bestEnd;
+        }
+    }
+
+    // 第一层：按句子结束符切分
+    var sentenceParts = text.split(/([。！？…]+)/);
+    for (var i = 0; i < sentenceParts.length; i++) {
+        appendPiece(sentenceParts[i]);
+    }
+    flushCurrent();
+    return result;
+}
+
+// 根据文本长度计算最小有效音频字节数，避免过短音频被误判为成功
+function calcMinAudioBytes(textLen) {
+    if (textLen <= 5) return 500;
+    if (textLen <= 20) return 1500;
+    return Math.max(2000, textLen * 80);
+}
+
+// 对超长文本段进行切分，避免整句被截断
+var expandedSegments = [];
+for (var si = 0; si < segments.length; si++) {
+    var seg = segments[si];
+    if (seg.type === 'sfx' || !seg.txt || seg.txt.length <= MAX_CHARS_PER_SYNTHESIS) {
+        expandedSegments.push(seg);
+    } else {
+        var subTexts = splitLongText(seg.txt, MAX_CHARS_PER_SYNTHESIS);
+        log('[引擎] 长文本切分: ' + seg.txt.substring(0, 30) + '... 长度' + seg.txt.length + ' → ' + subTexts.length + '段');
+        for (var sj = 0; sj < subTexts.length; sj++) {
+            expandedSegments.push({txt: subTexts[sj], config: seg.config});
+        }
+    }
+}
+segments = expandedSegments;
+
+// ===== 4. 合成音频 =====
+// v1.0.4 修复：每段请求使用独立随机的 aid/device_id，避免单标识被限流/连接复用冲突
+var out = ws.newBuffer();
+
+function loadAndRotateSfx(fileName) {
+    var filePath = sfxDir + fileName;
+    try { var d = new java.io.File(sfxDir); if(!d.exists()) d.mkdirs(); } catch(e) {}
+
+    var sfxJson = null;
+    try {
+        var raw = String(java.readExternalFile(filePath));
+        if (raw && raw.charAt(0) === '{') sfxJson = JSON.parse(raw);
+    } catch(e) {}
+
+    if (!sfxJson) {
+        var url = 'https://cnb.cool/mingwuyan/yinpin/-/git/raw/main/bdyinxiao2/' + fileName;
+        log('[音效] 下载: ' + url);
+        try {
+            var dl = String(java.ajax(url, 30000));
+            if (dl && dl.charAt(0) === '{') {
+                sfxJson = JSON.parse(dl);
+                try { java.writeExternalFile(filePath, dl); } catch(e) {}
+            }
+        } catch(e) { log('[音效] 下载失败: ' + e); return null; }
+    }
+
+    if (!sfxJson || !Array.isArray(sfxJson.audios) || sfxJson.audios.length === 0) {
+        log('[音效] audios无效');
+        return null;
+    }
+
+    var index = sfxJson.currentIndex || 0;
+    if (index >= sfxJson.audios.length) index = 0;
+    var b64 = sfxJson.audios[index];
+    if (!b64 || typeof b64 !== 'string' || b64.length < 100) {
+        log('[音效] Base64无效');
+        return null;
+    }
+
+    if (sfxJson.audios.length > 1) {
+        sfxJson.currentIndex = (index + 1) % sfxJson.audios.length;
+        try { java.writeExternalFile(filePath, JSON.stringify(sfxJson)); } catch(e) {}
+    }
+
+    try {
+        var bytes = android.util.Base64.decode(b64.trim(), android.util.Base64.DEFAULT);
+        if (bytes && bytes.length > 0) {
+            log('[音效] 解码成功，字节: ' + bytes.length + ' (' + fileName + ' idx=' + index + ')');
+            return bytes;
+        }
+    } catch(e) { log('[音效] 解码异常: ' + e); }
+    return null;
+}
+
+var SPEED_BOOST = speechRate / 20 * GLOBAL_SPEED_RATIO;
+for (var i = 0; i < segments.length; i++) {
+    var seg = segments[i];
+    if (seg.type === 'sfx') {
+        var sfxBytes = loadAndRotateSfx(seg.fileName);
+        if (sfxBytes && sfxBytes.length > 0) out.write(sfxBytes);
+        continue;
+    }
+
+    var pure = seg.txt ? seg.txt.replace(/[“”]/g, '').trim() : '';
+    if (!seg.txt || pure.length === 0) continue;
+
+    var cfg = seg.config;
+    var query = 'voice=' + cfg.voice + '&format=' + AUDIO_FORMAT + '&sampleRate=' + SAMPLE_RATE + '&appkey=' + APP_KEY;
+    
+    var segSpeed = cfg.speed || 1.0;
+    var segVolume = cfg.volume != null ? cfg.volume : GLOBAL_VOLUME;
+    var segRate = SPEED_BOOST * segSpeed;
+    var loudness = Math.max(-48, (segVolume - 1) * 50);   // 最小限制 -48
+
+    var extraObj = {};
+    if (cfg.source && cfg.source.data) {
+        extraObj = JSON.parse(JSON.stringify(cfg.source.data));
+    }
+
+    if (NEEDS_CONTEXT_TEXTS[cfg.voice]) {
+        if (cfg.prompt) {
+            extraObj.context_texts = [cfg.prompt];
+        }
+    } else {
+        delete extraObj.context_texts;
+    }
+
+    // v1.12 新增：追加脚本侧动态生成的自然语言表演指令
+    if (cfg.performancePrompt) {
+        extraObj.context_texts = extraObj.context_texts || [];
+        extraObj.context_texts.push(String(cfg.performancePrompt));
+        log('[表演指令] voice=' + cfg.voice + ' | ' + cfg.performancePrompt.substring(0, 60));
+    }
+
+    extraObj.audio_config = {
+        format: AUDIO_FORMAT,
+        sample_rate: SAMPLE_RATE,
+        loudness_rate: loudness
+    };
+
+    if (cfg.emotion) {
+        extraObj.audio_config.emotion = cfg.emotion;
+        extraObj.audio_config.emotion_scale = 4;
+    }
+
+    var extra = JSON.stringify(extraObj);
+
+    // 初始化本次合成结果信息
+    var synthesisResult = {
+        result: 'unknown',
+        bytes: 0,
+        retries: 0,
+        error: ''
+    };
+
+    // 合成请求带自动重试（针对502/504/超时/空音频/音频过短等临时错误）
+    var maxRetries = SEGMENT_RETRY_MAX;
+    var audio = null;
+    var retryCount = 0;
+    var lastError = '';
+    var minAudioBytes = calcMinAudioBytes(pure.length); // 根据文本长度动态计算最小有效音频字节数
+    for (var attempt = 0; attempt <= maxRetries; attempt++) {
+        lastError = '';
+        var currentAid = String(Math.floor(1e12 + 9e12 * Math.random()));
+        var currentDeviceId = String(Math.floor(1e12 + 9e12 * Math.random()));
+        var wsUrl = BASE_URL + '?' + query + '&ssmix=&aid=' + currentAid + '&device_id=' + currentDeviceId;
+        try {
+            audio = ws.maoxiang(wsUrl, seg.txt, cfg.voice, AUDIO_FORMAT, SAMPLE_RATE, segRate, PITCH_VALUE, APP_KEY, TIMEOUT_MS, extra);
+            if (!audio) {
+                lastError = '返回null';
+            } else if (typeof audio.length === 'undefined' || audio.length === 0) {
+                lastError = '返回空音频';
+            } else if (audio.length < minAudioBytes) {
+                lastError = '返回音频过短(' + audio.length + '字节)';
+            } else {
+                // 音频基本有效，结束重试
+                break;
+            }
+        } catch (ex) {
+            lastError = String(ex);
+        }
+
+        audio = null;
+        if (attempt < maxRetries) {
+            var isRetryable = !lastError ||
+                              lastError.indexOf('502') !== -1 ||
+                              lastError.indexOf('504') !== -1 ||
+                              lastError.indexOf('timeout') !== -1 ||
+                              lastError.indexOf('Timeout') !== -1 ||
+                              lastError.indexOf('connection') !== -1 ||
+                              lastError.indexOf('Connection') !== -1 ||
+                              lastError.indexOf('101') !== -1 ||
+                              lastError.indexOf('Socket') !== -1 ||
+                              lastError.indexOf('SocketTimeout') !== -1 ||
+                              lastError.indexOf('空音频') !== -1 ||
+                              lastError.indexOf('过短') !== -1 ||
+                              lastError.indexOf('null') !== -1;
+            if (isRetryable) {
+                retryCount++;
+                var sleepMs = Math.min(8000, 500 * Math.pow(2, attempt)) + Math.floor(Math.random() * 500);
+                log('[合成] 第' + (attempt + 1) + '次失败(可重试): ' + lastError.substring(0, 80) + '，' + sleepMs + 'ms后重试 | 文本: ' + seg.txt.substring(0, 25));
+                try { java.lang.Thread.sleep(sleepMs); } catch(e) {}
+            } else {
+                log('[合成] 请求失败(不重试): ' + lastError + ' 文本: ' + seg.txt.substring(0, 30));
+                break;
+            }
+        }
+    }
+    if (audio && audio.length > 0) {
+        synthesisResult.result = 'success';
+        synthesisResult.bytes = audio.length;
+        synthesisResult.retries = retryCount;
+        log('[合成] 成功(' + audio.length + '字节) voice=' + cfg.voice + ' | ' + seg.txt.substring(0, 25));
+        out.write(audio);
+    } else {
+        synthesisResult.result = 'failed';
+        synthesisResult.retries = retryCount;
+        synthesisResult.error = lastError || '未知错误';
+        log('[合成] 跳过本段(' + (retryCount > 0 ? '重试' + retryCount + '次后仍失败' : '无可重试错误') + '): ' + lastError.substring(0, 60) + ' | ' + seg.txt.substring(0, 25));
+    }
+
+    // 写入 markdown 合成日志
+    if (SAVE_REQUEST_LOG === 1 || SAVE_RESPONSE_LOG === 1) {
+        try {
+            var logEntry = buildMarkdownLogEntry(seg, cfg, segRate, segVolume, extraObj, synthesisResult);
+            var oldLog = '';
+            try { oldLog = String(java.readExternalFile(LOG_FILE_PATH)); } catch(e) {}
+            java.writeExternalFile(LOG_FILE_PATH, oldLog + logEntry);
+        } catch(e) {}
+    }
+}
+
+out.toByteArray();
+
+} catch (e) {
+    log("脚本异常: " + e);
+    throw e;
+}
