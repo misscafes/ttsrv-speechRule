@@ -1,3 +1,41 @@
+### 多角色朗读 2.132 融合 v88.7 别名审计/图谱/发音人稳定（步骤 5-8，2026-07-08）
+- **目标文件**: `多角色朗读2.132【融合v88.7完整别名审计+保留情绪缓存备用模型】.json`
+- **源文件**: `参考/多角色朗读2.85发音人轮询+增强别名检验v88.7.json`
+- **备份**: 修改前生成 `多角色朗读2.132_备份_步骤5前.json`
+- **覆盖/增强的 CharacterManager.prototype 方法**:
+  - `reEvaluateCharacter`（年龄段稳定、年龄段音色绑定备份、固定发音人硬锁、男主/女主自动锁定）
+  - `buildAliasEvidenceHint`（最近 N 章正/反图谱、共现统计三维辅助）
+  - `checkAliasByApi`（本地列表 → 三维提示 → aliasAnalyze API → 关系审计 → aliasRefine → 应用结果 → 写入图谱 → 冲突校验 → 更新记录）
+  - `updateAliasGraphsFromCache`（复合证据写入、最近 N 章标记）
+  - `applyModelRelationEvidence`、`applyPositiveChainClosure`、`verifyGraphConflictAndFix`
+  - `refineAliasGroupByApi`、`setAliasGraphBook`、`recordPositiveAliasEdge`、`recordNegativeAliasEdge`
+  - `mergeCharacterRecords`、`splitAliasByConflict`、`applyCompoundGraphEvidence`、`getAliasRecentGraphData`
+  - `findCharacterRecord`、`buildAliasRecentChapterHint`
+- **新增的 CharacterManager.prototype 方法**（约 36 个）:
+  - 关系审计：`auditNameSemanticRelationsByAliasApi`、`applyAuditedNameSemanticRelations`、`buildNameSemanticRelationAuditPrompt`
+  - Pending 机制：`setPendingNameSemanticRelations`、`getPendingNameSemanticRelationsForAliasCheck`、`buildAliasCheckRelationAuditBlock`、`consumePendingNameSemanticRelationsWithAlias`、`auditPendingNameSemanticRelationsIfNeeded`
+  - 最近角色/图谱提示：`buildNameAnalysisRecentRoleHint`、`getAliasRecentRoleList`、`getNameAnalysisRecentRoleList`、`getNameAnalysisCrossChapterRoleList`、`getAliasRecentCooccurData`
+  - 图谱/记录修复：`directPairEvidenceGate`、`cleanupBridgeAliasIfExists`、`handleGraphAuditSuggestions`、`graphBatchHasNewRoleCandidate`
+  - 记录合并/拆分/恢复：`loadMergedRecords`、`saveMergedRecords`、`storeMergedRecordBackup`、`v87ChooseMergeTarget`、`v87ReconcileExistingRecords`、`persistentCompoundRecordReconciliation`、`v87RunCompoundRecordReconciliation`、`applyPersistentCompoundGraphEvidence`、`repairDuplicateAliasMainRecords`、`resolveDuplicateAliasMainConflict`、`removeAliasFromRecord`、`rebuildNameToMainNameMap`、`restoreVoiceWithFallback`、`findMainCharacterRecordByExactName`
+  - 发音人稳定：`saveAgeVoiceBindingBackup`、`findAgeVoiceBindingBackup`
+  - 别名精洗：`buildAliasRefineGraphHint`、`addGenderAgeHistoryForExistingRole`
+  - 章节标记：`markCharacterRecordChapterByName`、`markRecordActiveChapter`
+- **保留的 2.131 现代特性**:
+  - `v2124_*` 章节缓存函数完整保留
+  - `BackupModelManager` 备用模型管理 IIFE 及调用点完整保留
+  - 情绪模块全部函数完整保留（`applyLocalDialogueEmotionCorrection` 等）
+  - `analyzeCharacter` 保留章节缓存、下文提取、批量构造、并发竞速、`voteNameAnalyzeResult`、缓存写入、本地情绪修正
+  - `processCharacter` 保留 2.131 的新建/更新角色与发音人校验逻辑
+  - `saveRecords`/`loadRecords` 保留 2.131 的 `shuming.<book>` 备份与别名列表缓存清理，仅追加 v88.7 的记录 ID 保证与远程日志
+- **自定义补丁**:
+  - `analyzeCharacter`：生成 `fullBatchContent` 后计算 `nameAnalysisRecentRoleHint`，追加到 `prompt` 与 `buildNameAnalyzeRequest` 的 user content；在并发结果成功后、投票合并前插入 `auditNameSemanticRelationsByAliasApi` + `applyAuditedNameSemanticRelations`
+  - `processCharacter`：在分配发音人前对 `targetMainRecord` 调用 `reEvaluateCharacter`，若 `graphV887IsFixedVoiceRecord` 为真且 `fixedVoiceTag` 可用则优先恢复；新建角色记录后再次调用 `reEvaluateCharacter`
+- **验证**:
+  - `node extract-js.js` 成功重新生成 `js/多角色朗读2.132【融合v88.7完整别名审计+保留情绪缓存备用模型】.js`
+  - `node --check js/多角色朗读2.132【融合v88.7完整别名审计+保留情绪缓存备用模型】.js` 通过
+  - 代码长度：495030 → 629810 字符（+134780）
+  - `CharacterManager.prototype` 唯一方法数：38 → 80 个
+
 ### 猫剪豆问 v1.22 融合猫箱-VV大军跳段修复策略（2026-07-06）
 - **版本升级**: v1.21 → v1.22（脚本 + 引擎）
 - **需求背景**: 用户要求分析参考文件 `参考/猫箱-VV大军(完全版+4).json` 中"完全修复跳段"的逻辑，并优化现有 v1.21 引擎
