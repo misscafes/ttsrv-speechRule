@@ -3108,3 +3108,94 @@ C:/date/ttsrv-speechRule/
 - v1.19 脚本需与 v1.19 引擎配套使用。
 - `new/猫剪豆问（自然情绪版）v1.20_回退备份.json` 不再使用，如需恢复其中的千问官方扩展内容，可手动去掉 `_回退备份` 后缀。
 - 待用户继续使用 v1.19 验证「」改由旁白发音、章节标题仍走括号3 的效果。
+
+---
+
+## 变更记录（多角色朗读 2.132，2026-07-08）
+
+**改动概要**：基于 2.131 创建 2.132，完整融合 `参考/多角色朗读2.85发音人轮询+增强别名检验v88.7.json` 的别名审计、语义证据、图谱推理与发音人稳定机制，同时保留 2.131 的章节缓存、情绪模块、备用模型接力与切书修复能力。
+
+**详细改动**：
+1. 备份 2.131 并创建 `多角色朗读2.132【融合v88.7完整别名审计+保留情绪缓存备用模型】.json`，同步更新文件名、JSON 顶层 `name`/`version`、code 内部 `SpeechRuleJS.name`/`SpeechRuleJS.version`。
+2. 在配置区新增 v88.7 开关变量与 `getV887CharacterNamingAndSpeakerRules` 规则提示函数，所有增强功能默认关闭，避免意外消耗 API 额度。
+3. 从 v88.7 移植 156 个独立函数到 2.132 code 末尾，覆盖：
+   - 别名清洗与规范化（`cleanAliasText`、`normalizeAlias`、`isPronounOrNoise` 等）
+   - 候选角色生成（`generateCharacterCandidates`、`extractCandidateNames`、`scoreCandidate` 等）
+   - N-gram/上下文窗口/语义证据/图谱推理（`collectContextWindow`、`buildSemanticEvidence`、`inferAliasViaGraph`、`updateCharacterRelationGraph` 等）
+   - 发音人稳定器（`getSpeakerStabilizer`、`recordSpeakerUsage`、`resolveStableSpeaker` 等）
+   - 置信度计算与渐进式学习（`calculateAliasConfidence`、`applyProgressiveLearning`、`promoteAliasIfConfident` 等）
+4. 重构 `CharacterManager.prototype` 系列方法：
+   - 增强 `addOrUpdateCharacter`、`tryMatchByAlias`、`updateAliasStats`、`getCharacterByNameOrAlias`、`getAliasOwner`
+   - 新增别名审计入口 `auditAliases` 与图谱推理入口 `inferAliasViaGraph`
+5. 重构 `analyzeCharacter`：接入 v88.7 的候选角色生成、语义证据评估、置信度排序与渐进式学习逻辑。
+6. 增强 `checkAliasByApi`：支持上下文窗口采样、角色关系对生成、备用模型接力与投票仲裁。
+7. 在 `handleText` 主流程接入发音人稳定器，提升同角色跨段落发音人一致性。
+8. 保留 2.131 的核心能力：章节缓存、情绪模块、备用模型接力、切书回默认/未知书籍修复。
+9. 使用 `node --check` 验证 2.132 JS 文件无语法错误，使用 Python `json.load` 验证 JSON 可解析。
+10. 运行 `node extract-js.js` 同步生成 `js/多角色朗读2.132...js` 调阅文件。
+11. 更新 `PROJECT_STATUS.md` 当前版本、最新改动、待办事项、目录结构、会话摘要。
+12. 清理子代理遗留临时文件：`多角色朗读2.132_备份_步骤5前.json`、对应 JS 备份、`patch_2132_step5.py`。
+
+**验证结果**：
+- `node --check js/多角色朗读2.132...js`：通过
+- Python `json.load(open(...))` 解析 2.132 JSON：通过
+
+**主目录结构（相关）**：
+```
+C:/date/ttsrv-speechRule/
+├── 多角色朗读2.132【融合v88.7完整别名审计+保留情绪缓存备用模型】.json   <- 当前最新朗读规则
+├── 多角色朗读2.131【修复切书语法错误+修复切书回默认书籍】.json         <- 上一版本备份
+├── js/
+│   └── 多角色朗读2.132...js                                             <- JS 调阅文件
+├── 参考/
+│   ├── 多角色朗读2.85发音人轮询+增强别名检验v88.7.json                  <- 本次融合来源
+│   └── v83.3完整流程.txt                                                <- 流程参考
+├── PROJECT_STATUS.md
+├── TODO.md
+└── extract-js.js
+```
+
+**注意事项**：
+- 2.132 默认关闭 v88.7 别名审计与发音人稳定增强开关，安装后如需启用请按需调整配置区变量。
+- 2.132 保留 2.131 的切书修复、章节缓存、情绪模块、备用模型接力能力。
+- 后续安装测试重点：别名审计日志、发音人稳定性、切书与章节缓存、情绪标签与备用模型接力。
+
+---
+
+## 会话摘要（2026-07-08）
+
+**当前版本**：
+- 猫剪豆问脚本：`new/(脚本)猫剪豆问（自然情绪版）v1.22.json`
+- 猫剪豆问引擎：`new/猫剪豆问（自然情绪版）v1.22.json`
+- 多角色朗读规则：`多角色朗读2.132【融合v88.7完整别名审计+保留情绪缓存备用模型】.json`
+
+**本次完成事项**：
+1. 基于 2.131 创建 2.132，完整融合参考文件 `参考/多角色朗读2.85发音人轮询+增强别名检验v88.7.json` 的别名审计、语义证据、图谱推理与发音人稳定机制。
+2. 在配置区新增 v88.7 开关变量与规则提示函数，默认关闭。
+3. 移植 156 个独立函数，覆盖别名清洗、候选角色生成、N-gram/上下文窗口/语义证据/图谱推理、发音人稳定器、置信度计算等模块。
+4. 重构 `CharacterManager.prototype` 系列方法，增强别名识别与审计能力。
+5. 重构 `analyzeCharacter` 与 `checkAliasByApi`，接入 v88.7 的语义证据与备用模型投票逻辑。
+6. 在 `handleText` 主流程接入发音人稳定器，保留情绪模块、章节缓存、备用模型、切书修复能力。
+7. 统一 2.132 文件名、JSON 顶层 `name`/`version`、code 内部 `SpeechRuleJS.name`/`SpeechRuleJS.version`。
+8. 使用 `node --check` 验证 2.132 JS 无语法错误，Python `json.load` 验证 JSON 可解析。
+9. 运行 `node extract-js.js` 同步生成 `js/多角色朗读2.132...js` 调阅文件。
+10. 更新 `PROJECT_STATUS.md` 和 `TODO.md`。
+11. 清理子代理遗留临时文件。
+
+**主目录结构（相关）**：
+```
+C:/date/ttsrv-speechRule/
+├── new/                                          # 猫剪豆问脚本+引擎（当前 v1.22）
+├── 多角色朗读2.132...json                        # 当前最新朗读规则
+├── js/                                           # JS 调阅文件
+├── 参考/                                          # 参考目录文件
+├── PROJECT_STATUS.md / TODO.md / MEMORY.md
+└── extract-js.js
+```
+
+**注意事项**：
+- 2.132 默认关闭 v88.7 增强开关，避免意外消耗 API 额度；启用前请确认配置区开关。
+- 2.132 保留 2.131 的切书修复、章节缓存、情绪模块、备用模型接力能力。
+- 待用户安装 2.132 后验证别名审计、发音人稳定器、切书逻辑、章节缓存、情绪模块、备用模型接力。
+- 本次所有输出已按规范保持中文。
+
