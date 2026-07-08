@@ -1,3 +1,17 @@
+### 多角色朗读 2.133 修复 graphAliasRecentChapters 未定义 + 去除「」括号3标签（2026-07-08）
+- **目标文件**: `多角色朗读2.133【修复graphAliasRecentChapters未定义+去除「」括号3标签】.json`
+- **源文件**: `多角色朗读2.132【融合v88.7完整别名审计+保留情绪缓存备用模型】.json`
+- **备份**: 修改前复制原文件为 `多角色朗读2.133【修复graphAliasRecentChapters未定义+去除「」括号3标签】.json`（按版本递增规范）
+- **修复1：graphAliasRecentChapters 未定义**:
+  - 根因：2.132 移植 v88.7 别名图谱/最近章节辅助模块时，移植了 `graphAliasRecentChapterAppend`、`graphAliasRecentChapterLoad`、`graphAliasRecentChapterSave`、`graphAliasGetRecentIndices` 等函数，但漏掉了顶层变量声明 `var graphAliasRecentChapters = []` 和 `var graphAliasRecentChapterFile = "alias_recent_chapters.json"`。
+  - 后果：运行到 `graphAliasGetRecentIndices` 时 Rhino 报 `ReferenceError: "graphAliasRecentChapters" 未定义`（#6712）。
+  - 修复：在配置区 `ALIAS_RECENT_CHAPTER_MARK_LIMIT` 之后追加两个变量声明，与参考文件 `参考/多角色朗读2.85发音人轮询+增强别名检验v88.7.json` 保持一致。
+- **修复2：「」内容读出“括号3”**:
+  - 根因：`fx` 函数把 `「内容」` 替换为 `\n「括号3】内容\n`，后续被识别为 tag "括号3" 并用独立发音人读出。
+  - 修复：将 `fx` 函数中 `input = input.replace(/「(.*?)」/g, "\n「括号3】$1\n").toString();` 改为 `input = input.replace(/「(.*?)」/g, "$1").toString();`，使「」内容作为普通旁白文本处理（与猫剪豆问 v1.19 处理一致）。
+- **版本号统一**：文件名、JSON 顶层 `name`/`version`、`SpeechRuleJS.name`/`SpeechRuleJS.version` 全部同步为 2.133。
+- **验证**：`node --check` 验证 2.133 JS 无语法错误；Python `json.load` 验证 JSON 可解析；`extract-js.js` 成功生成 `js/多角色朗读2.133...js` 调阅文件。
+
 ### 多角色朗读 2.132 融合 v88.7 别名审计/图谱/发音人稳定（步骤 5-8，2026-07-08）
 - **目标文件**: `多角色朗读2.132【融合v88.7完整别名审计+保留情绪缓存备用模型】.json`
 - **源文件**: `参考/多角色朗读2.85发音人轮询+增强别名检验v88.7.json`
@@ -3199,3 +3213,22 @@ C:/date/ttsrv-speechRule/
 - 待用户安装 2.132 后验证别名审计、发音人稳定器、切书逻辑、章节缓存、情绪模块、备用模型接力。
 - 本次所有输出已按规范保持中文。
 
+
+---
+
+### 会话摘要（2026-07-08）
+- **当前版本**：猫剪豆问 v1.22 / 多角色朗读 v2.133 / 多角色朗读（参考目录）v2.89
+- **触发问题**：用户反馈多角色朗读 2.132 出现 `ReferenceError: "graphAliasRecentChapters" 未定义`（#6712），且 `「内容」` 会读出“括号3”。
+- **已完成事项**：
+  - 基于 2.132 创建 2.133，按版本递增规范备份原文件。
+  - 在 2.133 配置区补回缺失的 `graphAliasRecentChapters` 和 `graphAliasRecentChapterFile` 变量声明。
+  - 修改 `fx` 函数，使 `「内容」` 不再被标记为“括号3”，而是作为普通旁白文本处理。
+  - 统一文件名、JSON 顶层 `name`/`version`、`SpeechRuleJS.name`/`SpeechRuleJS.version` 为 2.133。
+  - 使用 `node --check` 验证 2.133 JS 无语法错误，Python `json.load` 验证 JSON 可解析。
+  - 运行 `node extract-js.js` 同步生成 `js/多角色朗读2.133...js` 调阅文件。
+  - 更新 `TODO.md` 和 `PROJECT_STATUS.md`。
+- **注意事项**：
+  - 2.133 保留 2.132 的 v88.7 别名审计、图谱推理、发音人稳定器、情绪模块、章节缓存、备用模型接力能力。
+  - 2.133 默认仍关闭 v88.7 增强开关，避免意外消耗 API 额度；启用前请确认配置区开关。
+  - 待用户安装 2.133 后验证上述两个问题是否彻底解决。
+  - 本次所有输出已按规范保持中文。
