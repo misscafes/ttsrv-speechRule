@@ -9825,50 +9825,10 @@ var SpeechRuleJS = {
                   rkw.regex.lastIndex = 0;
               }
 
-              // 2. 在线特殊关键词：用originFullKW（完整原始关键词）替换
-              for (var s = 0; s < parsedKWs.specialKWs.length; s++) {
-                  var skw = parsedKWs.specialKWs[s];
-                  var prefixLen = Math.floor(skw.prefixLen) || 1;
-                  var suffixLen = Math.floor(skw.suffixLen) || 1;
-                  var specialReg = new RegExp(
-                      '(.{0,' + prefixLen + '})' + 
-                      escapeRegExp(skw.coreKW) + 
-                      '(.{0,' + suffixLen + '})' + 
-                      '(?=[' + commonPunctuation + ']|$|' + escapeRegExp(skw.coreKW) + ')', 
-                      'g'
-                  );
-
-                  var tempResult = "";
-                  var lastIndex = 0;
-                  var matchResult;
-                  var matchCount = 0;
-                  while ((matchResult = specialReg.exec(result)) !== null) {
-                      matchCount++;
-                      var matchedContent = matchResult[0];
-                      // 关键修改：用完整原始关键词（skw.originFullKW）替换，而非核心KW
-                      var replacedKeyword = SpeechRuleJS.replaceTargetContentSymbols(skw.originFullKW);
-                      tempResult += result.substring(lastIndex, matchResult.index) + '〖' + replacedKeyword + '〗';
-                      lastIndex = matchResult.index + matchResult[0].length;
-                  }
-                  
-                  if (matchCount > 0) {
-                      tempResult += result.substring(lastIndex);
-                      result = tempResult;
-                  }
-              }
-
-
-
-
-
-
-
-
-
-
-
-
-         
+              // 2. 在线特殊关键词：用 originFullKW（完整原始关键词）替换
+              // 【v2.135】双引号内同样跳过特殊关键词替换。特殊关键词替换会产生 〖关键词〗 标记，
+              // 后续 fx 处理 〖〗 时会在其前后插入 \n，同样会破坏双引号结构，导致对话被拆散误标为旁白。
+              // 双引号外的独立场景仍走下方的独立匹配逻辑。
               
               // 3. 在线普通关键词：替换「关键词本身】
               // 【v2.135】双引号内跳过普通关键词替换，避免在关键词前后插入换行破坏双引号结构。
