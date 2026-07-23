@@ -1,3 +1,20 @@
+### 猫剪豆问 v1.27 修复换书不切换问题（2026-07-23）
+- **目标文件**: `new/(脚本)猫剪豆问（自然情绪版）v1.27.json`、`new/猫剪豆问（自然情绪版）v1.27.json`
+- **源文件**: `new/(脚本)猫剪豆问（自然情绪版）v1.26.json`、`new/猫剪豆问（自然情绪版）v1.26.json`
+- **备份**: 按版本递增规范，基于 v1.26 生成 v1.27 新文件，原 v1.26 文件保留
+- **问题描述**: 用户反馈 v1.26 换书时不能自动切换到新书，当前书始终停留在 `default_book`；后台 AI 分析仍能识别新角色，但这些角色被保存到错误的书名备份下
+- **根因**: `getBookNameSafely()` 仅依赖 `data.json` 的 `bookName` 字段和 `cunfang.txt`；当 App 换书后 `data.json` 未及时更新、或 `bookName` 被写成 `default_book` 时，脚本无法拿到真实书名，导致 `handleBookSwitch()` 判断没有换书，角色记录一直按 `default_book` 处理
+- **改动**:
+  - 在 `getBookNameSafely()` 开头优先读取 App 注入的全局 `book.name`（TTS Server/阅读运行时可用），其实时性高于 `data.json`；仅当 `book.name` 无效时才回退到原有 `data.json` / `cunfang.txt` 逻辑；
+  - 增强 `handleBookSwitch()` 诊断日志，输出 `data.json.bookName` 原始值，便于排查书名来源；
+  - 同步升级对象 1“有效（替换对象）引擎+”与独立引擎版本号为 v1.27；
+  - 统一文件名、JSON 顶层 `name`/`version` 与 code 内部版本号全部为 v1.27。
+- **功能保持**: 保留 v1.26 的 CNB 混元3 API、进度指针、章节缓存、无引号多行匹配、异常引号修复、加权随机发音人分配、跨书 `voice_usage_count.json`、切书防御与角色合并备份等能力。
+- **验证**:
+  - 使用 `node --check` 验证 v1.27 脚本对象 0、对象 1 与独立引擎 JS 无语法错误；
+  - 使用 Python `json.load` 验证 JSON 可解析；
+  - 运行 `node extract-js.js` 同步生成 `js/new/...v1.27...` 调阅文件。
+
 ### 多角色朗读 2.136 融合零成本智谱 API（CNB + 智谱清言双游客通道）（2026-07-23）
 - **目标文件**: `多角色朗读2.136【融合零成本智谱API】.json`
 - **源文件**: `多角色朗读2.135【修复对话前旁白分配错误+连续对话分配】.json`

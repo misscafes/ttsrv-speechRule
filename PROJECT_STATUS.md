@@ -9,7 +9,7 @@
 
 | 组件 | 版本 | 文件 |
 |------|------|------|
-| 猫剪豆问（脚本+引擎） | **v1.26** | `new/(脚本)猫剪豆问（自然情绪版）v1.26.json`、`new/猫剪豆问（自然情绪版）v1.26.json` |
+| 猫剪豆问（脚本+引擎） | **v1.27** | `new/(脚本)猫剪豆问（自然情绪版）v1.27.json`、`new/猫剪豆问（自然情绪版）v1.27.json` |
 | 多角色朗读规则 | **v2.136** | `多角色朗读2.136【融合零成本智谱API】.json` |
 | 多角色朗读规则（参考目录） | **v2.89** | `参考/多角色朗读2.89【加速版+1修复2+情绪模块修复表演指令不兼容】.json` |
 
@@ -27,6 +27,17 @@
 8. 统一文件名、JSON 顶层 `name`/`version`、`SpeechRuleJS.name`/`SpeechRuleJS.version` 为 2.136
 9. 使用 `node --check` 验证 2.136 JS 文件无语法错误，Python `json.load` 验证 JSON 可解析
 10. 运行 `node extract-js.js` 同步生成 `js/多角色朗读2.136...js` 调阅文件
+
+## 最新改动（猫剪豆问 v1.27，2026-07-23）
+
+1. 基于 v1.26 创建 v1.27，修复用户反馈的“换书时不自动切换书籍，始终停留在 default_book”问题
+2. 根因：`getBookNameSafely()` 仅依赖 `data.json` 的 `bookName` 字段和 `cunfang.txt`；当 App 换书后 `data.json` 未及时更新或写入 default_book 时，脚本无法识别新书，导致角色记录始终按 default_book 处理
+3. 修复：`getBookNameSafely()` 优先读取 App 注入的全局 `book.name`（TTS Server/阅读运行时可用），其实时性高于 `data.json`；仅在 `book.name` 无效时才回退到 `data.json` / `cunfang.txt`
+4. 增强 `handleBookSwitch()` 诊断日志：输出 `data.json.bookName` 原始值，便于排查书名来源
+5. 统一文件名、JSON 顶层 `name`/`version` 与 code 内部版本号为 v1.27
+6. 同步升级对象 1“有效（替换对象）引擎+”与独立引擎到 v1.27
+7. 使用 `node --check` 验证 v1.27 脚本对象 0、对象 1 与独立引擎 JS 无语法错误，Python `json.load` 验证 JSON 可解析
+8. 运行 `node extract-js.js` 同步生成 `js/new/...v1.27...` 调阅文件
 
 ## 最新改动（猫剪豆问 v1.26，2026-07-23）
 
@@ -201,12 +212,12 @@
 - [ ] 安装 2.136 后测试 `API_SOURCE = "zhipu_guest"` 时智谱清言 App 游客通道是否正常：观察日志中 `[智谱清言游客]` / `[API]` 日志，确认 guest token 获取、SSE 流式解析、OpenAI 格式包装正常
 - [ ] 安装 2.136 后测试 `API_SOURCE = "official"` 时原智谱官方 API 是否仍正常工作
 - [ ] 安装 2.136 后确认 CNB 凭证文件 `cnb_cookie.json` / `cnb_token.json` 是否正确生成与刷新
-- [x] 安装 v1.23/v1.24/v1.25/v1.26 后测试发音人分配是否为随机，而非固定从 1 开始递增
-- [x] 安装 v1.23/v1.24/v1.25/v1.26 后观察 `voice_usage_count.json` 是否随朗读累积使用次数
-- [ ] 安装 v1.26 后测试 CNB 混元3 接口：观察 `tts_debug_log.txt` 中 `[CNB]` 日志，确认凭证抓取、AI 分析、别名识别正常
-- [ ] 安装 v1.26 后测试 App 端是否支持 `saveHeaders` 机制（`response_headers.json` 是否有内容）
-- [ ] 安装 v1.26 后换书测试：新书角色是否优先复用历史高频/手动固定的发音人
-- [ ] 安装 v1.26 后确认对象 1“有效（替换对象）引擎+”显示为 v1.26
+- [x] 安装 v1.23/v1.24/v1.25/v1.26/v1.27 后测试发音人分配是否为随机，而非固定从 1 开始递增
+- [x] 安装 v1.23/v1.24/v1.25/v1.26/v1.27 后观察 `voice_usage_count.json` 是否随朗读累积使用次数
+- [ ] 安装 v1.27 后测试 CNB 混元3 接口：观察 `tts_debug_log.txt` 中 `[CNB]` 日志，确认凭证抓取、AI 分析、别名识别正常
+- [ ] 安装 v1.27 后测试 App 端是否支持 `saveHeaders` 机制（`response_headers.json` 是否有内容）
+- [ ] 安装 v1.27 后换书测试：换书后是否能正确识别新书（观察 `[书名]` / `[换书检测]` 日志中是否出现 `book.name` 或正确的 data.json.bookName），新书角色是否优先复用历史高频/手动固定的发音人
+- [ ] 安装 v1.27 后确认对象 1“有效（替换对象）引擎+”显示为 v1.27
 - [ ] 安装 2.134 后测试 `"..."` 半角双引号对话是否稳定识别为对话，不再被旁白分支处理
 - [ ] 安装 2.134 后测试中文双引号 `“...”` 对话识别是否仍正常
 - [x] 安装 2.133 后测试 `graphAliasRecentChapters` 未定义错误是否消失
@@ -223,9 +234,9 @@
 ## 目录结构（关键路径）
 
 ```
-new/                          # 猫剪豆问脚本+引擎（当前版本 v1.26）
-  (脚本)猫剪豆问（自然情绪版）v1.26.json
-  猫剪豆问（自然情绪版）v1.26.json
+new/                          # 猫剪豆问脚本+引擎（当前版本 v1.27）
+  (脚本)猫剪豆问（自然情绪版）v1.27.json
+  猫剪豆问（自然情绪版）v1.27.json
 多角色朗读2.136...json        # 朗读规则（当前版本 v2.136）
 js/                           # JS 调阅文件（extract-js.js 生成）
   new/...
@@ -245,7 +256,7 @@ PROJECT_STATUS.md             # 本文件（快速查阅版）
 
 ## 会话摘要（最后更新：2026-07-23）
 
-- **当前版本**：猫剪豆问 v1.26 / 多角色朗读 v2.136 / 多角色朗读（参考目录）v2.89
+- **当前版本**：猫剪豆问 v1.27 / 多角色朗读 v2.136 / 多角色朗读（参考目录）v2.89
 - **主目录结构**：`new/`（猫剪豆问）、`js/`（调阅文件）、`yinpin/`（音效规则）、`参考/`（参考目录）
 - **已完成事项**：
   - 基于 2.135 创建 2.136，融合 `新脚本/多角色朗读2.87【爱心加速版+3.1智谱】.json` 的零成本智谱 API 能力
@@ -257,6 +268,13 @@ PROJECT_STATUS.md             # 本文件（快速查阅版）
   - 统一文件名、JSON 顶层 `name`/`version` 与 code 内部版本号为 2.136
   - 使用 `node --check` 验证 2.136 JS 文件无语法错误，Python `json.load` 验证 JSON 可解析
   - 运行 `node extract-js.js` 同步生成 `js/多角色朗读2.136...js` 调阅文件
+  - 基于 v1.26 创建 v1.27，修复换书不自动切换、始终停留在 default_book 的问题
+  - 在 `getBookNameSafely()` 中优先读取 App 注入的全局 `book.name`（TTS Server/阅读运行时可用），避免 `data.json` 滞后导致书名识别错误
+  - 增强 `handleBookSwitch()` 诊断日志，输出 `data.json.bookName` 原始值便于排查
+  - 同步升级对象 1“有效（替换对象）引擎+”与独立引擎到 v1.27
+  - 统一文件名、JSON 顶层 `name`/`version` 与 code 内部版本号全部为 v1.27
+  - 使用 `node --check` 验证 v1.27 脚本对象 0、对象 1 与独立引擎 JS 无语法错误，Python `json.load` 验证 JSON 可解析
+  - 运行 `node extract-js.js` 同步生成 `js/new/...v1.27...` 调阅文件
   - 基于 v1.25 创建 v1.26，将猫剪豆问 AI 分析底层模型从智谱AI 迁移到 CNB（cnb.cool）混元3（`hy3-preview`）
   - 参考 `新脚本/(脚本)猫箱-VV(混元3+).json` 的 CNB 接口实现，移植 CNB 凭证自动抓取、SSE 流式解析、通用调用封装
   - 移除智谱AI 的 `DEFAULT_API_CONFIG`、多密钥池 `_keyPools`、`loadApiConfigs`、`getNextApiConfigs` 等旧 API 层
@@ -275,9 +293,10 @@ PROJECT_STATUS.md             # 本文件（快速查阅版）
   - 2.136 默认仍走 `official` 原智谱官方 API，**只有用户把 `API_SOURCE` 改为 `"cnb_guest"` 或 `"zhipu_guest"` 才会启用零成本通道**
   - 2.136 CNB 通道依赖 App 端网络请求返回的响应头可读取，若 App 无法获取 `set-cookie` 头需额外适配
   - 2.136 智谱清言游客通道（`zhipu_guest`）不依赖 CNB 凭证，但每次请求需先访问 `chatglm.cn` 获取 guest token，受智谱官网风控与限流影响
-  - v1.26 依赖 App 端支持 `saveHeaders` 机制（`response_headers.json`）来抓取 CNB 凭证，若 App 不支持需额外适配
-  - v1.26 移除了多密钥轮询能力，仅使用单一 CNB 会话凭证
-  - 猫剪豆问 v1.20 已废弃，请勿使用；当前可用版本为 v1.26
+  - v1.27 书名识别优先使用 App 注入的 `book.name`；若所用 App 不支持该全局对象，会回退到 `data.json` / `cunfang.txt`
+  - v1.27 依赖 App 端支持 `saveHeaders` 机制（`response_headers.json`）来抓取 CNB 凭证，若 App 不支持需额外适配
+  - v1.27 移除了多密钥轮询能力，仅使用单一 CNB 会话凭证
+  - 猫剪豆问 v1.20 已废弃，请勿使用；当前可用版本为 v1.27
   - 2.130 存在语法错误，请勿使用，请选择 2.131 或更高版本
 
 ---
