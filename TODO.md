@@ -3441,3 +3441,27 @@ C:/date/ttsrv-speechRule/
 - 数字转换仅作用于章节标题命中 `preprocessChapterTitle()` 的文本，不影响正文对话。
 - 待用户安装 v1.28 后验证“第1章”是否已正确读为“第一章”。
 - 本次所有输出已按规范保持中文。
+
+
+---
+
+## 会话摘要（2026-07-23 续）
+
+**当前版本**：
+- 猫剪豆问脚本：`new/(脚本)猫剪豆问（自然情绪版）v1.28.json`
+- 猫剪豆问引擎：`new/猫剪豆问（自然情绪版）v1.28.json`
+- 多角色朗读规则：`多角色朗读2.136【融合零成本智谱API】.json`
+- 替换规则：`new/新脚本/ttsrv-replaces5.json`（去 18+ 版）
+
+**本次新增事项**：
+1. 根据用户需求，基于 `new/新脚本/ttsrv-replaces4.json` 生成去 18+ 版本 `ttsrv-replaces5.json`。
+2. 删除 `18+音效后置`（17 条）与 `18+音效前置`（11 条）两个分组。
+3. 保留其余 8 个分组共 875 条非 18+ 规则。
+4. 使用 Python `json.load` 验证 JSON 可解析。
+5. 更新 `PROJECT_STATUS.md` 和 `TODO.md`。
+6. 执行 `git add . && git commit && git push origin master`，成功推送到 GitHub 与 cnb.cool。
+
+**注意事项**：
+- `ttsrv-replaces5.json` 无 `code` 字段，extract-js.js 不会为其生成 JS 调阅文件；如需查看内容可直接打开 JSON 文件。
+- 如需在 2.136 中也修复“第1章”误读问题，请在朗读规则 `handleText` 中提前转换章节标题数字，或改用猫剪豆问 v1.28。
+- 本次所有输出已按规范保持中文。
