@@ -1,3 +1,22 @@
+### 多角色朗读 2.136 融合零成本智谱 API（CNB 游客通道）（2026-07-23）
+- **目标文件**: `多角色朗读2.136【融合零成本智谱API】.json`
+- **源文件**: `多角色朗读2.135【修复对话前旁白分配错误+连续对话分配】.json`
+- **参考文件**: `新脚本/多角色朗读2.87【爱心加速版+3.1智谱】.json`
+- **备份**: 按版本递增规范，基于 2.135 生成 2.136 新文件，原 2.135 文件保留
+- **背景**: 用户希望把 2.87 的零成本智谱 API 能力移植到当前主版本 2.135，实现不消耗智谱 key 的 CNB（cnb.cool）游客通道
+- **改动**:
+  - 在配置区新增 `API_SOURCE` 开关（默认 `"official"`，可选 `"cnb_guest"`），默认关闭，不破坏原有官方 API 逻辑；
+  - 移植 CNB 游客模式配置与凭证函数：`CNB_CONFIG`、`CNB_UA`、`getCnbCsrfToken()`、`buildCnbHeaders()`、`cnbConcatStreamContent()` 等；
+  - 修改 `DualKeyManager.getAvailableApiList()`：当 `API_SOURCE === "cnb_guest"` 时返回 `{isCnb: true, endpoint/model/key}` 特殊配置，不再读取 `miyue.txt`；
+  - 修改 `concurrentApiRequest()` 的 `createSingleRequestTask`：检测到 `apiConfig.isCnb === true` 时，自动把请求头替换为 `Cookie: csrfkey=...` + `Csrftoken: ...`，把 SSE 流式响应拼接成完整 content，再包装成 OpenAI 格式假 response 传给原有 `responseParser`；
+  - 对 CNB 配置保护日志中的 `key.slice(-4)`，避免 `__CNB__` 标记报错；
+  - 统一文件名、JSON 顶层 `name`/`version` 与 `SpeechRuleJS.name`/`SpeechRuleJS.version` 为 2.136。
+- **功能保持**: 保留 2.135 的对话前旁白分配修复、连续对话分配、半角双引号识别、别名审计、发音人稳定器、情绪模块、备用模型等全部能力。
+- **验证**:
+  - 使用 Python `json.load` 验证 2.136 JSON 可解析；
+  - 使用 `node --check` 验证提取出的 2.136 code JS 无语法错误；
+  - 运行 `node extract-js.js` 成功生成 `js/多角色朗读2.136...js` 调阅文件。
+
 ### 猫剪豆问 v1.26 底层模型迁移至 CNB 混元3（2026-07-23）
 - **目标文件**: `new/(脚本)猫剪豆问（自然情绪版）v1.26.json`、`new/猫剪豆问（自然情绪版）v1.26.json`
 - **源文件**: `new/(脚本)猫剪豆问（自然情绪版）v1.25.json`、`new/猫剪豆问（自然情绪版）v1.25.json`

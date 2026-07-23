@@ -10,10 +10,22 @@
 | 组件 | 版本 | 文件 |
 |------|------|------|
 | 猫剪豆问（脚本+引擎） | **v1.26** | `new/(脚本)猫剪豆问（自然情绪版）v1.26.json`、`new/猫剪豆问（自然情绪版）v1.26.json` |
-| 多角色朗读规则 | **v2.135** | `多角色朗读2.135【修复对话前旁白分配错误+连续对话分配】.json` |
+| 多角色朗读规则 | **v2.136** | `多角色朗读2.136【融合零成本智谱API】.json` |
 | 多角色朗读规则（参考目录） | **v2.89** | `参考/多角色朗读2.89【加速版+1修复2+情绪模块修复表演指令不兼容】.json` |
 
 ---
+
+## 最新改动（多角色朗读 2.136，2026-07-23）
+
+1. 基于 2.135 创建 2.136，融合 `新脚本/多角色朗读2.87【爱心加速版+3.1智谱】.json` 的零成本智谱 API 能力
+2. 新增 `API_SOURCE` 配置开关（默认 `"official"`，可选 `"cnb_guest"`），默认关闭，不破坏原有官方 API 逻辑
+3. 移植 CNB 游客模式配置与凭证函数：`CNB_CONFIG`、`CNB_UA`、`getCnbCsrfToken()`、`buildCnbHeaders()`、`cnbConcatStreamContent()` 等
+4. 修改 `DualKeyManager.getAvailableApiList()`：当 `API_SOURCE === "cnb_guest"` 时返回 `{isCnb: true, endpoint/model/key}` 特殊配置，不再读取 `miyue.txt`
+5. 修改 `concurrentApiRequest()` 的 `createSingleRequestTask`：检测到 `apiConfig.isCnb === true` 时，自动替换请求头为 `Cookie: csrfkey=...` + `Csrftoken: ...`，将 SSE 流式响应拼接为完整 content，再包装成 OpenAI 格式假 response 传给原有 `responseParser`
+6. 对 CNB 配置保护日志中的 `key.slice(-4)`，避免 `__CNB__` 标记报错
+7. 统一文件名、JSON 顶层 `name`/`version`、`SpeechRuleJS.name`/`SpeechRuleJS.version` 为 2.136
+8. 使用 `node --check` 验证 2.136 JS 文件无语法错误，Python `json.load` 验证 JSON 可解析
+9. 运行 `node extract-js.js` 同步生成 `js/多角色朗读2.136...js` 调阅文件
 
 ## 最新改动（猫剪豆问 v1.26，2026-07-23）
 
@@ -184,6 +196,9 @@
 
 ## 待办事项（当前）
 
+- [ ] 安装 2.136 后测试 `API_SOURCE = "cnb_guest"` 时 CNB 智谱通道是否正常：观察 `tts_debug_log.txt` 中 `[CNB]` / `[API]` 日志，确认凭证抓取、请求成功、SSE 流式拼接正常
+- [ ] 安装 2.136 后测试 `API_SOURCE = "official"` 时原智谱官方 API 是否仍正常工作
+- [ ] 安装 2.136 后确认 CNB 凭证文件 `cnb_cookie.json` / `cnb_token.json` 是否正确生成与刷新
 - [x] 安装 v1.23/v1.24/v1.25/v1.26 后测试发音人分配是否为随机，而非固定从 1 开始递增
 - [x] 安装 v1.23/v1.24/v1.25/v1.26 后观察 `voice_usage_count.json` 是否随朗读累积使用次数
 - [ ] 安装 v1.26 后测试 CNB 混元3 接口：观察 `tts_debug_log.txt` 中 `[CNB]` 日志，确认凭证抓取、AI 分析、别名识别正常
@@ -209,10 +224,10 @@
 new/                          # 猫剪豆问脚本+引擎（当前版本 v1.26）
   (脚本)猫剪豆问（自然情绪版）v1.26.json
   猫剪豆问（自然情绪版）v1.26.json
-多角色朗读2.135...json        # 朗读规则（当前版本 v2.135）
+多角色朗读2.136...json        # 朗读规则（当前版本 v2.136）
 js/                           # JS 调阅文件（extract-js.js 生成）
   new/...
-  多角色朗读2.134...js
+  多角色朗读2.136...js
   参考/...
 yinpin/                       # 音效规则文件
   ttsrv-replaces4.json
@@ -228,9 +243,17 @@ PROJECT_STATUS.md             # 本文件（快速查阅版）
 
 ## 会话摘要（最后更新：2026-07-23）
 
-- **当前版本**：猫剪豆问 v1.26 / 多角色朗读 v2.135 / 多角色朗读（参考目录）v2.89
+- **当前版本**：猫剪豆问 v1.26 / 多角色朗读 v2.136 / 多角色朗读（参考目录）v2.89
 - **主目录结构**：`new/`（猫剪豆问）、`js/`（调阅文件）、`yinpin/`（音效规则）、`参考/`（参考目录）
 - **已完成事项**：
+  - 基于 2.135 创建 2.136，融合 `新脚本/多角色朗读2.87【爱心加速版+3.1智谱】.json` 的零成本智谱 API 能力
+  - 新增 `API_SOURCE` 开关（默认 `"official"`，可选 `"cnb_guest"`），默认关闭，不破坏原有官方 API 逻辑
+  - 移植 CNB 游客模式配置与凭证函数：`CNB_CONFIG`、`CNB_UA`、`getCnbCsrfToken()`、`buildCnbHeaders()`、`cnbConcatStreamContent()` 等
+  - 修改 `DualKeyManager.getAvailableApiList()` 与 `concurrentApiRequest()` 的 `createSingleRequestTask`，在 `API_SOURCE = "cnb_guest"` 时自动走 CNB 通道并包装 OpenAI 格式响应
+  - 对 CNB 配置保护日志中的 `key.slice(-4)`，避免 `__CNB__` 标记报错
+  - 统一文件名、JSON 顶层 `name`/`version` 与 code 内部版本号为 2.136
+  - 使用 `node --check` 验证 2.136 JS 文件无语法错误，Python `json.load` 验证 JSON 可解析
+  - 运行 `node extract-js.js` 同步生成 `js/多角色朗读2.136...js` 调阅文件
   - 基于 v1.25 创建 v1.26，将猫剪豆问 AI 分析底层模型从智谱AI 迁移到 CNB（cnb.cool）混元3（`hy3-preview`）
   - 参考 `新脚本/(脚本)猫箱-VV(混元3+).json` 的 CNB 接口实现，移植 CNB 凭证自动抓取、SSE 流式解析、通用调用封装
   - 移除智谱AI 的 `DEFAULT_API_CONFIG`、多密钥池 `_keyPools`、`loadApiConfigs`、`getNextApiConfigs` 等旧 API 层
@@ -246,6 +269,8 @@ PROJECT_STATUS.md             # 本文件（快速查阅版）
   - 修改后必须运行 `node extract-js.js` 同步 `js/` 目录
   - 完成后必须 `git add . && git commit -m "版本说明" && git push origin master`
   - 所有输出必须为中文
+  - 2.136 默认仍走 `official` 原智谱官方 API，**只有用户把 `API_SOURCE` 改为 `"cnb_guest"` 才会启用零成本通道**
+  - 2.136 CNB 通道依赖 App 端网络请求返回的响应头可读取，若 App 无法获取 `set-cookie` 头需额外适配
   - v1.26 依赖 App 端支持 `saveHeaders` 机制（`response_headers.json`）来抓取 CNB 凭证，若 App 不支持需额外适配
   - v1.26 移除了多密钥轮询能力，仅使用单一 CNB 会话凭证
   - 猫剪豆问 v1.20 已废弃，请勿使用；当前可用版本为 v1.26
