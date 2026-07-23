@@ -1,3 +1,24 @@
+### 猫剪豆问 v1.26 底层模型迁移至 CNB 混元3（2026-07-23）
+- **目标文件**: `new/(脚本)猫剪豆问（自然情绪版）v1.26.json`、`new/猫剪豆问（自然情绪版）v1.26.json`
+- **源文件**: `new/(脚本)猫剪豆问（自然情绪版）v1.25.json`、`new/猫剪豆问（自然情绪版）v1.25.json`
+- **备份**: 按版本递增规范，基于 v1.25 生成 v1.26 新文件，原 v1.25 文件保留
+- **背景**: 用户要求优化底层模型，参考 `新脚本/(脚本)猫箱-VV(混元3+).json` 的 CNB 接口实现，将猫剪豆问 AI 分析接口从智谱AI 迁移到 CNB（cnb.cool）混元3 模型
+- **改动**:
+  - 替换脚本对象 0 的 API 调用层：移除智谱AI 的 `DEFAULT_API_CONFIG`、多密钥池 `_keyPools`、`loadApiConfigs`、`getNextApiConfigs` 等；
+  - 新增 CNB 接口配置 `CNB_CONFIG`、UA、`AJAX_HEADER_FILE`、`CNB_TOKEN_FILE`；
+  - 新增 `getCnbCsrfToken()`、`refreshCnbCredentials()`：访问 `cnb.cool/explore` 自动抓取 `csrfkey` 与 `csrftoken`，并持久化到 `cnb_cookie.json` / `cnb_token.json`；
+  - 新增 `buildCnbRequestList()`、`parseCnbContent()`：支持 SSE 流式与非流式响应解析；
+  - 新增通用 `callCnbChat()`：失败或格式校验不通过时自动清空 token 并重新获取凭证后重试一次；
+  - 新增 `validateAnalyzeContent()`、`validateAliasContent()` 格式校验；
+  - 改写 `callAnalyzeApi()` 与 `updateCharacterRecords()` 中的别名识别调用，统一使用 `callCnbChat()`；
+  - 同步升级对象 1“有效（替换对象）引擎+”与独立引擎版本号为 v1.26；
+  - 统一文件名、JSON 顶层 `name`/`version` 与 code 内部版本号全部为 v1.26。
+- **功能保持**: 保留 v1.25 的进度指针、章节缓存、无引号多行匹配、异常引号修复、加权随机发音人分配、跨书 `voice_usage_count.json`、切书防御与角色合并备份等能力。
+- **验证**:
+  - 使用 `node --check` 验证 v1.26 脚本对象 0、对象 1 与独立引擎 JS 无语法错误；
+  - 使用 Python `json.load` 验证 JSON 可解析；
+  - 运行 `node extract-js.js` 同步生成 `js/new/...v1.26...` 调阅文件。
+
 ### 多角色朗读 2.135 修复对话前旁白分配错误+连续对话分配（2026-07-09）
 - **目标文件**: `多角色朗读2.135【修复对话前旁白分配错误+连续对话分配】.json`
 - **源文件**: `多角色朗读2.134【修复半角双引号对话识别不稳定】.json`

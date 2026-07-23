@@ -9,11 +9,24 @@
 
 | 组件 | 版本 | 文件 |
 |------|------|------|
-| 猫剪豆问（脚本+引擎） | **v1.25** | `new/(脚本)猫剪豆问（自然情绪版）v1.25.json`、`new/猫剪豆问（自然情绪版）v1.25.json` |
+| 猫剪豆问（脚本+引擎） | **v1.26** | `new/(脚本)猫剪豆问（自然情绪版）v1.26.json`、`new/猫剪豆问（自然情绪版）v1.26.json` |
 | 多角色朗读规则 | **v2.135** | `多角色朗读2.135【修复对话前旁白分配错误+连续对话分配】.json` |
 | 多角色朗读规则（参考目录） | **v2.89** | `参考/多角色朗读2.89【加速版+1修复2+情绪模块修复表演指令不兼容】.json` |
 
 ---
+
+## 最新改动（猫剪豆问 v1.26，2026-07-23）
+
+1. 基于 v1.25 创建 v1.26，将 AI 分析底层模型从智谱AI 迁移到 CNB（cnb.cool）混元3（`hy3-preview`）
+2. 移除智谱AI 的多密钥池配置，改为 CNB 自动凭证管理：从 `cnb.cool/explore` 抓取 `csrfkey` 与 `csrftoken`，持久化到 `cnb_cookie.json` / `cnb_token.json`
+3. 新增 SSE 流式响应解析 `parseCnbContent()`，兼容流式与非流式返回
+4. 新增 `callCnbChat()` 通用调用封装，认证失效或返回格式异常时自动刷新 token 并重试一次
+5. 新增 API 返回格式校验 `validateAnalyzeContent()` / `validateAliasContent()`
+6. 改写 `callAnalyzeApi()` 与别名识别调用，统一走 `callCnbChat()`
+7. 同步升级对象 1“有效（替换对象）引擎+”与独立引擎到 v1.26
+8. 统一文件名、JSON 顶层 `name`/`version` 与 code 内部版本号全部为 v1.26
+9. 使用 `node --check` 验证 v1.26 脚本、替换引擎、独立引擎 JS 无语法错误，使用 Python `json.load` 验证 JSON 可解析
+10. 运行 `node extract-js.js` 同步生成 `js/new/...v1.26...` 调阅文件
 
 ## 最新改动（多角色朗读 2.135，2026-07-09）
 
@@ -171,10 +184,12 @@
 
 ## 待办事项（当前）
 
-- [x] 安装 v1.23/v1.24/v1.25 后测试发音人分配是否为随机，而非固定从 1 开始递增
-- [x] 安装 v1.23/v1.24/v1.25 后观察 `voice_usage_count.json` 是否随朗读累积使用次数
-- [ ] 安装 v1.25 后换书测试：新书角色是否优先复用历史高频/手动固定的发音人
-- [ ] 安装 v1.25 后确认对象 1“有效（替换对象）引擎+”显示为 v1.25
+- [x] 安装 v1.23/v1.24/v1.25/v1.26 后测试发音人分配是否为随机，而非固定从 1 开始递增
+- [x] 安装 v1.23/v1.24/v1.25/v1.26 后观察 `voice_usage_count.json` 是否随朗读累积使用次数
+- [ ] 安装 v1.26 后测试 CNB 混元3 接口：观察 `tts_debug_log.txt` 中 `[CNB]` 日志，确认凭证抓取、AI 分析、别名识别正常
+- [ ] 安装 v1.26 后测试 App 端是否支持 `saveHeaders` 机制（`response_headers.json` 是否有内容）
+- [ ] 安装 v1.26 后换书测试：新书角色是否优先复用历史高频/手动固定的发音人
+- [ ] 安装 v1.26 后确认对象 1“有效（替换对象）引擎+”显示为 v1.26
 - [ ] 安装 2.134 后测试 `"..."` 半角双引号对话是否稳定识别为对话，不再被旁白分支处理
 - [ ] 安装 2.134 后测试中文双引号 `“...”` 对话识别是否仍正常
 - [x] 安装 2.133 后测试 `graphAliasRecentChapters` 未定义错误是否消失
@@ -191,9 +206,9 @@
 ## 目录结构（关键路径）
 
 ```
-new/                          # 猫剪豆问脚本+引擎（当前版本 v1.25）
-  (脚本)猫剪豆问（自然情绪版）v1.25.json
-  猫剪豆问（自然情绪版）v1.25.json
+new/                          # 猫剪豆问脚本+引擎（当前版本 v1.26）
+  (脚本)猫剪豆问（自然情绪版）v1.26.json
+  猫剪豆问（自然情绪版）v1.26.json
 多角色朗读2.135...json        # 朗读规则（当前版本 v2.135）
 js/                           # JS 调阅文件（extract-js.js 生成）
   new/...
@@ -211,35 +226,29 @@ PROJECT_STATUS.md             # 本文件（快速查阅版）
 
 ---
 
-## 会话摘要（最后更新：2026-07-09）
+## 会话摘要（最后更新：2026-07-23）
 
-- **当前版本**：猫剪豆问 v1.25 / 多角色朗读 v2.135 / 多角色朗读（参考目录）v2.89
+- **当前版本**：猫剪豆问 v1.26 / 多角色朗读 v2.135 / 多角色朗读（参考目录）v2.89
 - **主目录结构**：`new/`（猫剪豆问）、`js/`（调阅文件）、`yinpin/`（音效规则）、`参考/`（参考目录）
 - **已完成事项**：
-  - 基于 2.134 创建 2.135，修复用户反馈的“对话前旁白分配错误”与“连续对话不分配发音人”问题
-  - 将半角双引号统一转换提前到短对话去引号正则之前，避免半角双引号短对话被误去掉引号
-  - 在双引号内跳过在线音效普通关键词替换，避免关键词替换插入换行破坏对话结构，导致 fx 无法识别
-  - 使用 `node --check` 验证 2.135 JS 文件无语法错误，Python `json.load` 验证 JSON 可解析
-  - 运行 `node extract-js.js` 同步生成 `js/多角色朗读2.135...js` 调阅文件
-  - 基于 v1.22 创建 v1.23，将猫剪豆问脚本的发音人分配由自然排序轮询改为按历史使用次数加权随机
-  - 基于 v1.23 创建 v1.24，修正对象 1“有效（替换对象）引擎+”版本号被误改为 v1.23 的问题，恢复为 v1.13（引擎无改动）
-  - 基于 v1.24 创建 v1.25，将脚本、替换引擎、独立引擎版本号统一为 v1.25，保持组件版本一致
-  - 新增 `voice_usage_count.json` 跨书记录发音人使用次数；实现 `weightedRandomVoice`、`recordVoiceUsage`、`initVoiceUsageFromBookCharacters` 等函数
-  - 在 `getTargetVoiceNum` 中按使用次数加权随机选择候选发音人，次数越多/手动固定则随机概率越大
-  - 在 `saveCharacter` 中每次分配后累加使用次数；在 `readBookCharacters` 中保留 `fixedVoice` 字段以识别手动固定
-  - 在 `handleBookSwitch` 中重置发音人使用缓存，确保换书后基于新书角色重新初始化
-  - 同步升级脚本与引擎到 v1.25，统一 JSON 顶层 `name`/`version` 与 code 内部版本号
-  - 使用 `node --check` 验证 v1.25 脚本、替换引擎、独立引擎 JS 无语法错误，Python `json.load` 验证 JSON 可解析
-  - 运行 `node extract-js.js` 同步生成 `js/new/...v1.25...` 调阅文件
+  - 基于 v1.25 创建 v1.26，将猫剪豆问 AI 分析底层模型从智谱AI 迁移到 CNB（cnb.cool）混元3（`hy3-preview`）
+  - 参考 `新脚本/(脚本)猫箱-VV(混元3+).json` 的 CNB 接口实现，移植 CNB 凭证自动抓取、SSE 流式解析、通用调用封装
+  - 移除智谱AI 的 `DEFAULT_API_CONFIG`、多密钥池 `_keyPools`、`loadApiConfigs`、`getNextApiConfigs` 等旧 API 层
+  - 新增 `CNB_CONFIG`、UA、`AJAX_HEADER_FILE`、`CNB_TOKEN_FILE`；新增 `getCnbCsrfToken()`、`refreshCnbCredentials()`、`buildCnbRequestList()`、`parseCnbContent()`、`callCnbChat()`
+  - 新增 `validateAnalyzeContent()`、`validateAliasContent()` 格式校验；改写 `callAnalyzeApi()` 与别名识别调用统一走 `callCnbChat()`
+  - 同步升级对象 1“有效（替换对象）引擎+”与独立引擎到 v1.26
+  - 统一文件名、JSON 顶层 `name`/`version` 与 code 内部版本号全部为 v1.26
+  - 使用 `node --check` 验证 v1.26 脚本、替换引擎、独立引擎 JS 无语法错误，Python `json.load` 验证 JSON 可解析
+  - 运行 `node extract-js.js` 同步生成 `js/new/...v1.26...` 调阅文件
   - 更新 `TODO.md` 和 `PROJECT_STATUS.md`
 - **注意事项**：
   - 修改 `.json` 前必须先备份并递增版本号
   - 修改后必须运行 `node extract-js.js` 同步 `js/` 目录
   - 完成后必须 `git add . && git commit -m "版本说明" && git push origin master`
   - 所有输出必须为中文
-  - 2.134 保留 2.133/2.132 的 v88.7 别名审计、图谱推理、发音人稳定器、情绪模块、章节缓存、备用模型接力能力
-  - 2.134 默认仍关闭 v88.7 增强开关，避免意外消耗 API 额度；安装后如需启用请按需调整配置区开关
-  - 猫剪豆问 v1.20 已废弃，请勿使用；当前可用版本为 v1.25
+  - v1.26 依赖 App 端支持 `saveHeaders` 机制（`response_headers.json`）来抓取 CNB 凭证，若 App 不支持需额外适配
+  - v1.26 移除了多密钥轮询能力，仅使用单一 CNB 会话凭证
+  - 猫剪豆问 v1.20 已废弃，请勿使用；当前可用版本为 v1.26
   - 2.130 存在语法错误，请勿使用，请选择 2.131 或更高版本
 
 ---
