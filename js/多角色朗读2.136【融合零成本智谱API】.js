@@ -779,6 +779,24 @@ function zhipuParseStream(rawBody) {
   }
   return result;
 }
+// 从 OpenAI 格式请求体中提取完整 prompt，用于智谱清言游客模式
+function zhipuExtractPromptFromOpenAiData(data) {
+  var msgs = data && data.messages;
+  if (!msgs || !msgs.length) return "";
+  var parts = [];
+  for (var i = 0; i < msgs.length; i++) {
+    var m = msgs[i];
+    var c = m.content;
+    if (typeof c === "string") {
+      parts.push(c);
+    } else if (c && c.length) {
+      for (var j = 0; j < c.length; j++) {
+        if (c[j] && c[j].text) parts.push(c[j].text);
+      }
+    }
+  }
+  return parts.join("\n");
+}
 
 // 访问 explore 页面提取 csrftoken；★ 只有失效（401/403）才重新获取，不按时间过期
 function getCnbCsrfToken() {
@@ -1161,6 +1179,20 @@ var DualKeyManager = (function() {
           }
           return arr;
       }
+      // v2.136：智谱清言 App 游客模式（真正的智谱官方游客免登录）
+      if (API_SOURCE === "zhipu_guest") {
+          var zcnt = needCount && needCount > 0 ? needCount : MIN_CONCURRENT_COUNT;
+          var zarr = [];
+          for (var zi = 0; zi < zcnt; zi++) {
+              zarr.push({
+                  endpoint: ZHIPU_STREAM_URL,
+                  model: "zhipu-guest",
+                  key: "__ZHIPU__",
+                  isZhipuGuest: true
+              });
+          }
+          return zarr;
+      }
       // 每次调用强制重新读取密钥文件，保留热更新特性
       loadKeyFile();
       var sceneConfig = pools[scene];
@@ -1323,16 +1355,26 @@ if (!maxConcurrent || maxConcurrent <= 0) {
             requestParams.data.stream = true;
             console.log("【CNB智谱游客】使用免登录通道，模型：" + CNB_CONFIG.model);
         }
+        // v2.136：智谱清言 App 游客模式，重新构造智谱原生请求
+        if (apiConfig.isZhipuGuest === true) {
+            var zhipuPrompt = zhipuExtractPromptFromOpenAiData(requestParams.data);
+            var zhipuTokenObj = zhipuFetchGuestToken();
+            var zhipuSign = zhipuBuildSign();
+            requestParams.endpoint = ZHIPU_STREAM_URL;
+            requestParams.data = zhipuBuildChatBody(zhipuPrompt);
+            requestParams.headers = zhipuStreamHeaders(zhipuTokenObj, zhipuSign);
+            console.log("【智谱清言游客】使用免登录通道，模型：zhipu-guest");
+        }
         // 发起HTTP请求（复用原同步请求方法）
         var response = ttsrv.httpPost(
           requestParams.endpoint,
           JSON.stringify(requestParams.data),
           requestParams.headers
         );
-        // v2.136：CNB 智谱游客返回 SSE 流式响应，需拼接为完整内容后再走原解析
-        if (apiConfig.isCnb === true && response && response.body) {
+        // v2.136：CNB / 智谱清言游客返回 SSE 流式响应，需拼接为完整内容后再走原解析
+        if ((apiConfig.isCnb === true || apiConfig.isZhipuGuest === true) && response && response.body) {
             var rawBody = String(response.body().string() || "");
-            if (rawBody.indexOf("data:") !== -1) {
+            if (apiConfig.isCnb === true && rawBody.indexOf("data:") !== -1) {
                 var lines = rawBody.split("\n");
                 var cnbContentParts = [];
                 for (var cnbI = 0; cnbI < lines.length; cnbI++) {
@@ -1351,6 +1393,12 @@ if (!maxConcurrent || maxConcurrent <= 0) {
                 var fakeBodyContent = JSON.stringify({ choices: [{ message: { content: cnbFullContent } }] });
                 var fakeBody = { _content: fakeBodyContent, string: function() { return this._content; } };
                 response = { body: function() { return fakeBody; } };
+            } else if (apiConfig.isZhipuGuest === true) {
+                var zhipuFullContent = zhipuParseStream(rawBody);
+                // 构造兼容 responseParser 的假 response 对象
+                var fakeBodyContent2 = JSON.stringify({ choices: [{ message: { content: zhipuFullContent } }] });
+                var fakeBody2 = { _content: fakeBodyContent2, string: function() { return this._content; } };
+                response = { body: function() { return fakeBody2; } };
             }
         }
         // 响应解析与格式校验（与原逻辑100%一致）
@@ -1370,14 +1418,14 @@ if (!maxConcurrent || maxConcurrent <= 0) {
         // ===================== 模式分支处理 =====================
         if (!needWaitMultiResult) {
           // 原模式：1/2值，第一个成功立即唤醒主线程
-          var logKeyTail1 = (apiConfig.isCnb === true) ? "CNB游客" : apiConfig.key.slice(-4);
+          var logKeyTail1 = (apiConfig.isCnb === true) ? "CNB游客" : ((apiConfig.isZhipuGuest === true) ? "智谱游客" : apiConfig.key.slice(-4));
           console.log("【" + (scene === "nameAnalyze" ? "🔴🔴🔴✅ 姓名分析" : "🔵🔵🔵✅ 别名校验") + "成功！】 单结果模式，立即使用，模型：" + apiConfig.model + "，密钥末尾4位：" + logKeyTail1);
           if (hasWakedUp.compareAndSet(false, true)) {
             countDownLatch.countDown();
           }
         } else {
           // 多结果模式：打印当前进度
-          var logKeyTail2 = (apiConfig.isCnb === true) ? "CNB游客" : apiConfig.key.slice(-4);
+          var logKeyTail2 = (apiConfig.isCnb === true) ? "CNB游客" : ((apiConfig.isZhipuGuest === true) ? "智谱游客" : apiConfig.key.slice(-4));
           console.log("【" + (scene === "nameAnalyze" ? "🔴🔴🔴 姓名分析" : "🔵🔵🔵 别名校验") + "成功" + currentSuccessNum + "/" + targetSuccessCount + "个】 模型：" + apiConfig.model + "，密钥末尾4位：" + logKeyTail2);
           // 达到目标成功数，唤醒主线程
           if (currentSuccessNum >= targetSuccessCount && hasWakedUp.compareAndSet(false, true)) {
@@ -1387,7 +1435,7 @@ if (!maxConcurrent || maxConcurrent <= 0) {
         }
       } catch (err) {
         // 单请求失败，仅记录错误，不影响其他线程
-        var keyTail = (apiConfig.isCnb === true) ? "CNB游客" : apiConfig.key.slice(-4);
+        var keyTail = (apiConfig.isCnb === true) ? "CNB游客" : ((apiConfig.isZhipuGuest === true) ? "智谱游客" : apiConfig.key.slice(-4));
         var errorMsg = "密钥末尾" + keyTail + "：" + (err.message || "请求超时/未知错误");
         errors.push(errorMsg);
         console.error("【并发" + scene + "】请求失败：" + errorMsg);

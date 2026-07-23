@@ -1,15 +1,16 @@
-### 多角色朗读 2.136 融合零成本智谱 API（CNB 游客通道）（2026-07-23）
+### 多角色朗读 2.136 融合零成本智谱 API（CNB + 智谱清言双游客通道）（2026-07-23）
 - **目标文件**: `多角色朗读2.136【融合零成本智谱API】.json`
 - **源文件**: `多角色朗读2.135【修复对话前旁白分配错误+连续对话分配】.json`
 - **参考文件**: `新脚本/多角色朗读2.87【爱心加速版+3.1智谱】.json`
 - **备份**: 按版本递增规范，基于 2.135 生成 2.136 新文件，原 2.135 文件保留
-- **背景**: 用户希望把 2.87 的零成本智谱 API 能力移植到当前主版本 2.135，实现不消耗智谱 key 的 CNB（cnb.cool）游客通道
+- **背景**: 用户希望把 2.87 的零成本智谱 API 能力移植到当前主版本 2.135，实现不消耗智谱 key 的零成本通道
 - **改动**:
-  - 在配置区新增 `API_SOURCE` 开关（默认 `"official"`，可选 `"cnb_guest"`），默认关闭，不破坏原有官方 API 逻辑；
+  - 在配置区新增 `API_SOURCE` 开关（默认 `"official"`，可选 `"cnb_guest"`、`"zhipu_guest"`），默认关闭，不破坏原有官方 API 逻辑；
   - 移植 CNB 游客模式配置与凭证函数：`CNB_CONFIG`、`CNB_UA`、`getCnbCsrfToken()`、`buildCnbHeaders()`、`cnbConcatStreamContent()` 等；
-  - 修改 `DualKeyManager.getAvailableApiList()`：当 `API_SOURCE === "cnb_guest"` 时返回 `{isCnb: true, endpoint/model/key}` 特殊配置，不再读取 `miyue.txt`；
-  - 修改 `concurrentApiRequest()` 的 `createSingleRequestTask`：检测到 `apiConfig.isCnb === true` 时，自动把请求头替换为 `Cookie: csrfkey=...` + `Csrftoken: ...`，把 SSE 流式响应拼接成完整 content，再包装成 OpenAI 格式假 response 传给原有 `responseParser`；
-  - 对 CNB 配置保护日志中的 `key.slice(-4)`，避免 `__CNB__` 标记报错；
+  - 移植智谱清言（GLM）App 游客模式完整客户端：`zhipuMd5()`、`zhipuBuildSign()`、`zhipuFetchGuestToken()`、`zhipuStreamHeaders()`、`zhipuBuildChatBody()`、`zhipuParseStream()`、`zhipuExtractPromptFromOpenAiData()`；
+  - 修改 `DualKeyManager.getAvailableApiList()`：当 `API_SOURCE === "cnb_guest"` 时返回 `{isCnb: true, ...}`；当 `API_SOURCE === "zhipu_guest"` 时返回 `{isZhipuGuest: true, ...}`；均不再读取 `miyue.txt`；
+  - 修改 `concurrentApiRequest()` 的 `createSingleRequestTask`：检测到 `apiConfig.isCnb === true` 时自动走 CNB 通道；检测到 `apiConfig.isZhipuGuest === true` 时自动从 OpenAI 格式请求体提取 prompt、重新构造智谱原生请求、解析 SSE 流式响应，再包装成 OpenAI 格式假 response 传给原有 `responseParser`；
+  - 对 CNB / 智谱游客配置保护日志中的 `key.slice(-4)`，避免 `__CNB__` / `__ZHIPU__` 标记报错；
   - 统一文件名、JSON 顶层 `name`/`version` 与 `SpeechRuleJS.name`/`SpeechRuleJS.version` 为 2.136。
 - **功能保持**: 保留 2.135 的对话前旁白分配修复、连续对话分配、半角双引号识别、别名审计、发音人稳定器、情绪模块、备用模型等全部能力。
 - **验证**:
